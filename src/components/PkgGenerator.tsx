@@ -42,13 +42,16 @@ export function PkgGenerator() {
     setFeedback('Gerando aplicação, por favor aguarde...');
 
     try {
-      const response = await fetch('http://localhost:4000/api/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        'http://145.223.27.100:8000/api/generate',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
         },
-        body: JSON.stringify(formData),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -80,12 +83,20 @@ export function PkgGenerator() {
       a.remove();
 
       setFeedback('Aplicação gerada com sucesso! O download foi iniciado.');
+       setFormData({
+        nome_cliente: '',
+        db_host: '',
+        db_user: '',
+        db_password: '',
+        db_database: '',
+        access_key: '',
+      });
     } catch (error: unknown) {
       console.error('Erro ao tentar gerar a aplicação:', error);
       setFeedback(`Erro: ${error.message}`);
     } finally {
       setIsLoading(false);
-      window.location.reload();
+     
     }
   };
 
