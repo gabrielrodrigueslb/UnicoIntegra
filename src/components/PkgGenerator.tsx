@@ -42,16 +42,13 @@ export function PkgGenerator() {
     setFeedback('Gerando aplicação, por favor aguarde...');
 
     try {
-      const response = await fetch(
-        'http://145.223.27.100:8000/api/generate',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
+      const response = await fetch('http://145.223.27.100:8000/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify(formData),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -83,7 +80,7 @@ export function PkgGenerator() {
       a.remove();
 
       setFeedback('Aplicação gerada com sucesso! O download foi iniciado.');
-       setFormData({
+      setFormData({
         nome_cliente: '',
         db_host: '',
         db_user: '',
@@ -91,12 +88,17 @@ export function PkgGenerator() {
         db_database: '',
         access_key: '',
       });
-    } catch (error: unknown) {
+      // CÓDIGO CORRIGIDO
+    } catch (error) {
+      // Não precisa mais do ': unknown'
       console.error('Erro ao tentar gerar a aplicação:', error);
-      setFeedback(`Erro: ${error.message}`);
+      let errorMessage = 'Ocorreu um erro desconhecido.';
+      if (error instanceof Error) {
+        errorMessage = `Erro: ${error.message}`;
+      }
+      setFeedback(errorMessage);
     } finally {
       setIsLoading(false);
-     
     }
   };
 
