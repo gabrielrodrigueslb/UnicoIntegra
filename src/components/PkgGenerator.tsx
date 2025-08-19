@@ -80,15 +80,15 @@ export function PkgGenerator() {
       a.remove();
 
       setFeedback('Aplicação gerada com sucesso! O download foi iniciado.');
-      setFormData({
+      /* setFormData({
         nome_cliente: '',
         db_host: '',
         db_user: '',
         db_password: '',
         db_database: '',
         access_key: '',
-      });
-      // CÓDIGO CORRIGIDO
+      }); */
+
     } catch (error) {
       // Não precisa mais do ': unknown'
       console.error('Erro ao tentar gerar a aplicação:', error);
