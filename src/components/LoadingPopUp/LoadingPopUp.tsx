@@ -1,7 +1,7 @@
 import './LoadingPopUp.scss';
 
-interface LoadingProps{
-  message : string
+interface LoadingProps {
+  message: string;
 }
 
 export default function LoadingPopUp({ message }: LoadingProps) {
@@ -16,4 +16,3 @@ export default function LoadingPopUp({ message }: LoadingProps) {
     </aside>
   );
 }
-

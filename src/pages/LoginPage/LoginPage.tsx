@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LoadingPopUp from '../../components/LoadingPopUp/LoadingPopUp';
 import './LoginPage.scss';
 import axios from 'axios';
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -43,7 +43,7 @@ export default function LoginPage() {
 
   return (
     <main className="main">
-      {loading && <LoadingPopUp message="Carregando..." />}
+      {loading && <LoadingScreen loadingMessage='Carregando...'/>}
       <section className="banner-section">
         <picture className="logo-container">
           <img

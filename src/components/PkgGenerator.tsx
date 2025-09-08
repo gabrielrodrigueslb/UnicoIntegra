@@ -34,6 +34,7 @@ export function PkgGenerator() {
       [name]: value,
     }));
   };
+  /* 145.223.27.100 */
 
   // Função para enviar os dados para o back-end
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,7 +89,6 @@ export function PkgGenerator() {
         db_database: '',
         access_key: '',
       }); */
-
     } catch (error) {
       // Não precisa mais do ': unknown'
       console.error('Erro ao tentar gerar a aplicação:', error);
@@ -104,7 +104,8 @@ export function PkgGenerator() {
 
   return (
     <>
-      {isLoading && <LoadingScreen />}
+    
+       {isLoading && <LoadingScreen loadingMessage={feedback || 'Aguarde, seu app está sendo gerado...'}/>} 
       <div className="card">
         <h2>📦 Gerador de Executável (PKG)</h2>
         <form onSubmit={handleSubmit} className="space-y-4 mb-6">
@@ -121,18 +122,6 @@ export function PkgGenerator() {
             />
           </div>
           <div>
-            <label className="block font-medium">Host do Banco de Dados</label>
-            <input
-              type="text"
-              name="db_host"
-              className="border p-2 w-full"
-              value={formData.db_host}
-              onChange={handleChange}
-              placeholder="000.0.000.0"
-              required
-            />
-          </div>
-          <div>
             <label className="block font-medium">Usuário do Banco</label>
             <input
               type="text"
@@ -144,6 +133,31 @@ export function PkgGenerator() {
               required
             />
           </div>
+
+          <div>
+            <label className="block font-medium">Senha do Banco</label>
+            <input
+              type="text"
+              name="db_password"
+              className="border p-2 w-full"
+              value={formData.db_password}
+              placeholder="Senha"
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <label className="block font-medium">Host do Banco de Dados</label>
+            <input
+              type="text"
+              name="db_host"
+              className="border p-2 w-full"
+              value={formData.db_host}
+              onChange={handleChange}
+              placeholder="000.0.000.0"
+              required
+            />
+          </div>
+
           <div>
             <label className="block font-medium">
               Nome do Banco (Database)
@@ -156,17 +170,6 @@ export function PkgGenerator() {
               onChange={handleChange}
               placeholder="nome_database"
               required
-            />
-          </div>
-          <div>
-            <label className="block font-medium">Senha do Banco</label>
-            <input
-              type="text"
-              name="db_password"
-              className="border p-2 w-full"
-              value={formData.db_password}
-              placeholder="Senha"
-              onChange={handleChange}
             />
           </div>
 
@@ -190,11 +193,7 @@ export function PkgGenerator() {
           </button>
         </form>
 
-        {feedback && (
-          <div className="feedback-message">
-            <p>{feedback}</p>
-          </div>
-        )}
+        
       </div>
     </>
   );
