@@ -10,7 +10,8 @@ export default defineConfig({
     fs: {
       allow: [
         path.resolve(__dirname, 'src'), // permite a pasta src
-        path.resolve(__dirname, 'src/templates') // permite a pasta de templates
+        path.resolve(__dirname, 'src/templates'), // permite a pasta de templates
+        path.resolve(__dirname)
       ]
     }
   }

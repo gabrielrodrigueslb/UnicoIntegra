@@ -66,9 +66,7 @@ export default function Automations() {
         <PkgGenerator />
       </main>
 
-      <footer className="app-footer">
-        <p>UnicoIntegra © {new Date().getFullYear()}</p>
-      </footer>
+      
     </div>
   )
 }

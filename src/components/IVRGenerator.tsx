@@ -1,42 +1,74 @@
+// IVRGenerator.tsx
+
 import { useState } from 'react';
+import axios from 'axios';
 import { SuccessModal } from './SucessModal';
-import {base64ToUtf8, utf8ToBase64} from '../utils/utils';
+import { base64ToUtf8, utf8ToBase64 } from '../utils/utils'; 
 
 interface Props {
   template: { name: string; file: string; fields: { key: string }[] };
   formData: Record<string, string>;
-  // MUDANÇA 1: Definir o tipo correto para a função
   closeModal: () => void;
 }
 
 export function IVRGenerator({ template, formData, closeModal }: Props) {
   const [generated, setGenerated] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
-    const res = await fetch(`/templates/${template.file}`);
-    const templateBase64 = await res.text() 
-    
-    //decodifica de Base64 para UTF-8
-    const decoded = base64ToUtf8(templateBase64);
+    setError(null);
+    try {
+      const res = await fetch(`/templates/${template.file}`);
+      const templateContent = await res.text();
 
-    const json = JSON.parse(decoded);
+      // Correção 1: Remove a tag do conteúdo do arquivo
+      const templateBase64 = templateContent.replace(/\//g, '').trim();
 
-    const jsonString = JSON.stringify(json).replace(/{{(.*?)}}/g, (_, key) => {
-      const value = formData[key.trim()];
-      return value !== undefined && value !== '' ? value : `{{${key.trim()}}}`;
-    });
+      const decoded = base64ToUtf8(templateBase64);
+      const json = JSON.parse(decoded);
 
-    //codifica de volta para base64 -> UTF-8
-    const base64 = utf8ToBase64(jsonString);
+      const jsonString = JSON.stringify(json).replace(
+        /{{(.*?)}}/g,
+        (_, key) => {
+          const value = formData[key.trim()];
+          return value !== undefined && value !== ''
+            ? value
+            : `{{${key.trim()}}}`;
+        },
+      );
+      
+      // Correção 2: Remove a barra "/" do final da URL da instância
+      const instanceURL = formData['instanceURL'] || '';
+      const sanitizedInstanceURL = instanceURL.replace(/\/$/, '');
 
-    setGenerated(base64);
-    setShowModal(true)
-  }
+      const ivrPayload = {
+        instance: sanitizedInstanceURL,
+        integrationData: JSON.parse(jsonString),
+      };
+      
+      console.log('Enviando payload para a API:', ivrPayload);
 
-  //  Criar uma função para lidar com o fechamento do modal de sucesso
+      const installResponse = await axios.post(
+        'http://localhost:4000/install/integration',
+        ivrPayload,
+      );
+
+      console.log('Installation successful:', installResponse.data);
+
+      const finalBase64 = utf8ToBase64(jsonString);
+
+      setGenerated(finalBase64);
+      setShowModal(true);
+
+    } catch (error) {
+      console.error('Failed to generate or install IVR:', error);
+      setError('Falha na geração ou instalação do IVR. Verifique o console para mais detalhes.');
+    }
+  };
+
   const handleCloseSuccessModal = () => {
-    setShowModal(false); 
+    setShowModal(false);
     closeModal();
   };
 
@@ -46,11 +78,12 @@ export function IVRGenerator({ template, formData, closeModal }: Props) {
         Gerar IVR
       </button>
 
+      {error && <p className="text-red-500 mt-2">{error}</p>}
+
       {showModal && generated && (
         <SuccessModal
           base64={generated}
           filename={`${template.name.replace(/\s+/g, '_').toLowerCase()}.ivr`}
-          // MUDANÇA 3: Passar a função para a propriedade obrigatória "onClose"
           onClose={handleCloseSuccessModal}
         />
       )}

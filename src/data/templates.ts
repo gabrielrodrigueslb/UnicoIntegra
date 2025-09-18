@@ -30,6 +30,25 @@ export const templates = {
       { label: 'Nome da loja', key: 'nomeDaLoja' },
     ],
   },
+  Cielo: {
+    name: 'Link de pagamento - Cielo',
+    file: 'link_cielo.txt',
+    fields: [
+      { label: 'Nome do cliente', key: 'nomecliente' },
+      { label: 'ClientId:ClientSecret', key: 'clientcode' },
+    ],
+  },
+  Cielo_webhook: {
+    name: 'Cielo Webhook (Notificação)',
+    file: 'CieloWebhook.txt',
+    fields: [
+      { label: 'Nome do cliente', key: 'nomecliente' },
+      { label: 'ClientId:ClientSecret', key: 'clientcode' },
+      {label: 'Instancia de armazenamento', key:"instancia"},
+      {label:"QueueId", key:"fila"},
+      {label:"APIKEY", key:"apikey"},
+    ],
+  },
 
   /* ,
   alpha7Carrinho: {

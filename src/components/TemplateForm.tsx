@@ -1,3 +1,4 @@
+
 interface Field {
   label: string;
   key: string;
@@ -15,6 +16,19 @@ export function TemplateForm({ template, formData, setFormData }: Props) {
 
   return (
     <form className="space-y-4 mb-6">
+      {/* 1. Add the "Instância" input field before the map */}
+      <div>
+        <label className="block font-medium">Instância</label>
+        <input
+          type="text"
+          className="border p-2 w-full"
+          // 2. Use a unique key like 'instanceURL'
+          value={formData['instanceURL'] || ''}
+          // 3. Pass the unique key to the handleChange function
+          onChange={(e) => handleChange('instanceURL', e.target.value)}
+        />
+      </div>
+
       {template.fields.map((field) => (
         <div key={field.key}>
           <label className="block font-medium">{field.label}</label>
