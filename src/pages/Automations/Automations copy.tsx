@@ -45,7 +45,7 @@ export default function Automations() {
               Escolha uma opção
             </option>
             {Object.entries(templates).map(([key, t]) => (
-              <option key={key} value={key}>
+              <option key={key} value={key} className=''>
                 {t.name}
               </option>
             ))}

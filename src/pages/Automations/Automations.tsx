@@ -39,22 +39,26 @@ export default function Automations() {
   }
 
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <h1>🛠️ Gerador de Arquivos</h1>
+    <div className="app-container flex flex-col max-h-screen h-screen py-8 pr-5 max-w-screen overflow-hidden">
+      <header className="app-header mb-8">
+        <h1 className="text-3xl font-semibold opacity-90">Gerador de Arquivos</h1>
       </header>
 
-      <main className="app-main">
-        <h2>💬 Selecione uma integração</h2>
-        
-        <div className="cards-grid">
+      <main className="app-main overflow-y-auto max-w-screen h-full ">
+        <div className="cards-grid grid grid-cols-4 gap-5 pt-2 ">
           {Object.entries(templates).map(([key, t]) => (
             <div
               key={key}
-              className={`integration-card ${selectedTemplate === key ? 'active' : ''}`}
+              className={`integration-card ${
+                selectedTemplate === key ? 'active' : ''
+              }`}
               onClick={() => handleOpenModal(key)}
             >
-              <h3>{t.name}</h3>
+              <div
+                className={`h-50 w-full bg-center bg-cover rounded-xl bg-gray-300`}
+                style={{ backgroundImage: `url(${t.banner})` }}
+              ></div>
+              <h3 className='font-semibold pt-4 px-2 text-ellipsis overflow-hidden text-nowrap'>{t.name}</h3>
               {/* <p>{t.description ?? 'Integração personalizada'}</p> */}
             </div>
           ))}
@@ -63,22 +67,24 @@ export default function Automations() {
         {template && openModal && (
           <div className="modal-overlay">
             <div className="modal">
-              <button className="close-button" onClick={handleCloseModal}>✖</button>
+              <button className="close-button" onClick={handleCloseModal}>
+                ✖
+              </button>
 
               <TemplateForm
                 template={template}
                 formData={formData}
                 setFormData={setFormData}
               />
-              <IVRGenerator template={template} formData={formData} closeModal={handleCloseModal}/>
+              <IVRGenerator
+                template={template}
+                formData={formData}
+                closeModal={handleCloseModal}
+              />
             </div>
           </div>
         )}
       </main>
-
-      <footer className="app-footer">
-        <p>UnicoIntegra © {new Date().getFullYear()}</p>
-      </footer>
     </div>
-  )
+  );
 }

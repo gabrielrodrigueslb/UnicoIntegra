@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import LoadingScreen from './LoadingScreen/LoadingScreen';
+import "./PkgGenerator.scss"
 
 // Define a interface para os dados do nosso formulário
 interface PkgFormData {
@@ -106,15 +107,16 @@ export function PkgGenerator() {
     <>
     
        {isLoading && <LoadingScreen loadingMessage={feedback || 'Aguarde, seu app está sendo gerado...'}/>} 
-      <div className="card">
-        <h2>📦 Gerador de Executável (PKG)</h2>
-        <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+      <div className="card h-screen py-8 pr-5 flex flex-col justify-center">
+        <h2 className='text-3xl font-semibold opacity-90 mb-8'>Gerador de Executável</h2>
+        <section className='form'>
+           <form onSubmit={handleSubmit} className="space-y-4 mb-6 grid grid-cols-3 gap-4">
           <div>
             <label className="block font-medium">Nome do Cliente</label>
             <input
               type="text"
               name="nome_cliente"
-              className="border p-2 w-full"
+              className=" p-3 w-full rounded-xl bg-gray-200"
               value={formData.nome_cliente}
               onChange={handleChange}
               placeholder="Drogaria de exemplo"
@@ -126,7 +128,7 @@ export function PkgGenerator() {
             <input
               type="text"
               name="db_user"
-              className="border p-2 w-full"
+              className="p-3 w-full rounded-xl bg-gray-200"
               value={formData.db_user}
               onChange={handleChange}
               placeholder="usuario_database"
@@ -139,7 +141,7 @@ export function PkgGenerator() {
             <input
               type="text"
               name="db_password"
-              className="border p-2 w-full"
+              className="p-3 w-full rounded-xl bg-gray-200"
               value={formData.db_password}
               placeholder="Senha"
               onChange={handleChange}
@@ -150,7 +152,7 @@ export function PkgGenerator() {
             <input
               type="text"
               name="db_host"
-              className="border p-2 w-full"
+              className="p-3 w-full rounded-xl bg-gray-200"
               value={formData.db_host}
               onChange={handleChange}
               placeholder="000.0.000.0"
@@ -165,7 +167,7 @@ export function PkgGenerator() {
             <input
               type="text"
               name="db_database"
-              className="border p-2 w-full"
+              className="p-3 w-full rounded-xl bg-gray-200"
               value={formData.db_database}
               onChange={handleChange}
               placeholder="nome_database"
@@ -180,7 +182,7 @@ export function PkgGenerator() {
             <input
               type="text"
               name="access_key"
-              className="border p-2 w-full"
+              className="p-3 w-full rounded-xl bg-gray-200"
               value={formData.access_key}
               onChange={handleChange}
               placeholder="Authorization"
@@ -188,10 +190,12 @@ export function PkgGenerator() {
             />
           </div>
 
-          <button type="submit" className="btn-primary" disabled={isLoading}>
-            {isLoading ? 'Gerando...' : 'Gerar Aplicação'}
+          <button type="submit" className="btn-primary bg-(--color-primary) text-(--text-color-primary) rounded-xl p-3 hover:bg-gray-100 hover:text-(--color-primary) transition-all font-semibold flex items-center justify-center" disabled={isLoading}>
+            {isLoading ? 'Gerando...' : 'Gerar Aplicação'} <img src="/Zy84sEEoSG.gif" className='h-6 download-ping hidden transition-all' alt="" />
           </button>
         </form>
+        </section>
+       
 
         
       </div>
