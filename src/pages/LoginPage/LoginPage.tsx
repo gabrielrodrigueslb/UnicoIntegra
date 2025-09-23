@@ -44,7 +44,7 @@ export default function LoginPage() {
   return (
     <main className="main">
       {loading && <LoadingScreen loadingMessage='Carregando...'/>}
-      <section className="banner-section">
+      <section className="banner-section ">
         <picture className="logo-container">
           <img
             src="/logo-branca-na-ponta_20230831_131618_0001-e1693505469301-768x231 1.svg"
@@ -52,9 +52,12 @@ export default function LoginPage() {
           />
         </picture>
       </section>
-      <section className="form-section">
-        <form onSubmit={handleLogin} className="login-form">
-          <h2>Acesso ao Sistema</h2>
+      <section className="form-section ">
+        <form onSubmit={handleLogin} className="login-form flex items-center flex-col">
+          <picture className='pb-12'>
+            <img src="/loginunico.svg" alt="" />
+          </picture>
+          <h2 className='self-start pb-4'>Acesso ao Sistema</h2>
           <div className="form-group">
             <label htmlFor="username">Usuário</label>
             <input

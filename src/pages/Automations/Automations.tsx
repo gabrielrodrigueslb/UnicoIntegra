@@ -45,7 +45,7 @@ export default function Automations() {
       </header>
 
       <main className="app-main overflow-y-auto max-w-screen h-full ">
-        <div className="cards-grid grid grid-cols-4 gap-5 pt-2 ">
+        <div className="cards-grid grid grid-cols-1 gap-5 pt-2 sm:grid-cols-2 md:grid-cols-4">
           {Object.entries(templates).map(([key, t]) => (
             <div
               key={key}
