@@ -1,8 +1,17 @@
 // src/data/templates.ts
 export const templates = {
+  GerarQRCode: {
+    name: 'Gerar QR code',
+    file: 'gerarQRcode.txt',
+    banner:'/unico.png',
+    fields: [
+      { label: 'intância do cliente', key: 'urlInstancia', },
+      {label:"APIKEY", key:"apiKeyFila", defaultValue:"unicocontato"},
+    ],
+  },
   cashback: {
     name: 'Alpha7 - Cashback ativo',
-    file: 'Alpha7_cashback_ativo.txt',
+    file: 'alpha7_cashback_ativo.txt',
     banner:'/Alpha.png',
     fields: [{ label: 'IP do Cliente', key: 'client_ip' }],
   },
@@ -54,16 +63,7 @@ export const templates = {
       {label:"QueueId", key:"fila"},
       {label:"APIKEY", key:"apikey"},
     ],
-  },
-  GerarQRCode: {
-    name: 'Gerar QR code',
-    file: 'gerarQRcode.txt',
-    banner:'/unico.png',
-    fields: [
-      { label: 'intância do cliente', key: 'urlInstancia', },
-      {label:"APIKEY", key:"apiKeyFila", defaultValue:"unicocontato"},
-    ],
-  },
+  }
 
   /* ,
   alpha7Carrinho: {
