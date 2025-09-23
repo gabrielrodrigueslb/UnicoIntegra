@@ -74,7 +74,7 @@ export function IVRGenerator({ template, formData, closeModal }: Props) {
 
   return (
     <>
-      <button className="btn-primary" onClick={handleGenerate}>
+      <button className="btn-primary py-3 px-5 bg-(--color-primary) text-(--text-color-primary) font-semibold rounded-xl"  onClick={handleGenerate}>
         Gerar IVR
       </button>
 

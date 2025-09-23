@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GrIntegration } from 'react-icons/gr';
 import { AiOutlineHome } from 'react-icons/ai';
 import { TbAutomation } from 'react-icons/tb';
@@ -11,6 +11,9 @@ export default function Header() {
     localStorage.removeItem('authToken');
     navigate('/'); // Redireciona para a página de login
   }
+
+  const location = useLocation()
+  console.log(location)
 
   const menuItems = [
     { path: '/main', icon: <AiOutlineHome /> },
@@ -25,7 +28,7 @@ export default function Header() {
           <ul className="nav-list flex flex-col gap-3">
             {menuItems.map((item, index) => (
               <li
-                className="p-3.5 bg-gray-950 text-white rounded-full text-2xl cursor-pointer"
+                className={`p-3.5 bg-gray-950 text-white rounded-full text-2xl cursor-pointer ${item.path == location.pathname ? "active": ""} hover:bg-(--color-primary)`}
                 key={index}
               >
                 <Link to={item.path}>{item.icon}</Link>

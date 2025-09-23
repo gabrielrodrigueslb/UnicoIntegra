@@ -1,4 +1,5 @@
 
+
 interface Field {
   label: string;
   key: string;
@@ -21,7 +22,7 @@ export function TemplateForm({ template, formData, setFormData }: Props) {
         <label className="block font-medium">Instância</label>
         <input
           type="text"
-          className="border p-2 w-full"
+          className="bg-gray-200 p-2 w-full rounded-xl"
           // 2. Use a unique key like 'instanceURL'
           value={formData['instanceURL'] || ''}
           // 3. Pass the unique key to the handleChange function
@@ -34,8 +35,8 @@ export function TemplateForm({ template, formData, setFormData }: Props) {
           <label className="block font-medium">{field.label}</label>
           <input
             type="text"
-            className="border p-2 w-full"
-            value={formData[field.key] || ''}
+            className="bg-gray-200 p-2 w-full rounded-xl"
+             value={formData[field.key] || ""}
             onChange={(e) => handleChange(field.key, e.target.value)}
           />
         </div>

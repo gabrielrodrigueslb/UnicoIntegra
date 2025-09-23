@@ -21,11 +21,9 @@ export function SuccessModal({ onClose, base64, filename }: Props) {
       <div className="modal-content animate-popup">
         <button className="close-button" onClick={onClose}>×</button>
         <div className="modal-body">
-          <h2>✅ IVR Gerado!</h2>
-          <p>Seu arquivo está pronto para download.</p>
-          <button className="btn-success" onClick={handleDownload}>
-            Baixar IVR
-          </button>
+          <h2>✅ IVR instalado!</h2>
+
+          <p className='opacity-60 text-sm'>Caso não tenha funcionado, seu arquivo está pronto para <a onClick={handleDownload} className='text-blue-500 font-medium'>download</a>.</p>
         </div>
       </div>
     </div>

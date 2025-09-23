@@ -55,6 +55,15 @@ export const templates = {
       {label:"APIKEY", key:"apikey"},
     ],
   },
+  GerarQRCode: {
+    name: 'Gerar QR code',
+    file: 'gerarQRcode.txt',
+    banner:'/unico.png',
+    fields: [
+      { label: 'intância do cliente', key: 'urlInstancia', },
+      {label:"APIKEY", key:"apiKeyFila", defaultValue:"unicocontato"},
+    ],
+  },
 
   /* ,
   alpha7Carrinho: {

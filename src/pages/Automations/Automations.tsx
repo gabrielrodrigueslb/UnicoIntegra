@@ -39,8 +39,8 @@ export default function Automations() {
   }
 
   return (
-    <div className="app-container flex flex-col max-h-screen h-screen py-8 pr-5 max-w-screen overflow-hidden">
-      <header className="app-header mb-8">
+    <div className="app-container flex flex-col max-h-screen h-screen py-8 pr-5 max-w-screen overflow-hidden" >
+      <header className="app-header mb-5">
         <h1 className="text-3xl font-semibold opacity-90">Gerador de Arquivos</h1>
       </header>
 
@@ -65,8 +65,8 @@ export default function Automations() {
         </div>
 
         {template && openModal && (
-          <div className="modal-overlay">
-            <div className="modal">
+          <div className="modal-overlay" onClick={handleCloseModal}>
+            <div className="modal " onClick={(e) => e.stopPropagation()}>
               <button className="close-button" onClick={handleCloseModal}>
                 ✖
               </button>
