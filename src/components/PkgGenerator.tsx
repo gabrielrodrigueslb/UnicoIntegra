@@ -44,7 +44,7 @@ export function PkgGenerator() {
     setFeedback('Gerando aplicação, por favor aguarde...');
 
     try {
-      const response = await fetch('http://145.223.27.100:8000/api/generate', {
+      const response = await fetch('https://unicocontato.tech/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

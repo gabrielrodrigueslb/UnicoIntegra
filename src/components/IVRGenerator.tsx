@@ -48,7 +48,7 @@ export function IVRGenerator({ template, formData, closeModal }: Props) {
       console.log('Enviando payload para a API:', ivrPayload);
 
       const installResponse = await axios.post(
-        'http://145.223.27.100:4000/install/integration',
+        'https://unicocontato.tech/install/integration',
         ivrPayload,
       );
 
