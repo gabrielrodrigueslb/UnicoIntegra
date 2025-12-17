@@ -4,7 +4,7 @@ interface Field {
 }
 
 interface Props {
-  template?: { name: string; file: string; fields: Field[] };
+  template?: { name: string; file?: string; fields?: Field[] };
   formData: Record<string, string>;
   setFormData: (data: Record<string, string>) => void;
   isIaSetup?: boolean;
