@@ -1,7 +1,11 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GrIntegration } from 'react-icons/gr';
 import { AiOutlineHome } from 'react-icons/ai';
-import { TbAutomation } from 'react-icons/tb';
+/* import { TbSettingsAutomation } from "react-icons/tb";
+ */import { AiOutlineAppstoreAdd } from "react-icons/ai";
+import { 
+  Bot
+} from 'lucide-react'; 
 import { MdLogout } from 'react-icons/md';
 import './Header.scss';
 
@@ -17,8 +21,11 @@ export default function Header() {
 
   const menuItems = [
     { path: '/main', icon: <AiOutlineHome /> },
+    { path: '/main/aplications', icon: <AiOutlineAppstoreAdd/> },
     { path: '/main/integrations', icon: <GrIntegration /> },
-    { path: '/main/automations', icon: <TbAutomation /> },
+/*     { path: '/main/automations', icon: <TbSettingsAutomation  /> }, */
+    { path: '/main/iaPage', icon: <Bot  /> },
+/*     { path: '/main/extensions', icon: <GrIntegration  /> }, */
   ];
 
   return (

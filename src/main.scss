@@ -13,3 +13,21 @@ a,button {
   --color-primary: #080a3a;
   --text-color-primary:#fff;
 }
+.scrollbar-clean::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-clean::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-clean::-webkit-scrollbar-thumb {
+  background-color: #9ca3af; /* gray-400 */
+  border-radius: 9999px;
+}
+
+.scrollbar-clean {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af transparent; /* thumb | track */
+}
+

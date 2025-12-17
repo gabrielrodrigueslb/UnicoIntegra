@@ -7,6 +7,7 @@ import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export default function LoginPage() {
     try {
       const apiUrl =
         'https://ambientesdetesteunicocontato.atenderbem.com/api/login';
-      const response = await axios.post(apiUrl, { username, password });
+      const response = await axios.post(apiUrl, { username, password, code });
       localStorage.setItem('authToken', response.data.token);
 
       // Redireciona após login bem-sucedido
@@ -78,6 +79,18 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Digite sua senha"
+              required
+              disabled={loading}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="code">Código 2FA</label>
+            <input
+              id="code"
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Digite seu código de 2FA"
               required
               disabled={loading}
             />
