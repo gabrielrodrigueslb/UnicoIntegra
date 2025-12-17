@@ -12,7 +12,7 @@ import {
   Cpu
 } from 'lucide-react'; 
 
-import { templates } from '../../data/templatesIAs';
+import { templates } from '../../data/templates_ia';
 import { TemplateForm } from '../../components/TemplateForm';
 
 // CORREÇÃO 3: Movemos a constante IAs para fora do componente.
