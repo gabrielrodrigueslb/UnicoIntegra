@@ -1,10 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/components/TemplateForm.tsx
+
 interface Field {
-  label: string;
   key: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  width?: 'full' | 'half';
+}
+
+interface TemplateData {
+  name: string;
+  file?: string;
+  fields?: Field[];
+  [key: string]: any;
 }
 
 interface Props {
-  template?: { name: string; file?: string; fields?: Field[] };
+  template?: TemplateData;
   formData: Record<string, string>;
   setFormData: (data: Record<string, string>) => void;
   isIaSetup?: boolean;
@@ -16,12 +29,13 @@ export function TemplateForm({
   setFormData,
   isIaSetup = false,
 }: Props) {
+  
   const handleChange = (key: string, value: string) => {
     setFormData({ ...formData, [key]: value });
   };
 
   // -----------------------------------------------------------------------
-  // MODO 1: CONFIGURAÇÃO DE IA (Layout Duas Colunas Otimizado)
+  // MODO 1: CONFIGURAÇÃO DE IA (Data-Driven UI)
   // -----------------------------------------------------------------------
   if (isIaSetup) {
     return (
@@ -29,80 +43,68 @@ export function TemplateForm({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
           
           {/* COLUNA ESQUERDA: Configurações Técnicas */}
-          <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[60vh] lg:max-h-none">
+          <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar max-h-[60vh] lg:max-h-none">
             
-            {/* Bloco 1: Identidade */}
-            <div className="mx-1">
-              <label className="block font-semibold text-xs text-slate-500 uppercase tracking-wider mb-1">
-                Nome
+            {/* 1. Bloco Básico (Sempre existe) */}
+            <div className="px-1 ">
+              <label className="block font-semibold text-xs text-slate-500 uppercase tracking-wider mb-2">
+                Básico
               </label>
-              <input
-                type="text"
-                className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition-all text-sm"
-                placeholder="Nome da sua IA (Ex: Atendente Nível 1)"
-                value={formData['name'] || ''}
-                onChange={(e) => handleChange('name', e.target.value)}
-              />
-            </div>
-
-            {/* Bloco 2: Conexão */}
-            <div className="mx-1">
-              <label className="block font-semibold text-xs text-slate-500 uppercase tracking-wider mb-1">
-                Conexão
-              </label>
-              <input
-                type="text"
-                className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition-all text-sm mb-3"
-                placeholder="URL da Instância"
-                value={formData['instance'] || ''}
-                onChange={(e) => handleChange('instance', e.target.value)}
-              />
-              <input
-                type="password"
-                className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition-all text-sm"
-                placeholder="API Key"
-                value={formData['apiKey'] || ''}
-                onChange={(e) => handleChange('apiKey', e.target.value)}
-              />
-            </div>
-
-            {/* Bloco 3: Dados Específicos (Grid interno) */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="mx-1">
-                <label className="block font-semibold text-xs text-slate-500 uppercase tracking-wider mb-1">
-                  Database
-                </label>
+              <div className="space-y-3">
                 <input
                   type="text"
-                  className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-violet-500 outline-none text-sm"
-                  placeholder="Nome do DB"
-                  value={formData['dbName'] || ''}
-                  onChange={(e) => handleChange('dbName', e.target.value)}
+                  className="w-full bg-white border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-violet-500 outline-none text-sm"
+                  placeholder="Nome da IA"
+                  value={formData['name'] || ''}
+                  onChange={(e) => handleChange('name', e.target.value)}
                 />
-              </div>
-
-              <div className="mx-1">
-                <label className="block font-semibold text-xs text-slate-500 uppercase tracking-wider mb-1">
-                  Fila (ID)
-                </label>
                 <input
                   type="text"
-                  className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-violet-500 outline-none text-sm"
-                  placeholder="Ex: 11"
-                  value={formData['queueId'] || ''}
-                  onChange={(e) => handleChange('queueId', e.target.value)}
+                  className="w-full bg-white border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-violet-500 outline-none text-sm"
+                  placeholder="URL da Instância"
+                  value={formData['instance'] || ''}
+                  onChange={(e) => handleChange('instance', e.target.value)}
                 />
               </div>
             </div>
 
-            {/* Bloco 4: Segurança */}
-            <div className="mx-1 mb-1">
-              <label className="block font-semibold text-xs text-slate-500 uppercase tracking-wider mb-1">
+            {/* 2. Bloco Dinâmico (Renderizado baseado no JSON do template) */}
+            {template?.fields && template.fields.length > 0 && (
+              <div className="px-1 ">
+                <label className="block font-semibold text-xs text-slate-500 uppercase tracking-wider mb-2">
+                  Configurações Específicas
+                </label>
+                
+                <div className="flex flex-wrap gap-3">
+                  {template.fields.map((field) => (
+                    <div 
+                      key={field.key} 
+                      className={`${field.width === 'half' ? 'w-[calc(50%-6px)]' : 'w-full'}`}
+                    >
+                      <label className="block text-[10px] font-bold text-slate-400 mb-1 ml-1 uppercase">
+                        {field.label}
+                      </label>
+                      <input
+                        type={field.type || 'text'}
+                        className="w-full bg-white border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-violet-500 outline-none text-sm"
+                        placeholder={field.placeholder}
+                        value={formData[field.key] || ''}
+                        onChange={(e) => handleChange(field.key, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 3. Bloco Segurança (Sempre existe) */}
+            <div className="px-1 pb-1">
+              <label className="block font-semibold text-xs text-slate-500 uppercase tracking-wider mb-2">
                 Segurança
               </label>
               <input
                 type="text"
-                className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-violet-500 outline-none text-sm"
+                className="w-full bg-white border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-violet-500 outline-none text-sm"
                 placeholder="Código 2FA / Validação"
                 value={formData['code'] || ''}
                 onChange={(e) => handleChange('code', e.target.value)}
@@ -110,17 +112,14 @@ export function TemplateForm({
             </div>
           </div>
 
-          {/* COLUNA DIREITA: Contexto (Full Height) */}
-          <div className="flex flex-col h-full min-h-[300px] mr-1 ">
-            <div className="flex justify-between items-end mb-2">
-              <label className="block font-semibold text-xs text-slate-500 uppercase tracking-wider">
+          {/* COLUNA DIREITA: Contexto (Sempre existe) */}
+          <div className="flex flex-col h-full min-h-[300px]">
+             <label className="block font-semibold text-xs text-slate-500 uppercase tracking-wider mb-2">
                 Prompt do Sistema (Contexto)
-              </label>
-            </div>
-            
-            <textarea
-              className="flex-1 w-full bg-slate-50 border border-slate-200 p-4 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none resize-none text-sm leading-relaxed custom-scrollbar shadow-inner scrollbar-clean"
-              placeholder="Digite aqui como a IA deve se comportar, o que ela pode ou não fazer..."
+             </label>
+             <textarea
+              className="flex-1 w-full bg-slate-50 border border-slate-200 p-4 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none resize-none text-sm leading-relaxed custom-scrollbar shadow-inner"
+              placeholder="Digite o prompt do sistema..."
               value={formData['context'] || ''}
               onChange={(e) => handleChange('context', e.target.value)}
             />
@@ -132,7 +131,7 @@ export function TemplateForm({
   }
 
   // -----------------------------------------------------------------------
-  // MODO 2: PADRÃO (Integrações Normais)
+  // MODO 2: PADRÃO (Integrações Legado - Mantido igual)
   // -----------------------------------------------------------------------
   return (
     <form className="space-y-4 mb-6">
