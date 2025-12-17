@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -13,7 +12,7 @@ import {
   Cpu
 } from 'lucide-react'; 
 
-import { templates } from '../../data/templatesIas';
+import { templates } from '../../data/templatesIAs';
 import { TemplateForm } from '../../components/TemplateForm';
 
 // CORREÇÃO 3: Movemos a constante IAs para fora do componente.

@@ -1,16 +1,17 @@
 // src/pages/Main/App.tsx
 import { Navigate, Route, Routes } from 'react-router-dom';
 import './App.scss';
+
 import Header from '../../components/Header/Header';
-import Integrations from '../Integrations/Integrations';
+import { PkgGenerator } from '../../pages/Aplications/PkgGenerator'; 
+import Integrations from '../Integrations/Integrations'; 
 import Automations from '../Automations/Automations';
 import Uras from '../uras/Uras';
-import { PkgGenerator } from '../Aplications/PkgGenerator';
 import AiPage from '../AiPage/AiPage';
 
-// 1. Importe o Contexto E o Popup
+// 5. Contexto e Popup
 import { GenerationProvider } from '../../context/GenerationContext';
-import { GlobalStatusPopup } from '../../components/GlobalStatusPopup'; // Ajuste o caminho conforme sua pasta
+import { GlobalStatusPopup } from '../../components/GlobalStatusPopup';
 
 export default function App() {
   const token = localStorage.getItem('authToken');
