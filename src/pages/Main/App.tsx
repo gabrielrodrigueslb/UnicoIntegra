@@ -2,11 +2,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import './App.scss';
 import Header from '../../components/Header/Header';
-import Integrations from '../integrations/integrations';
+import Integrations from '../Integrations/Integrations';
 import Automations from '../Automations/Automations';
 import Uras from '../uras/Uras';
-import { PkgGenerator } from '../aplications/PkgGenerator';
-import AiPage from '../aiPage/AiPage';
+import { PkgGenerator } from '../Aplications/PkgGenerator';
+import AiPage from '../AiPage/AiPage';
 
 // 1. Importe o Contexto E o Popup
 import { GenerationProvider } from '../../context/GenerationContext';
