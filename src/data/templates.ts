@@ -96,6 +96,15 @@ export const templates = {
       {label:'API Key', key: 'apikey'},
       {label:'URL da instância', key: 'url'}
     ]
-  }
+  },
+  transcricao_de_receitas: {
+    name: 'IA - Transcrição de receita',
+    file: 'transcricao_de_receita.txt',
+    banner: '/unico.png',
+    description: 'Ferramenta de IA para transcrever receita.',
+    type: 'Ferramenta de IA',
+    active:true,
+    fields: []
+  },
 
 };

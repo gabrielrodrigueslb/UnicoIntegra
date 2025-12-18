@@ -12,6 +12,7 @@ import AiPage from '../AiPage/AiPage';
 // 5. Contexto e Popup
 import { GenerationProvider } from '../../context/GenerationContext';
 import { GlobalStatusPopup } from '../../components/GlobalStatusPopup';
+import Databases from '../Databases/Databases';
 
 export default function App() {
   const token = localStorage.getItem('authToken');
@@ -33,7 +34,7 @@ export default function App() {
             <Route path="integrations" element={<Integrations />} />
             <Route path="automations" element={<Automations />} />
             <Route path="iaPage" element={<AiPage />} />
-            <Route path="uras" element={<Uras />} />
+            <Route path="databases" element={<Databases />} />
             <Route path="extensions" element={<Uras />} />
           </Routes>
 
