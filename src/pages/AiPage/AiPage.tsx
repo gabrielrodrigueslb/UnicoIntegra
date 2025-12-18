@@ -86,7 +86,7 @@ export default function AiPage() {
     setErrorMessage('');
 
     try {
-      const baseUrl = import.meta.env.VITE_URLBASE || 'http://localhost:4000';
+      const baseUrl = import.meta.env.VITE_URLBASE || 'https://unicocontato.tech';
       
       const commonPath = '/api/ia/create-ai';
       const endpointSuffix = template?.endpoint || '';
