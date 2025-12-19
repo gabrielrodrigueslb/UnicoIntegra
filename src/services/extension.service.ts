@@ -29,7 +29,8 @@ export interface LicenseData {
   config_id: number;
   is_active: boolean;
   created_at: string;
-  configs?: ConfigData; // O backend traz aninhado
+  activated_machine_id: string | null;
+  configs?: ConfigData;
 }
 
 export interface LicenseListResponse {
@@ -100,3 +101,7 @@ export async function deleteLicense(license_key: string) {
   return response.data;
 }
 
+export async function unbindLicense(license_key: string) {
+  const response = await apiExtensions.post('/v1/license/unbind', { license_key });
+  return response.data;
+}
