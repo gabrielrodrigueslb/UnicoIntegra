@@ -14,6 +14,7 @@ export default function Header() {
   const navigate = useNavigate();
   function handleLogout() {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('username');
     navigate('/'); // Redireciona para a página de login
   }
 

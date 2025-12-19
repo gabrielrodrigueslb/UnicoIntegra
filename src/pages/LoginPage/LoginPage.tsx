@@ -27,9 +27,11 @@ export default function LoginPage() {
 
     try {
       const apiUrl =
-        'https://ambientesdetesteunicocontato.atenderbem.com/api/login';
+        'https://ambientesdetesteunicocontato.atenderbem.com/login';
       const response = await axios.post(apiUrl, { username, password, code });
-      localStorage.setItem('authToken', response.data.token);
+      console.log(response.data)
+       localStorage.setItem('authToken', response.data.token);
+       localStorage.setItem('username',response.data.user.fullname )
 
       // Redireciona após login bem-sucedido
       navigate('/main');
