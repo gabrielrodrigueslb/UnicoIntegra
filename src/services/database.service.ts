@@ -23,9 +23,9 @@ export async function getDatabases(page = 1, limit = 9, search = '') {
             page,
             limit,
             search
-        }, headers:{
+        }/* , headers:{
             'x-api-key': import.meta.env.VITE_ADMIN_API_KEY,
-        }
+        } */
     });
     return response.data;
 }
@@ -35,9 +35,9 @@ export async function createDatabase(name: string) {
         'api/databases/createDatabase', // URL completa conforme sua rota
         { name }, // Body do POST
         {
-            headers: {
+            /* headers: {
                 'x-api-key': import.meta.env.VITE_ADMIN_API_KEY,
-            }
+            } */
         }
     );
     return response.data;
