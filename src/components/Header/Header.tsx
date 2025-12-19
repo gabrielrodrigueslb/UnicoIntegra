@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'; 
 import { MdLogout } from 'react-icons/md';
 import './Header.scss';
+import { BsPuzzle } from 'react-icons/bs';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -23,9 +24,10 @@ export default function Header() {
     { path: '/main', icon: <AiOutlineHome /> },
     { path: '/main/aplications', icon: <AiOutlineAppstoreAdd/> },
     { path: '/main/integrations', icon: <GrIntegration /> },
+    { path: '/main/extensions', icon: <BsPuzzle /> },
     { path: '/main/iaPage', icon: <Bot  /> },
     { path: '/main/databases', icon: < Database/> },
-/*     { path: '/main/extensions', icon: <GrIntegration  /> }, */
+
   ];
 
   return (
