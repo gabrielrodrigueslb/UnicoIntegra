@@ -4,7 +4,7 @@ import { AiOutlineHome } from 'react-icons/ai';
 /* import { TbSettingsAutomation } from "react-icons/tb";
  */import { AiOutlineAppstoreAdd } from "react-icons/ai";
 import { 
-  Bot, Database
+  Cpu, Database
 } from 'lucide-react'; 
 import { MdLogout } from 'react-icons/md';
 import './Header.scss';
@@ -22,11 +22,12 @@ export default function Header() {
 
   const menuItems = [
     { path: '/main', icon: <AiOutlineHome /> },
+    { path: '/main/databases', icon: < Database/> },
     { path: '/main/aplications', icon: <AiOutlineAppstoreAdd/> },
     { path: '/main/integrations', icon: <GrIntegration /> },
     { path: '/main/extensions', icon: <BsPuzzle /> },
-    { path: '/main/iaPage', icon: <Bot  /> },
-    { path: '/main/databases', icon: < Database/> },
+    { path: '/main/iaPage', icon: <Cpu  /> },
+    
 
   ];
 

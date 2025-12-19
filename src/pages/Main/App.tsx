@@ -3,8 +3,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import './App.scss';
 
 import Header from '../../components/Header/Header';
-import { PkgGenerator } from '../Aplications/PkgGenerator'; 
-import Integrations from '../Integrations/Integrations'; 
+import { PkgGenerator } from '../Aplications/PkgGenerator';
+import Integrations from '../Integrations/Integrations';
 import Automations from '../Automations/Automations';
 import AiPage from '../AiPage/AiPage';
 
@@ -13,6 +13,7 @@ import { GenerationProvider } from '../../context/GenerationContext';
 import { GlobalStatusPopup } from '../../components/GlobalStatusPopup';
 import Databases from '../Databases/Databases';
 import ExtensionManager from '../ExtensionManager/ExtensionManager';
+import Home from '../Home/Home';
 
 export default function App() {
   const token = localStorage.getItem('authToken');
@@ -29,8 +30,9 @@ export default function App() {
         {/* O Provider envolve TUDO nessa seção */}
         <GenerationProvider>
           <Routes>
+            <Route path="/" element={<Navigate to="home" replace />} />
+            <Route path="home" element={<Home />} />
             <Route path="aplications" element={<PkgGenerator />} />
-            {/* <Route path="pkginstaller" element={} /> */}
             <Route path="integrations" element={<Integrations />} />
             <Route path="automations" element={<Automations />} />
             <Route path="iaPage" element={<AiPage />} />
