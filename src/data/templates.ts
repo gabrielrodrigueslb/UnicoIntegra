@@ -54,8 +54,8 @@ export const templates = {
     type: 'integração',
     active:true,
     fields: [
-      { label: 'Nome do cliente', key: 'nomecliente' },
-      { label: 'ClientId:ClientSecret', key: 'clientcode' },
+      { label: 'Nome do cliente', key: 'Cliente' },
+      { label: 'Basic (ClientId:ClientSecret)', key: 'autenticacao' },
     ],
   },
   Cielo_webhook: {
