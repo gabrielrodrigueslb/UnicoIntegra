@@ -6,6 +6,7 @@ import { Search, X, Filter, Puzzle } from 'lucide-react'; // Instale: npm i luci
 import { templates } from '../../data/templates.ts';
 import { TemplateForm } from '../../components/TemplateForm.tsx';
 import { IVRGenerator } from '../../components/IVRGenerator.tsx';
+import { IntegrationPreviewModal } from '../../components/IntegrationPreviewModal.tsx';
 
 interface ITemplate {
   name: string;
@@ -22,6 +23,8 @@ export default function Integrations() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -48,6 +51,16 @@ export default function Integrations() {
     // Bloqueia scroll do body quando modal abre
     document.body.style.overflow = 'hidden';
   }
+  function handleOpenPreview(key: string) {
+    setSelectedTemplate(key);
+    setPreviewOpen(true);
+    document.body.style.overflow = 'hidden';
+  }
+
+  function handleContinueInstall() {
+    setPreviewOpen(false);
+    setInstallOpen(true);
+  }
 
   function handleCloseModal() {
     setOpenModal(false);
@@ -58,7 +71,7 @@ export default function Integrations() {
     }, 200);
     document.body.style.overflow = 'auto';
   }
-console.log(selectedTemplate)
+  console.log(selectedTemplate);
   return (
     <div className="flex flex-col h-screen max-h-screen bg-gray-50 overflow-hidden font-sans text-slate-800">
       {/* --- HEADER --- */}
@@ -96,7 +109,7 @@ console.log(selectedTemplate)
             {filteredTemplates.map(([key, t]) => (
               <div
                 key={key}
-                onClick={() => handleOpenModal(key)}
+                onClick={() => handleOpenPreview(key)}
                 className={`
                   group relative flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm 
                   hover:shadow-xl hover:border-blue-300 transition-all duration-300 cursor-pointer overflow-hidden
@@ -171,8 +184,19 @@ console.log(selectedTemplate)
         )}
       </main>
 
+      {template && previewOpen && (
+        <IntegrationPreviewModal
+          template={template}
+          onClose={() => {
+            setPreviewOpen(false);
+            document.body.style.overflow = 'auto';
+          }}
+          onContinue={handleContinueInstall}
+        />
+      )}
+
       {/* --- MODAL --- */}
-      {template && openModal && (
+      {template && installOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
           role="dialog"
