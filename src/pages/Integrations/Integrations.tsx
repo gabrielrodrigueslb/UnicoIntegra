@@ -58,7 +58,7 @@ export default function Integrations() {
     }, 200);
     document.body.style.overflow = 'auto';
   }
-
+console.log(selectedTemplate)
   return (
     <div className="flex flex-col h-screen max-h-screen bg-gray-50 overflow-hidden font-sans text-slate-800">
       {/* --- HEADER --- */}

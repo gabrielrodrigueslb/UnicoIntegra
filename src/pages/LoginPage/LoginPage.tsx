@@ -93,7 +93,6 @@ export default function LoginPage() {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="Digite seu código de 2FA"
-              required
               disabled={loading}
             />
           </div>
