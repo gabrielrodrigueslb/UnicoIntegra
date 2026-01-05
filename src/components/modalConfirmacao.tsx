@@ -18,7 +18,7 @@ export default function ModalConfirmacao({
 }: ModalProps) {
   return (
     <div className="fixed top-0 left-0 w-screen h-screen bg-black/70 z-50 flex items-center justify-center backdrop-blur-[2px] transition-opacity">
-      <div className="bg-background rounded-lg shadow-lg flex flex-col p-6 w-96 text-center justify-center">
+      <div className="bg-background rounded-lg shadow-lg flex flex-col p-6 max-w-110 text-center justify-center">
         <span className="bg-amber-200/70 p-2 self-center rounded-2xl mb-3">
           <CircleQuestionMark className="text-amber-400" size={50} />
         </span>
@@ -26,7 +26,7 @@ export default function ModalConfirmacao({
           Confirmar ação
         </h2>
 
-        <div className="mb-6 text-gray-600 ">
+        <div className="mb-6 text-gray-600 overflow-hidden">
           {description || 'Essa ação não poderá ser desfeita. Deseja continuar?'}
         </div>
 

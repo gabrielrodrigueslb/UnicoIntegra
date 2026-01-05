@@ -101,9 +101,9 @@ export function CreateInstanceForm({
             loading={loading}
             // Agora passamos JSX com as tags strong
             description={
-              <p>Tem certeza que deseja criar o cliente{' '}
+              <p className='line-clamp-3'>Tem certeza que deseja criar o cliente{' '}
                 <b>{formData.client_name}</b> da instância{' '}
-                <b>{formData.instance_Url}</b>?</p>
+                <b className='line-clamp-3'>{formData.instance_Url}</b>?</p>
             }
             confirmText={'Criar'}
             showModal={() => setShowModal(false)}

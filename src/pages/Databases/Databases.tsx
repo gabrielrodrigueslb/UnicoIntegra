@@ -342,7 +342,7 @@ export default function Databases() {
                   disabled={isCreating}
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  O nome será higienizado automaticamente (apenas minúsculas e underscores).
+                  O nome será higienizado automaticamente (apenas minúsculas, números, hífens e underlines).
                 </p>
               </div>
 

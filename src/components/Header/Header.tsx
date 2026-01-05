@@ -40,7 +40,7 @@ export default function Header() {
             {menuItems.map((item, index) => (
               <Link to={item.path}>
               <li
-                className={`p-3.5 bg-gray-950 text-white rounded-full text-2xl cursor-pointer ${item.path == location.pathname ? "active": ""} hover:bg-(--color-primary)`}
+                className={`p-3.5 bg-gray-950 text-white rounded-full text-2xl cursor-pointer transition-colors duration-150 ${item.path == location.pathname ? "active": ""}`}
                 key={index}
               >
                {item.icon}

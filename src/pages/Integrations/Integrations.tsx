@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Filter, Puzzle } from 'lucide-react'; // Instale: npm i lucide-react
+import { Search, X, Filter, Puzzle } from 'lucide-react';
 
 import { templates } from '../../data/templates.ts';
 import { TemplateForm } from '../../components/TemplateForm.tsx';
@@ -18,24 +19,21 @@ interface ITemplate {
   type?: string;
 }
 
+type ModalStep = 'none' | 'preview' | 'install';
+
 export default function Integrations() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [formData, setFormData] = useState<Record<string, string>>({});
-  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [modalStep, setModalStep] = useState<ModalStep>('none');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [installOpen, setInstallOpen] = useState(false);
-
   const navigate = useNavigate();
 
-  // 🔹 Auth Check
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (!token) navigate('/');
   }, [navigate]);
 
   const filteredTemplates = useMemo(() => {
-    // Cast "as Record..." resolve os erros de 'description' e 'type' faltantes
     return Object.entries(templates as Record<string, ITemplate>).filter(
       ([, t]) => t.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
@@ -45,190 +43,143 @@ export default function Integrations() {
     ? (templates[selectedTemplate as keyof typeof templates] as ITemplate)
     : null;
 
-  function handleOpenModal(key: string) {
-    setSelectedTemplate(key);
-    setOpenModal(true);
-    // Bloqueia scroll do body quando modal abre
-    document.body.style.overflow = 'hidden';
-  }
   function handleOpenPreview(key: string) {
     setSelectedTemplate(key);
-    setPreviewOpen(true);
+    setModalStep('preview');
     document.body.style.overflow = 'hidden';
   }
 
   function handleContinueInstall() {
-    setPreviewOpen(false);
-    setInstallOpen(true);
+    setModalStep('install');
   }
 
   function handleCloseModal() {
-    setOpenModal(false);
+    setModalStep('none');
+    document.body.style.overflow = 'auto';
     setTimeout(() => {
-      // Pequeno delay para limpar dados após animação (opcional)
       setSelectedTemplate('');
       setFormData({});
     }, 200);
-    document.body.style.overflow = 'auto';
   }
-  console.log(selectedTemplate);
+
   return (
-    <div className="flex flex-col h-screen max-h-screen bg-gray-50 overflow-hidden font-sans text-slate-800">
-      {/* --- HEADER --- */}
-      <header className="px-8 py-6 bg-white border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-10">
+    <div className="flex flex-col h-screen max-h-screen bg-background overflow-hidden font-sans text-foreground">
+      {/* HEADER */}
+      <header className="px-8 py-6 bg-card border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-10">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Puzzle className="w-6 h-6 text-blue-600" />
-            Catálogo de Integrações
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Puzzle className="w-6 h-6 text-primary" /> Catálogo de Integrações
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Conecte suas ferramentas favoritas e automatize seus fluxos.
+          <p className="text-muted-foreground text-sm mt-1">
+            Conecte suas ferramentas favoritas.
           </p>
         </div>
-
-        {/* Barra de Busca */}
         <div className="relative w-full md:w-96">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <input
             type="text"
-            className="block w-full pl-11 pr-3 py-2 border border-gray-300 rounded-full leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 sm:text-sm"
-            placeholder="Buscar integração (ex: WhatsApp, CRM...)"
+            className="block w-full pl-10 pr-3 py-2 border border-border rounded-lg bg-muted focus:bg-card focus:ring-2 focus:ring-primary transition sm:text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            placeholder="Buscar integração..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </header>
 
-      {/* --- MAIN CONTENT --- */}
+      {/* CONTENT */}
       <main className="flex-1 overflow-y-auto p-8">
-        {/* Grid de Integrações */}
         {filteredTemplates.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredTemplates.map(([key, t]) => (
               <div
                 key={key}
                 onClick={() => handleOpenPreview(key)}
-                className={`
-                  group relative flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm 
-                  hover:shadow-xl hover:border-blue-300 transition-all duration-300 cursor-pointer overflow-hidden
-                  ${selectedTemplate === key ? 'ring-2 ring-blue-500' : ''}
-                `}
+                className={`group relative flex flex-col bg-card rounded-xl border border-border shadow-sm hover:shadow-xl hover:border-primary/50 transition-all cursor-pointer overflow-hidden ${
+                  selectedTemplate === key ? 'ring-2 ring-primary' : ''
+                }`}
               >
-                {/* Banner da Integração */}
-                <div className="h-40 w-full overflow-hidden bg-gray-100 relative">
+                <div className="h-40 w-full overflow-hidden bg-muted relative">
                   {t.banner ? (
                     <div
                       className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                       style={{ backgroundImage: `url(${t.banner})` }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                       <Puzzle className="w-12 h-12" />
                     </div>
                   )}
-                  {/* Badge de Status (Opcional) */}
                   <div
-                    className={`absolute top-3 right-3  backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold shadow-sm uppercase ${
-                      t.active == true
-                        ? 'bg-white/90 text-green-600'
+                    className={`absolute top-3 right-3 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold shadow-sm uppercase ${
+                      t.active
+                        ? 'bg-background/90 text-green-600 dark:text-green-400'
                         : 'bg-red-200 text-red-500'
                     }`}
                   >
-                    {t.active == true ? 'Ativo' : 'Inativo'}
+                    {t.active ? 'Ativo' : 'Inativo'}
                   </div>
                 </div>
-
-                {/* Conteúdo do Card */}
                 <div className="p-5 flex flex-col flex-1">
-                  <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
                     {t.name}
                   </h3>
-                  <p className="text-sm text-slate-500 line-clamp-3 mb-4">
-                    {/* Fallback description se não houver no objeto */}
-                    {t.description ??
-                      'Integre e automatize processos com esta ferramenta para aumentar sua produtividade.'}
+                  <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                    {t.description ?? 'Integre e automatize processos.'}
                   </p>
-
-                  <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       {t.type || 'Automação'}
                     </span>
-                    {t.active == true ? (
-                      <button className="text-sm font-medium text-blue-600">
-                        Instalar &rarr;
-                      </button>
-                    ) : (
-                      <button
-                        className="text-sm font-medium text-gray-400"
-                        disabled
-                      >
-                        Instalar &rarr;
-                      </button>
-                    )}
+                    <button
+                      className={`text-sm font-medium ${
+                        t.active ? 'text-primary' : 'text-muted-foreground'
+                      }`}
+                      disabled={!t.active}
+                    >
+                      Instalar &rarr;
+                    </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          /* Empty State */
           <div className="h-full flex flex-col items-center justify-center text-center opacity-60 mt-10">
-            <Filter className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">
+            <Filter className="w-16 h-16 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground">
               Nenhuma integração encontrada
             </h3>
-            <p className="text-gray-500">Tente buscar por outro termo.</p>
           </div>
         )}
       </main>
 
-      {template && previewOpen && (
+      {/* MODALS */}
+      {template && modalStep === 'preview' && (
         <IntegrationPreviewModal
           template={template}
-          onClose={() => {
-            setPreviewOpen(false);
-            document.body.style.overflow = 'auto';
-          }}
+          onClose={handleCloseModal}
           onContinue={handleContinueInstall}
         />
       )}
 
-      {/* --- MODAL --- */}
-      {template && installOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-          role="dialog"
-          aria-modal="true"
-        >
-          {/* Backdrop Blur */}
-          <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
-            onClick={handleCloseModal}
-          />
-
-          {/* Modal Content */}
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+      {template && modalStep === 'install' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="relative bg-card rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/50">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                 Instalar {template.name}
               </h2>
               <button
                 onClick={handleCloseModal}
-                className="p-2 rounded-full hover:bg-gray-200 text-gray-500 transition-colors"
+                className="p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            {/* Modal Body (Scrollable) */}
             <div className="p-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Lado Esquerdo: Formulário */}
                 <div className="space-y-6">
-                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-200">
                     Preencha os dados abaixo para gerar as credenciais da
                     integração.
                   </div>
@@ -238,10 +189,7 @@ export default function Integrations() {
                     setFormData={setFormData}
                   />
                 </div>
-
-                {/* Lado Direito: Painel de Status */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full min-h-[400px]">
-                  {/* O componente agora controla todo o espaço interno */}
+                <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden h-full min-h-[400px]">
                   <IVRGenerator
                     template={template}
                     formData={formData}

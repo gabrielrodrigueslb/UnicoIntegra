@@ -23,7 +23,7 @@ button {
    Design Tokens (fonte da verdade)
 ================================ */
 :root {
-  --primary: oklch(0.17 0.04 265); /* equivalente ao #080a3a */
+  --primary:  #145efc; /* equivalente ao #080a3a */
   --primary-foreground: oklch(1 0 0); /* branco */
 
   --background: oklch(0.97 0 0); /* #f3f4f6 */
@@ -36,6 +36,7 @@ button {
   --background: oklch(0.14 0.02 265);
   --foreground: oklch(0.95 0 0);
   --primary: oklch(0.6 0.2 265);
+    --border: oklch(0.85 0 0);
 }
 
 /* ================================
