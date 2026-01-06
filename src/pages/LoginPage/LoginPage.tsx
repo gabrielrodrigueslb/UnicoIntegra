@@ -29,8 +29,10 @@ export default function LoginPage() {
       const apiUrl =
         'https://ambientesdetesteunicocontato.atenderbem.com/login';
       const response = await axios.post(apiUrl, { username, password, code });
-      console.log(response.data)
+      
        localStorage.setItem('authToken', response.data.token);
+       localStorage.setItem('authUsername', username);
+       localStorage.setItem('authPassword', password);
        localStorage.setItem('username',response.data.user.fullname )
 
       // Redireciona após login bem-sucedido
@@ -94,6 +96,7 @@ export default function LoginPage() {
               onChange={(e) => setCode(e.target.value)}
               placeholder="Digite seu código de 2FA"
               disabled={loading}
+              required
             />
           </div>
           <button type="submit" className="button" disabled={loading}>

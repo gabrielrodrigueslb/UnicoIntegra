@@ -15,6 +15,9 @@ export default function Header() {
   function handleLogout() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('username');
+    localStorage.removeItem('authUsername');
+    localStorage.removeItem('authPassword');
+
     navigate('/'); // Redireciona para a página de login
   }
 
@@ -34,9 +37,9 @@ export default function Header() {
 
   return (
     <>
-      <header className="header sm:h-screen px-4 bg-background">
-        <nav className="navbar flex-row sm:flex-col flex justify-between h-full items-end">
-          <ul className="nav-list flex-row sm:flex-col flex gap-3">
+      <header className="header h-screen px-4 bg-background">
+        <nav className="navbar flex-col flex justify-between h-full items-end">
+          <ul className="nav-list flex-col flex gap-3">
             {menuItems.map((item, index) => (
               <Link to={item.path}>
               <li

@@ -2,16 +2,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { 
-  Bot, 
-  Search, 
-  Sparkles, 
-  Brain, 
-  X, 
-  CheckCircle, 
+import {
+  Bot,
+  Search,
+  Sparkles,
+  Brain,
+  X,
+  CheckCircle,
   AlertTriangle,
-  Cpu
-} from 'lucide-react'; 
+  Cpu,
+} from 'lucide-react';
 
 // Importa o objeto templates refatorado
 import { templates } from '../../data/templates_ia';
@@ -23,13 +23,15 @@ const IAs = templates;
 export default function AiPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [formData, setFormData] = useState<Record<string, string>>({});
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [openModal, setOpenModal] = useState<boolean>(false);
-  
-  const [processStatus, setProcessStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const [processStatus, setProcessStatus] = useState<
+    'idle' | 'loading' | 'success' | 'error'
+  >('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,9 +40,11 @@ export default function AiPage() {
   }, [navigate]);
 
   const filteredIAs = useMemo(() => {
-    return Object.entries(IAs).filter(([, t]) => 
-      t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (t.description && t.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    return Object.entries(IAs).filter(
+      ([, t]) =>
+        t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (t.description &&
+          t.description.toLowerCase().includes(searchTerm.toLowerCase())),
     );
   }, [searchTerm]);
 
@@ -50,13 +54,13 @@ export default function AiPage() {
 
   function handleOpenModal(key: string) {
     setSelectedTemplate(key);
-    
+
     // Pega o template selecionado para preencher o contexto padrão
     const selectedIA = IAs[key as keyof typeof IAs];
 
     setFormData({
       name: 'IA - Unico',
-      context: selectedIA?.context || '', 
+      context: selectedIA?.context || '',
       // Não precisamos inicializar dbName, queueId, etc. Eles serão criados dinamicamente se existirem no template
     });
 
@@ -81,36 +85,43 @@ export default function AiPage() {
   }
 
   // --- NOVA LÓGICA DE ENVIO GENÉRICA ---
- const handleCreateIa = async () => {
+  const handleCreateIa = async () => {
     setProcessStatus('loading');
     setErrorMessage('');
 
     try {
-      const baseUrl = import.meta.env.VITE_URLBASE || 'https://unicocontato.tech';
-      
+      const baseUrl =
+        import.meta.env.VITE_URLBASE || 'https://unicocontato.tech';
+
       const commonPath = '/api/ia/create-ai';
       const endpointSuffix = template?.endpoint || '';
       const apiUrl = `${baseUrl}${commonPath}${endpointSuffix}`;
+      const username = localStorage.getItem('authUsername');
+      const password = localStorage.getItem('authPassword');
 
       const apiBody = {
-        ...formData, 
-        instance: normalizeInstanceUrl(formData.instance), 
-        name: formData.name,       
+        ...formData,
+        instance: normalizeInstanceUrl(formData.instance),
+        name: formData.name,
+        username: username,
+        password: password,
         context: formData.context,
         code: formData.code,
       };
 
       console.log(`Enviando para ${apiUrl}:`, apiBody);
-      
+
       const response = await axios.post(apiUrl, apiBody);
       console.log('Resposta:', response.data);
 
       setProcessStatus('success');
-
     } catch (error: unknown) {
       console.error(error);
-      const err = error as any; 
-      const msg = err.response?.data?.message || err.message || 'Erro desconhecido ao criar IA.';
+      const err = error as any;
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        'Erro desconhecido ao criar IA.';
       setErrorMessage(msg);
       setProcessStatus('error');
     }
@@ -118,7 +129,6 @@ export default function AiPage() {
 
   return (
     <div className="flex flex-col h-screen max-h-screen bg-slate-50 overflow-hidden font-sans text-slate-800">
-      
       {/* HEADER */}
       <header className="px-8 py-6 bg-white border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-10">
         <div>
@@ -127,7 +137,8 @@ export default function AiPage() {
             Agentes de IA
           </h1>
           <p className="text-slate-500 text-sm mt-1">
-            Crie e gerencie inteligências artificiais para automatizar seu atendimento.
+            Crie e gerencie inteligências artificiais para automatizar seu
+            atendimento.
           </p>
         </div>
 
@@ -161,7 +172,7 @@ export default function AiPage() {
               >
                 <div className="h-44 w-full overflow-hidden bg-gray-100 relative border-b border-gray-100">
                   {t.banner ? (
-                    <div 
+                    <div
                       className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                       style={{ backgroundImage: `url(${t.banner})` }}
                     />
@@ -171,7 +182,10 @@ export default function AiPage() {
                     </div>
                   )}
                   <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2 py-1 rounded-md text-xs font-bold text-violet-700 shadow-sm flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" /> {'type' in t && t.type === 'assistente' ? "AI Assistant" : "AI Model"}
+                    <Sparkles className="w-3 h-3" />{' '}
+                    {'type' in t && t.type === 'assistente'
+                      ? 'AI Assistant'
+                      : 'AI Model'}
                   </div>
                 </div>
 
@@ -180,9 +194,10 @@ export default function AiPage() {
                     {t.name}
                   </h3>
                   <p className="text-sm text-slate-500 line-clamp-3 mb-4 leading-relaxed">
-                    {t.description || "Modelo de inteligência artificial avançado."}
+                    {t.description ||
+                      'Modelo de inteligência artificial avançado.'}
                   </p>
-                  
+
                   <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
                     <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                       <Cpu className="w-3 h-3" /> V 1.0
@@ -198,7 +213,9 @@ export default function AiPage() {
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-center opacity-60 mt-10">
             <Bot className="w-20 h-20 text-gray-300 mb-4" />
-            <h3 className="text-xl font-medium text-gray-900">Nenhum modelo encontrado</h3>
+            <h3 className="text-xl font-medium text-gray-900">
+              Nenhum modelo encontrado
+            </h3>
             <p className="text-gray-500">Tente ajustar sua busca.</p>
           </div>
         )}
@@ -206,22 +223,32 @@ export default function AiPage() {
 
       {/* MODAL */}
       {template && openModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={handleCloseModal} />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+            onClick={handleCloseModal}
+          />
 
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
-            
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/80">
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                {processStatus === 'idle' ? `Configurar ${template.name}` : 'Status da Instalação'}
+                {processStatus === 'idle'
+                  ? `Configurar ${template.name}`
+                  : 'Status da Instalação'}
               </h2>
-              <button onClick={handleCloseModal} className="p-2 rounded-full hover:bg-gray-200 text-gray-500 transition-colors">
+              <button
+                onClick={handleCloseModal}
+                className="p-2 rounded-full hover:bg-gray-200 text-gray-500 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6 py-3 overflow-y-auto custom-scrollbar">
-              
               {/* STATUS: FORMULÁRIO */}
               {processStatus === 'idle' && (
                 <div className="space-y-6">
@@ -229,7 +256,9 @@ export default function AiPage() {
                     <Bot className="w-6 h-6 text-violet-600 shrink-0 mt-0.5" />
                     <div className="text-sm text-violet-900">
                       <p className="font-semibold">Defina o comportamento</p>
-                      <p className="opacity-80">Preencha os campos abaixo para configurar o agente.</p>
+                      <p className="opacity-80">
+                        Preencha os campos abaixo para configurar o agente.
+                      </p>
                     </div>
                   </div>
 
@@ -237,11 +266,11 @@ export default function AiPage() {
                     template={template}
                     formData={formData}
                     setFormData={setFormData}
-                    isIaSetup={true} 
+                    isIaSetup={true}
                   />
-                  
+
                   <div className="pt-4 border-t border-gray-100">
-                    <button 
+                    <button
                       onClick={handleCreateIa}
                       className="w-full py-3.5 rounded-xl font-semibold text-white bg-violet-600 hover:bg-violet-700 hover:-translate-y-0.5 transition-all shadow-lg shadow-violet-200 flex items-center justify-center gap-2"
                     >
@@ -262,7 +291,9 @@ export default function AiPage() {
                       <Brain className="w-10 h-10 text-violet-500 animate-pulse" />
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-800">Criando Agente...</h3>
+                  <h3 className="text-xl font-bold text-slate-800">
+                    Criando Agente...
+                  </h3>
                   <p className="text-slate-500 mt-2 max-w-xs">
                     Estamos configurando o contexto e gerando a instância.
                   </p>
@@ -275,11 +306,17 @@ export default function AiPage() {
                   <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
                     <CheckCircle className="w-10 h-10 text-green-600" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900">Sucesso!</h3>
+                  <h3 className="text-2xl font-bold text-slate-900">
+                    Sucesso!
+                  </h3>
                   <p className="text-slate-600 mt-2 mb-8 max-w-sm">
-                    Sua IA <strong>{formData.name}</strong> foi criada e já está pronta.
+                    Sua IA <strong>{formData.name}</strong> foi criada e já está
+                    pronta.
                   </p>
-                  <button onClick={handleCloseModal} className="w-full max-w-xs py-3 rounded-xl font-semibold text-white bg-gray-900 hover:bg-gray-800 transition-all shadow-lg">
+                  <button
+                    onClick={handleCloseModal}
+                    className="w-full max-w-xs py-3 rounded-xl font-semibold text-white bg-gray-900 hover:bg-gray-800 transition-all shadow-lg"
+                  >
                     Fechar
                   </button>
                 </div>
@@ -291,21 +328,28 @@ export default function AiPage() {
                   <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6 border border-red-100">
                     <AlertTriangle className="w-10 h-10 text-red-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900">Falha na Criação</h3>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Falha na Criação
+                  </h3>
                   <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-lg text-red-700 text-sm max-w-md break-words w-full">
                     {errorMessage}
                   </div>
                   <div className="mt-8 flex gap-3 w-full max-w-xs">
-                    <button onClick={handleCloseModal} className="flex-1 py-3 rounded-xl font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                    <button
+                      onClick={handleCloseModal}
+                      className="flex-1 py-3 rounded-xl font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors"
+                    >
                       Cancelar
                     </button>
-                    <button onClick={() => setProcessStatus('idle')} className="flex-1 py-3 rounded-xl font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200">
+                    <button
+                      onClick={() => setProcessStatus('idle')}
+                      className="flex-1 py-3 rounded-xl font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200"
+                    >
                       Tentar de novo
                     </button>
                   </div>
                 </div>
               )}
-
             </div>
           </div>
         </div>

@@ -23,7 +23,7 @@ export default function App() {
   }
 
   return (
-    <main className="main">
+    <main className="main flex-row">
       <Header />
 
       <section className="w-full relative">

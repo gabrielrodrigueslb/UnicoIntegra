@@ -61,10 +61,14 @@ export function IVRGenerator({ template, formData, closeModal }: Props) {
       const instanceURL = formData['instanceURL'] || '';
       const sanitizedInstanceURL = instanceURL.replace(/\/$/, '');
       const code = formData['code'] || '';
+      const username = localStorage.getItem('authUsername')
+       const password = localStorage.getItem('authPassword')
 
       const ivrPayload = {
         instance: sanitizedInstanceURL,
         integrationData: JSON.parse(jsonString),
+        username: username,
+        password: password,
         code: code
       };
 
