@@ -34,9 +34,9 @@ export default function Header() {
 
   return (
     <>
-      <header className="header h-screen px-4">
-        <nav className="navbar flex flex-col justify-between h-full items-end">
-          <ul className="nav-list flex flex-col gap-3">
+      <header className="header sm:h-screen px-4 bg-background">
+        <nav className="navbar flex-row sm:flex-col flex justify-between h-full items-end">
+          <ul className="nav-list flex-row sm:flex-col flex gap-3">
             {menuItems.map((item, index) => (
               <Link to={item.path}>
               <li

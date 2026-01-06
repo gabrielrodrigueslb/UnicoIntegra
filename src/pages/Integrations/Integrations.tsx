@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -89,7 +89,7 @@ export default function Integrations() {
       {/* CONTENT */}
       <main className="flex-1 overflow-y-auto p-8">
         {filteredTemplates.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ">
             {filteredTemplates.map(([key, t]) => (
               <div
                 key={key}
@@ -111,12 +111,13 @@ export default function Integrations() {
                   )}
                   <div
                     className={`absolute top-3 right-3 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold shadow-sm uppercase ${
+                      t.active == false && t.type == 'Extensão' ? 'bg-blue-100 text-blue-700' :
                       t.active
                         ? 'bg-background/90 text-green-600 dark:text-green-400'
                         : 'bg-red-200 text-red-500'
                     }`}
                   >
-                    {t.active ? 'Ativo' : 'Inativo'}
+                    {t.active == false && t.type == 'Extensão' ? 'Extensão' : t.active ? 'Ativo' : 'Inativo'}
                   </div>
                 </div>
                 <div className="p-5 flex flex-col flex-1">
@@ -164,9 +165,9 @@ export default function Integrations() {
 
       {template && modalStep === 'install' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="relative bg-card rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="relative bg-card rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden bg-background">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/50">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-bold text-black/80 flex items-center gap-2">
                 Instalar {template.name}
               </h2>
               <button
@@ -179,7 +180,7 @@ export default function Integrations() {
             <div className="p-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-200">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-800">
                     Preencha os dados abaixo para gerar as credenciais da
                     integração.
                   </div>

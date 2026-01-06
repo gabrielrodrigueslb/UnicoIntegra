@@ -45,13 +45,13 @@ export function IntegrationPreviewModal({
               <h2 className="text-xl font-bold text-slate-900 leading-tight flex justify-center items-center gap-2">
                 {template.name}{' '}
                 <span
-                  className={`px-1 py-1 rounded-md text-[10px] font-bold uppercase ${
+                  className={`px-1 py-1 rounded-md text-[10px] font-bold uppercase ${template.active == false && template.type == 'Extensão' ? 'bg-blue-100 text-blue-700' :
                     template.active
                       ? 'bg-green-100 text-green-700'
                       : 'bg-red-100 text-red-600'
                   }`}
                 >
-                  {template.active ? 'Disponível' : 'Manutenção'}
+                  {template.active == false && template.type == 'Extensão' ? 'Extensão' : template.active ? 'Disponível' : 'Manutenção'}
                 </span>
               </h2>
               <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
@@ -123,7 +123,7 @@ export function IntegrationPreviewModal({
                       <h3 className="text-lg font-bold text-slate-900 mb-4">
                         Sobre a Integração
                       </h3>
-                      <p className="text-slate-600 leading-7 text-base">
+                      <p className="text-slate-600 leading-7 text-base whitespace-pre-line">
                         {template.longDescription || template.description}
                       </p>
                     </section>

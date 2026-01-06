@@ -24,9 +24,9 @@ button {
 ================================ */
 :root {
   --primary:  #145efc; /* equivalente ao #080a3a */
-  --primary-foreground: oklch(1 0 0); /* branco */
+  --primary-foreground: oklch(0.95 0 0); /* branco */
 
-  --background: oklch(0.97 0 0); /* #f3f4f6 */
+  --background: #fff; /* #f3f4f6 */
   --foreground: oklch(0.17 0.02 265);
 
   --border: oklch(0.85 0 0);

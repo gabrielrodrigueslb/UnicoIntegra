@@ -93,7 +93,7 @@ export function IVRGenerator({ template, formData, closeModal }: Props) {
   // --- RENDERIZAÇÃO DOS ESTADOS ---
 
   return (
-    <div className="h-full flex flex-col justify-between min-h-[300px]">
+    <div className="h-full flex flex-col justify-between min-h-[300px] bg-primary-foreground">
       
       {/* AREA DE STATUS CENTRAL */}
       <div className="flex-1 flex flex-col items-center justify-center text-center p-6">

@@ -1,6 +1,116 @@
 // src/data/templates.ts
 
 export const templates = {
+ 
+  alpha7extensao: {
+    name: 'Alpha7 - Extensão',
+    file: 'Alpha7_orcamento.txt',
+    banner: '/Alpha.png',
+    type: 'Extensão',
+    description: 'Realiza orçamentos com o estoque da loja via extensão.',
+    longDescription:
+      'Integração que permite realizar orçamentos para clientes diretamente pelo navegador com o mesmo estoque do ERP da Alpha 7, agilizando o atendimento e permitindo o fechamento de vendas de forma mais ágil e sem sair do sistema de atendimento.',
+    active: false,
+    videoUrl: 'https://drive.google.com/file/d/1BPQhsMIjoMVVbVfvLOHZIWZWFBy4PSnM/preview',
+    benefits: [
+      'Criação automática de orçamentos',
+      'Integração direta com ERP',
+      'Atendimento mais rápido',
+    ],
+    fields: [
+      { label: 'Banco de dados do cliente', key: 'Banco' },
+      { label: 'Licensa de ativação', key: 'Licensa' },
+    ],
+    steps: [
+  {
+    title: 'Recebimento da Solicitação',
+    content:
+      'Quando o cliente solicitar a integração, solicite as seguintes informações:\n\n- Quantas lojas serão integradas\n- Quais são as lojas\n\nExemplo: Farmácia X – Loja 1'
+  },
+  {
+    title: 'Criação do Banco de Dados',
+    content:
+      'Crie um banco de dados para o cliente na Aplicação.\n\nAtenção à nomenclatura:\n- Utilize apenas letras minúsculas, números ou underlines \n- Não utilize espaços ou caracteres especiais\n- Utilize o padrão snake_case\n\nExemplo correto: banco_da_drogaria_x'
+  },
+  {
+    title: 'Solicitação de Integração ao Alpha 7',
+    content:
+      'Preencha os dados abaixo com o nome do banco criado e solicite que o cliente abra um chamado junto ao suporte do Alpha 7:\n\n- Empresa terceira: Unico Contato\n- CNPJ: 42.926.765/0001-05\n- E-mail: unicoprogramacao@gmail.com\n- Tipo: Postgres\n- Banco de dados: NOME_DO_BANCO\n- Host: 145.223.27.100\n- Schema: public\n- Usuário: postgres\n- Senha: Unico@123'
+  },
+  {
+    title: 'Verificação da Sincronização',
+    content:
+      'Após a confirmação do Alpha 7, acesse o PostgreSQL e valide se as tabelas foram criadas:\n\n- out_embalagem\n- in_pedido\n- in_itempedido\n\nCaminho: Schemas > public > Tables'
+  },
+  {
+    title: 'Validação dos Dados de Estoque',
+    content:
+      'Abra a tabela out_embalagem e verifique se os produtos estão sendo carregados corretamente.\n\nResultado esperado: lista completa de produtos do estoque do cliente.'
+  },
+  {
+    title: 'Cadastro do Cliente e Configuração',
+    content:
+      'Acesse o menu "Gestão de Extensões" na plataforma e siga a ordem das abas:\n\n1. Aba "+ Cliente": Cadastre o Nome do Cliente e a URL da Instância.\n2. Aba "+ Config": Crie uma nova configuração vinculando a Instância criada, o Nome do Banco de Dados e o Client Token (Z-API).'
+  },
+  {
+    title: 'Geração da Licença de Acesso',
+    content:
+      'Ainda na Gestão de Extensões, vá para a aba "+ Licença":\n\n1. Selecione a Instância e a Configuração criadas anteriormente.\n2. Clique em "Gerar Chave de Licença".\n3. Copie a chave gerada na lista de licenças (botão de cópia ao lado da chave oculta).'
+  },
+  {
+    title: 'Instalação e Ativação',
+    content:
+      'Acesse a Chrome Web Store na máquina do cliente, instale a extensão Alpha 7 e cole a chave de licença copiada.\n\nNota: A licença será vinculada ao ID dessa máquina específica. Você pode monitorar o status "Ativo/Em uso" pelo painel.\n\n Extensão: https://chromewebstore.google.com/detail/alpha-7-extens%C3%A3o/ckhpdjpljgenhbmcglhefmbgnfpnaklb?utm_source=item-share-cb'
+  }
+]
+
+  },
+  
+  alpha7: {
+    name: 'Alpha7 - Orçamento',
+    file: 'Alpha7_orcamento.txt',
+    banner: '/Alpha.png',
+    type: 'Integração',
+    description: 'Busca de orçamentos criados no ERP Alpha 7',
+    longDescription:
+      'Esta integração utiliza um aplicativo intermediário instalado na infraestrutura do cliente. Ele conecta-se localmente ao banco de dados do Alpha 7 e expõe uma API segura na porta 12537 para que o Unico Contato consulte orçamentos em tempo real.',
+    active: true,
+    videoUrl: 'https://drive.google.com/file/d/1AinncMo9Wa7CeKP8b8lQxO7U99EZ4Lrj/preview',
+    benefits: [
+      'Leitura direta do banco de dados',
+      'Independe da API nativa do ERP',
+      'Resposta em tempo real',
+    ],
+    fields: [
+      { label: 'IP do Cliente', key: 'ip_do_cliente' },
+      { label: 'Authorization', key: 'Authorization' },
+      { label: 'Nome da empresa', key: 'nome_da_empresa' },
+    ],
+    steps: [
+      {
+        title: '1. Envio dos Requisitos Técnicos',
+        content: 'Acione o atalho "/Alpha 7 Orçamentos" no chat ou envie a mensagem padrão solicitando: IP Fixo/DNS, liberação da porta 12537, redirecionamento de porta e as credenciais do banco de dados (solicitadas ao suporte Alpha 7).',
+        alert: 'Peça que o cliente envie as credenciais do banco via FOTO, nunca em texto.'
+      },
+      {
+        title: '2. Configuração de Rede (Cliente)',
+        content: 'O cliente ou TI responsável deve configurar o modem/firewall para encaminhar conexões externas na porta 12537 para o IP local do servidor onde o sistema Alpha 7 roda.'
+      },
+      {
+        title: '3. Geração do Aplicativo',
+        content: 'Com as credenciais do banco em mãos, acesse o "Gerador de Pacotes" no sistema interno. Preencha o Host do Banco, Usuário, Senha e Caminho do Banco. Gere e baixe o arquivo .zip.',
+      },
+      {
+        title: '4. Instalação Remota',
+        content: 'Acesse o servidor do cliente via AnyDesk. Descompacte o arquivo gerado e execute o instalador/executável "Como Administrador". Certifique-se de que o serviço iniciou corretamente e o Firewall do Windows não está bloqueando o Node.js/Porta 12537.'
+      },
+      {
+        title: '5. Validação e Ativação',
+        content: 'No painel do Unico, insira o IP Externo do cliente seguido da porta (ex: http://200.200.200.1:12537) e a chave de acesso gerada. Teste a conexão.'
+      }
+    ]
+  },
+
   cashback: {
     name: 'Alpha7 - Cashback ativo',
     file: 'alpha7_cashback_ativo.txt',
@@ -30,47 +140,6 @@ export const templates = {
       {
         title: 'Instalação',
         content: 'Insira o IP no campo de configuração ao lado e clique em Instalar.'
-      }
-    ]
-  },
-
-  alpha7: {
-    name: 'Alpha7 - Orçamento',
-    file: 'Alpha7_orcamento.txt',
-    banner: '/Alpha.png',
-    type: 'Integração',
-    description: 'Busca de orçamentos criados no ERP Alpha 7.',
-    longDescription:
-      'Integração que permite consultar orçamentos criados pelo cliente diretamente no ERP Alpha 7, agilizando o atendimento e permitindo o fechamento de vendas automatizado.',
-    active: true,
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    benefits: [
-      'Busca automática de orçamentos',
-      'Integração direta com ERP',
-      'Atendimento mais rápido',
-    ],
-    fields: [
-      { label: 'IP do Cliente', key: 'ip_do_cliente' },
-      { label: 'Authorization', key: 'Authorization' },
-      { label: 'Nome da empresa', key: 'nome_da_empresa' },
-    ],
-    steps: [
-      {
-        title: 'Acesse as Configurações de API',
-        content: 'No painel administrativo do Alpha 7, vá até Configurações > Integrações > API.'
-      },
-      {
-        title: 'Gere o Token de Autorização',
-        content: 'Gere uma nova chave de API (Authorization Basic ou Bearer) e copie o código completo.',
-        code: 'Basic YTJxbj...=='
-      },
-      {
-        title: 'Identifique a Empresa',
-        content: 'Caso utilize multi-empresas, pegue o Nome exato da empresa conforme cadastrado no ERP.'
-      },
-      {
-        title: 'Preencha os Dados',
-        content: 'Cole o IP, o Token e o Nome da Empresa nos campos do formulário de instalação.'
       }
     ]
   },
@@ -163,11 +232,12 @@ export const templates = {
       'Crie links de pagamento Cielo e envie diretamente para seus clientes de forma rápida e segura através do fluxo de conversa.',
     type: 'Integração',
     active: true,
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://drive.google.com/file/d/1aMgPZcpb2XTANBKxlkNTvjiEbs27gYHp/preview',
     benefits: [
       'Pagamentos rápidos',
       'Integração segura',
       'Aceita cartões e Pix',
+      'Retorno de pagamento no chat'
     ],
     fields: [
       { label: 'Nome do cliente', key: 'Cliente' },

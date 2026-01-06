@@ -23,7 +23,7 @@ export default function App() {
   }
 
   return (
-    <main className="main flex">
+    <main className="main">
       <Header />
 
       <section className="w-full relative">

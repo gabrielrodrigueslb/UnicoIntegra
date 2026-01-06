@@ -39,11 +39,11 @@ export function TemplateForm({
   // -----------------------------------------------------------------------
   if (isIaSetup) {
     return (
-      <form className="mb-2 h-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+      <form className="mb-2 h-full ">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full ">
           
           {/* COLUNA ESQUERDA: Configurações Técnicas */}
-          <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar max-h-[60vh] lg:max-h-none">
+          <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar max-h-[60vh] lg:max-h-none ">
             
             {/* 1. Bloco Básico (Sempre existe) */}
             <div className="px-1 ">
@@ -141,7 +141,7 @@ export function TemplateForm({
         </label>
         <input
           type="text"
-          className="bg-gray-100 border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
+          className="bg-gray-100  border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
           placeholder="https://sua-instancia.com"
           value={formData['instanceURL'] || ''}
           onChange={(e) => handleChange('instanceURL', e.target.value)}
