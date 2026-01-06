@@ -33,6 +33,21 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 };
 
+const getTimelineDotColor = (type: string): string => {
+  switch (type) {
+    case 'feature':
+      return 'bg-emerald-500 ring-emerald-100'; // Verde para novidades
+    case 'update':
+      return 'bg-blue-500 ring-blue-100';       // Azul para atualizações
+    case 'maintenance':
+      return 'bg-amber-500 ring-amber-100';     // Laranja para manutenção
+    case 'alert':
+      return 'bg-red-500 ring-red-100';         // Vermelho para alertas
+    default:
+      return 'bg-slate-300 ring-slate-100';      // Cinza padrão
+  }
+};
+
 // --- COMPONENTES VISUAIS ---
 
 const StatCard = ({ title, value, subValue, icon: Icon, colorClass, onClick }: any) => (
@@ -242,32 +257,45 @@ export default function Home() {
 
               {/* Lista com Scroll Interno Independente */}
               <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
-                {news.length > 0 ? (
-                  news.map((item) => (
-                    <div 
-                      key={item.id} 
-                      onClick={() => setSelectedNews(item)}
-                      className="p-3 mb-2 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all cursor-pointer group"
-                    >
-                      <div className="flex justify-between items-start mb-1.5">
-                        <NewsTag type={item.type} />
-                        <span className="text-[10px] text-slate-400">{formatDate(item.created_at)}</span>
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-700 leading-snug group-hover:text-blue-600 transition-colors">
-                        {item.title}
-                      </h4>
-                      <p className="text-xs text-slate-400 mt-1 line-clamp-2">
-                        {item.description}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-60">
-                    <Info className="w-8 h-8 mb-2" />
-                    <p className="text-xs">Nenhuma novidade.</p>
-                  </div>
-                )}
-              </div>
+  {news.length > 0 ? (
+    news.map((item, index) => (
+      // 1. Wrapper com relative e padding na esquerda para a linha
+      <div key={item.id} className="relative pl-6 pb-2">
+        
+        {/* 2. LINHA VERTICAL */}
+        {/* Só renderiza a linha se não for o último item (opcional, remova a condição se quiser linha infinita) */}
+        {index !== news.length - 1 && (
+           <div className="absolute left-[11px] top-6 bottom-0 w-[2px] bg-slate-200"></div>
+        )}
+
+        {/* 3. BOLINHA DA TIMELINE */}
+        <div className={`absolute left-[7px] top-6 w-2.5 h-2.5 rounded-full ring-4 ring-white z-10 ${getTimelineDotColor(item.type)}`}></div>
+
+        {/* SEU CARD ORIGINAL (com pequenas melhorias de layout) */}
+        <div 
+          onClick={() => setSelectedNews(item)}
+          className="p-3 rounded-xl hover:bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all cursor-pointer group bg-white shadow-sm"
+        >
+          <div className="flex justify-between items-start mb-1.5">
+            <NewsTag type={item.type} />
+            <span className="text-[10px] text-slate-400">{formatDate(item.created_at)}</span>
+          </div>
+          <h4 className="text-sm font-bold text-slate-700 leading-snug group-hover:text-blue-600 transition-colors">
+            {item.title}
+          </h4>
+          <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+            {item.description}
+          </p>
+        </div>
+      </div>
+    ))
+  ) : (
+    <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-60">
+      {/* <Info className="w-8 h-8 mb-2" /> Certifique-se de importar o ícone se for usar */}
+      <p className="text-xs">Nenhuma novidade.</p>
+    </div>
+  )}
+</div>
               
               <div className="p-3 bg-slate-50 border-t border-slate-100 text-center shrink-0">
                 <button className="text-xs font-bold text-slate-500 hover:text-slate-800 uppercase tracking-wider flex items-center justify-center gap-1 w-full py-1">
