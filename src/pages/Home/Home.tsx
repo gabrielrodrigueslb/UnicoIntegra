@@ -11,7 +11,6 @@ import {
   Calendar,
   KeySquare,
   X,
-  Info,
   Layout,
   ChevronRight,
   ArrowRight
@@ -95,7 +94,8 @@ const NewsTag = ({ type }: { type: string }) => {
 
 export default function Home() {
   const navigate = useNavigate();
-  const username = localStorage.getItem('username');
+  const username = localStorage.getItem('authUsername');
+  const formattedUsername = username?.split('--')[1]
   
   const [stats, setStats] = useState({ databases: 0, licenses: 0, activeLicenses: 0 });
   const [loading, setLoading] = useState(true);
@@ -150,8 +150,8 @@ export default function Home() {
             <div className="flex items-center gap-2 mb-1">
                <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Painel de Controle</span>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              {greeting}, {username}
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight capitalize">
+              {greeting}, {formattedUsername || 'Usuário'}
             </h1>
           </div>
           <div className="hidden md:flex items-center gap-4">
@@ -315,7 +315,7 @@ export default function Home() {
           onClick={() => setSelectedNews(null)}
         >
           <div 
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 relative flex flex-col max-h-[85vh] border border-white/20" 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 relative flex flex-col max-h-[85vh]" 
             onClick={e => e.stopPropagation()}
           >
             {/* Banner Área */}
