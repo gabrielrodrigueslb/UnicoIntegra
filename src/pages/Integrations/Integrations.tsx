@@ -1,6 +1,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, Filter, Puzzle } from 'lucide-react';
 
@@ -61,6 +61,16 @@ export default function Integrations() {
       setFormData({});
     }, 200);
   }
+
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
+
+  // 3. Função que será chamada quando der Enter no formulário
+  const handleEnterPress = () => {
+    // Simula o clique físico no botão que está no outro componente
+    if (submitButtonRef.current) {
+      submitButtonRef.current.click();
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen max-h-screen bg-background overflow-hidden font-sans text-foreground">
@@ -188,6 +198,7 @@ export default function Integrations() {
                     template={template}
                     formData={formData}
                     setFormData={setFormData}
+                    onPressEnter={handleEnterPress}
                   />
                 </div>
                 <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden h-full min-h-[400px]">
@@ -195,6 +206,7 @@ export default function Integrations() {
                     template={template}
                     formData={formData}
                     closeModal={handleCloseModal}
+                    submitRef={submitButtonRef}
                   />
                 </div>
               </div>

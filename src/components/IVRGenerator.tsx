@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import axios from 'axios';
 import { 
   HardDriveDownload, 
@@ -8,23 +8,30 @@ import {
   AlertCircle, 
   Rocket, 
   Server 
-} from 'lucide-react'; // Certifique-se de ter lucide-react instalado
+} from 'lucide-react'; 
 import { base64ToUtf8, utf8ToBase64 } from '../utils/utils';
 
 interface Props {
-  template: { name: string; file: string; fields: { key: string }[]; description?: string; type?: string };
+  template: { 
+    name: string; 
+    file: string; 
+    fields: { key: string }[]; 
+    description?: string; 
+    type?: string 
+  };
   formData: Record<string, string>;
+  submitRef?: RefObject<HTMLButtonElement | null>;
   closeModal: () => void;
 }
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
-export function IVRGenerator({ template, formData, closeModal }: Props) {
+export function IVRGenerator({ template, formData, closeModal, submitRef }: Props) {
   const [status, setStatus] = useState<Status>('idle');
   const [generatedBase64, setGeneratedBase64] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Lógica de Download extraída do seu SuccessModal antigo
+  // Lógica de Download
   const handleDownload = () => {
     if (!generatedBase64) return;
     const filename = `${template.name.replace(/\s+/g, '_').toLowerCase()}.ivr`;
@@ -43,7 +50,7 @@ export function IVRGenerator({ template, formData, closeModal }: Props) {
       // 1. Busca e processamento do Template
       const res = await fetch(`/templates/${template.file}`);
       const templateContent = await res.text();
-      const templateBase64 = templateContent.replace(/\//g, '').trim(); //
+      const templateBase64 = templateContent.replace(/\//g, '').trim();
       
       const decoded = base64ToUtf8(templateBase64);
       const json = JSON.parse(decoded);
@@ -61,12 +68,13 @@ export function IVRGenerator({ template, formData, closeModal }: Props) {
       const instanceURL = formData['instanceURL'] || '';
       const sanitizedInstanceURL = instanceURL.replace(/\/$/, '');
       const code = formData['code'] || '';
-      const username = localStorage.getItem('authUsername')
-       const password = localStorage.getItem('authPassword')
+      const username = localStorage.getItem('authUsername');
+      const password = localStorage.getItem('authPassword');
 
       const ivrPayload = {
         instance: sanitizedInstanceURL,
         integrationData: JSON.parse(jsonString),
+        integration: template.name,
         username: username,
         password: password,
         code: code
@@ -87,14 +95,11 @@ export function IVRGenerator({ template, formData, closeModal }: Props) {
 
     } catch (error: any) {
       console.error('Failed:', error);
-      // Se houver response do axios, usa a mensagem, senão usa genérica
       const msg = error.response?.data?.message || 'Falha na conexão ou instalação.';
       setErrorMessage(msg);
       setStatus('error');
     }
   };
-
-  // --- RENDERIZAÇÃO DOS ESTADOS ---
 
   return (
     <div className="h-full flex flex-col justify-between min-h-[300px] bg-primary-foreground">
@@ -175,7 +180,7 @@ export function IVRGenerator({ template, formData, closeModal }: Props) {
       </div>
 
       {/* FOOTER ACTIONS */}
-      <div className="mt-auto p-6  flex gap-3 items-center">
+      <div className="mt-auto p-6 flex gap-3 items-center">
         {status === 'success' ? (
           <button 
             onClick={closeModal}
@@ -185,6 +190,7 @@ export function IVRGenerator({ template, formData, closeModal }: Props) {
           </button>
         ) : (
           <button 
+            ref={submitRef} // <--- AQUI ESTÁ A LIGAÇÃO COM O ENTER
             onClick={handleGenerate}
             disabled={status === 'loading'}
             className={`

@@ -3,7 +3,7 @@ import { GrIntegration } from 'react-icons/gr';
 import { AiOutlineHome } from 'react-icons/ai';
 /* import { TbSettingsAutomation } from "react-icons/tb";
  */ import { AiOutlineAppstoreAdd } from 'react-icons/ai';
-import { Cpu, Database } from 'lucide-react';
+import { Cpu, Database, Logs } from 'lucide-react';
 import { MdLogout } from 'react-icons/md';
 import './Header.scss';
 import { BsPuzzle } from 'react-icons/bs';
@@ -41,6 +41,7 @@ export default function Header() {
     },
     { path: '/main/extensions', icon: <BsPuzzle />, description: 'Extensões' },
     { path: '/main/iaPage', icon: <Cpu />, description: 'IAs' },
+    { path: '/main/logs', icon: <Logs />, description: 'Logs do sistema' },
   ];
 
   return (

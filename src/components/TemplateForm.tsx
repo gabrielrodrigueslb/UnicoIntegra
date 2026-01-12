@@ -21,6 +21,7 @@ interface Props {
   formData: Record<string, string>;
   setFormData: (data: Record<string, string>) => void;
   isIaSetup?: boolean;
+  onPressEnter?: () => void;
 }
 
 export function TemplateForm({
@@ -28,10 +29,18 @@ export function TemplateForm({
   formData,
   setFormData,
   isIaSetup = false,
+  onPressEnter,
 }: Props) {
   
   const handleChange = (key: string, value: string) => {
     setFormData({ ...formData, [key]: value });
+  };
+  // Função auxiliar para checar o Enter
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && onPressEnter) {
+      e.preventDefault(); // Evita comportamento padrão se necessário
+      onPressEnter();
+    }
   };
 
   // -----------------------------------------------------------------------
@@ -57,6 +66,7 @@ export function TemplateForm({
                   placeholder="Nome da IA"
                   value={formData['name'] || ''}
                   onChange={(e) => handleChange('name', e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
                 <input
                   type="text"
@@ -64,6 +74,7 @@ export function TemplateForm({
                   placeholder="URL da Instância"
                   value={formData['instance'] || ''}
                   onChange={(e) => handleChange('instance', e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
             </div>
@@ -90,6 +101,7 @@ export function TemplateForm({
                         placeholder={field.placeholder}
                         value={formData[field.key] || ''}
                         onChange={(e) => handleChange(field.key, e.target.value)}
+                        onKeyDown={handleKeyDown}
                       />
                     </div>
                   ))}
@@ -108,6 +120,7 @@ export function TemplateForm({
                 placeholder="Código 2FA / Validação"
                 value={formData['code'] || ''}
                 onChange={(e) => handleChange('code', e.target.value)}
+                onKeyDown={handleKeyDown}
               />
             </div>
           </div>
@@ -145,6 +158,7 @@ export function TemplateForm({
           placeholder="https://sua-instancia.com"
           value={formData['instanceURL'] || ''}
           onChange={(e) => handleChange('instanceURL', e.target.value)}
+          onKeyDown={handleKeyDown}
         />
       </div>
 
@@ -158,6 +172,7 @@ export function TemplateForm({
             className="bg-gray-100 border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
             value={formData[field.key] || ''}
             onChange={(e) => handleChange(field.key, e.target.value)}
+            onKeyDown={handleKeyDown}
           />
         </div>
       ))}
@@ -172,6 +187,7 @@ export function TemplateForm({
           placeholder="959752"
           value={formData['code'] || ''}
           onChange={(e) => handleChange('code', e.target.value)}
+          onKeyDown={handleKeyDown}
         />
       </div>
     </form>

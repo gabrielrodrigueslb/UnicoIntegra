@@ -159,7 +159,7 @@ export default function Home() {
                 <p className="text-sm font-medium text-slate-900">
                   {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </p>
-                <p className="text-xs text-slate-400">Sistema v1.2.5</p>
+                <p className="text-xs text-slate-400">Sistema v1.2.7</p>
              </div>
              <div className="h-10 w-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
                 <Calendar className="w-5 h-5" />

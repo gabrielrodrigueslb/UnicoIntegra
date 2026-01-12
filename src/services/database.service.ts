@@ -31,9 +31,11 @@ export async function getDatabases(page = 1, limit = 9, search = '') {
 }
 
 export async function createDatabase(name: string) {
+
+    const username = localStorage.getItem("authUsername")
     const response = await api.post(
         'api/databases/createDatabase', // URL completa conforme sua rota
-        { name }, // Body do POST
+        { name,  username}, // Body do POST
         {
             /* headers: {
                 'x-api-key': import.meta.env.VITE_ADMIN_API_KEY,
