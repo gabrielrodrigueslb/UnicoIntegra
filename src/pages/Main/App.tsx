@@ -14,7 +14,8 @@ import { GlobalStatusPopup } from '../../components/GlobalStatusPopup';
 import Databases from '../Databases/Databases';
 import ExtensionManager from '../ExtensionManager/ExtensionManager';
 import Home from '../Home/Home';
-import { Logs } from '../Logs/Logs';
+import Logs from '../Logs/Logs';
+
 
 export default function App() {
   const token = localStorage.getItem('authToken');
