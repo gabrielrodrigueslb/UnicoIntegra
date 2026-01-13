@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // CORREÇÃO: Alterado de 3000 para 4000 conforme seu log
-const API_URL = 'http://localhost:4000/api'; 
+const API_URL = `https://unicocontato.tech/api`; 
 
 export const fetchLogs = async ({ page, limit, search, startDate, endDate }: any) => {
   try {
