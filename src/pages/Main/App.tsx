@@ -14,7 +14,8 @@ import { GlobalStatusPopup } from '../../components/GlobalStatusPopup';
 import Databases from '../Databases/Databases';
 import ExtensionManager from '../ExtensionManager/ExtensionManager';
 import Home from '../Home/Home';
-import Logs from '../Logs/Logs';
+import Logs from '../SystemLogs/Logs';
+
 
 
 export default function App() {
@@ -40,7 +41,7 @@ export default function App() {
             <Route path="iaPage" element={<AiPage />} />
             <Route path="extensions" element={<ExtensionManager />} />
             <Route path="databases" element={<Databases />} />
-            <Route path="logs" element={<Logs />} />
+            <Route path="logs" element={<Logs/>} />
           </Routes>
 
           {/* 2. ADICIONE O POPUP AQUI. 
