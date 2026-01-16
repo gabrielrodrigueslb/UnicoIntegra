@@ -145,7 +145,7 @@ export default function Home() {
       
       {/* HEADER FIXO */}
       <header className="px-8 pt-6 pb-6 bg-white border-b border-slate-200/60 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
+        <div className="max-w-1100 mx-auto w-full flex justify-between items-center">
           <div>
             <div className="flex items-center gap-2 mb-1">
                <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Painel de Controle</span>
