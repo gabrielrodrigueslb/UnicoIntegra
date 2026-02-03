@@ -40,10 +40,10 @@ export interface LicenseListResponse {
 // --- SERVIÇOS ---
 
 // 1. Instâncias
-export async function createInstance(client_name: string, instance_Url: string) {
+export async function createInstance(client_name: string, instance_url: string) {
   const response = await apiExtensions.post('/v1/instance/create', {
     client_name,
-    instance_Url,
+    instance_url,
   });
   return response.data;
 }

@@ -90,9 +90,9 @@ export default function Logs() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 h-screen">
+    <div className=" mx-auto p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 h-screen overflow-x-hidden overflow-y-auto ">
       {/* Header */}
-      <header className="px-2 pb-6  bg-card border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3 sticky top-0 z-10 bg-background">
+      <header className="px-2 pb-6  bg-card border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3 bg-background">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <History className="w-7 h-7 text-primary" />
@@ -152,7 +152,7 @@ export default function Logs() {
       </div>
 
       {/* Tabela */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative ">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
         {/* Overlay de carregamento sutil (opcional, se quiser bloquear a tabela enquanto busca) */}
         {loading && logs.length > 0 && (
           <div className="absolute inset-0 bg-white/60 z-10 flex items-start justify-center pt-20 backdrop-blur-[1px]">
@@ -160,9 +160,9 @@ export default function Logs() {
           </div>
         )}
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase tracking-wider text-xs">
+            <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200 text-gray-500 uppercase tracking-wider text-xs">
               <tr>
                 <th className="px-6 py-4 font-semibold">Usuário</th>
                 <th className="px-6 py-4 font-semibold">Ação</th>
@@ -172,7 +172,7 @@ export default function Logs() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 overflow-auto">
               {logs.length === 0 && !loading ? (
                 <tr>
                   <td
