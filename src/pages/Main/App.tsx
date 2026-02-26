@@ -7,6 +7,7 @@ import { PkgGenerator } from '../Aplications/PkgGenerator';
 import Integrations from '../Integrations/Integrations';
 import Automations from '../Automations/Automations';
 import AiPage from '../AiPage/AiPage';
+import AiVersionsPage from '../AiPage/AiVersionsPage';
 
 // 5. Contexto e Popup
 import { GenerationProvider } from '../../context/GenerationContext';
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="integrations" element={<Integrations />} />
             <Route path="automations" element={<Automations />} />
             <Route path="iaPage" element={<AiPage />} />
+            <Route path="iaPage/list" element={<AiVersionsPage />} />
             <Route path="extensions" element={<ExtensionManager />} />
             <Route path="databases" element={<Databases />} />
             <Route path="logs" element={<Logs/>} />

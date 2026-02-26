@@ -140,6 +140,13 @@ export default function AiPage() {
             Crie e gerencie inteligências artificiais para automatizar seu
             atendimento.
           </p>
+          <button
+            onClick={() => navigate('/main/iaPage/list')}
+            className="mt-3 inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-100 transition-colors"
+          >
+            <Brain className="w-4 h-4" />
+            Ver IAs criadas
+          </button>
         </div>
 
         <div className="relative w-full md:w-96">
