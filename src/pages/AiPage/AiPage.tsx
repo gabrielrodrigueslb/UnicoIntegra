@@ -145,7 +145,15 @@ export default function AiPage() {
     } catch (error: unknown) {
       console.error(error);
       const err = error as any;
+      const backendError = err?.response?.data?.error;
+      const normalizedBackendError =
+        typeof backendError === 'string'
+          ? backendError
+          : backendError
+            ? JSON.stringify(backendError)
+            : '';
       const msg =
+        normalizedBackendError ||
         err.response?.data?.message ||
         err.message ||
         'Erro desconhecido ao criar IA.';
