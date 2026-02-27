@@ -51,6 +51,26 @@ export default function AiPage() {
   const template = selectedTemplate
     ? templates[selectedTemplate as keyof typeof templates]
     : null;
+  const uiTemplate = useMemo(() => {
+    if (!template) return null;
+    if (selectedTemplate !== 'alpha7') return template;
+
+    const blockedDbKeys = new Set([
+      'dbname',
+      'db_name',
+      'database',
+      'banco',
+      'nome_banco',
+    ]);
+
+    return {
+      ...template,
+      fields: (template.fields || []).filter(
+        (field: { key?: string }) =>
+          !blockedDbKeys.has((field?.key || '').toLowerCase()),
+      ),
+    };
+  }, [template, selectedTemplate]);
 
   function handleOpenModal(key: string) {
     setSelectedTemplate(key);
@@ -99,7 +119,7 @@ export default function AiPage() {
       const username = localStorage.getItem('authUsername');
       const password = localStorage.getItem('authPassword');
 
-      const apiBody = {
+      const apiBody: Record<string, unknown> = {
         ...formData,
         instance: normalizeInstanceUrl(formData.instance),
         name: formData.name,
@@ -108,6 +128,13 @@ export default function AiPage() {
         context: formData.context,
         code: formData.code,
       };
+
+      if (selectedTemplate === 'alpha7') {
+        delete apiBody.dbName;
+        delete apiBody.db_name;
+        delete apiBody.database;
+        delete apiBody.Banco;
+      }
 
       console.log(`Enviando para ${apiUrl}:`, apiBody);
 
@@ -229,7 +256,7 @@ export default function AiPage() {
       </main>
 
       {/* MODAL */}
-      {template && openModal && (
+      {uiTemplate && openModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
           role="dialog"
@@ -244,7 +271,7 @@ export default function AiPage() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/80">
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                 {processStatus === 'idle'
-                  ? `Configurar ${template.name}`
+                  ? `Configurar ${uiTemplate.name}`
                   : 'Status da Instalação'}
               </h2>
               <button
@@ -270,7 +297,7 @@ export default function AiPage() {
                   </div>
 
                   <TemplateForm
-                    template={template}
+                    template={uiTemplate}
                     formData={formData}
                     setFormData={setFormData}
                     isIaSetup={true}
