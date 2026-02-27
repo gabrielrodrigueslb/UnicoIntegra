@@ -17,14 +17,16 @@ export interface AiVersionItem {
 interface FetchAiVersionsParams {
   limit?: number;
   latestOnly?: boolean;
+  instance?: string;
 }
 
 export async function fetchAiVersions({
   limit = 200,
   latestOnly = true,
+  instance,
 }: FetchAiVersionsParams = {}): Promise<AiVersionItem[]> {
   const response = await axios.get(`${API_BASE}/api/ia/versions`, {
-    params: { limit, latestOnly },
+    params: { limit, latestOnly, instance },
   });
 
   return response.data?.data ?? [];

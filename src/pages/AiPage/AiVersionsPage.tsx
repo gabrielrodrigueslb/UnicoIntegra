@@ -11,15 +11,24 @@ import {
   Calendar,
   Copy,
   Check,
+  ChevronRight,
 } from 'lucide-react';
 import {
   fetchAiVersions,
   type AiVersionItem,
 } from '../../services/aiVersions.service';
 
+type InstanceSummary = {
+  instance: string;
+  count: number;
+  latestCreatedAt: string;
+};
+
 export default function AiVersionsPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState<AiVersionItem[]>([]);
+  const [instances, setInstances] = useState<InstanceSummary[]>([]);
+  const [selectedInstance, setSelectedInstance] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -34,18 +43,70 @@ export default function AiVersionsPage() {
     }
   }, [navigate]);
 
-  const loadData = async () => {
+  const buildInstancesSummary = (rows: AiVersionItem[]) => {
+    const map = new Map<string, InstanceSummary>();
+
+    for (const item of rows) {
+      const current = map.get(item.instance);
+      if (!current) {
+        map.set(item.instance, {
+          instance: item.instance,
+          count: 1,
+          latestCreatedAt: item.createdAt,
+        });
+        continue;
+      }
+
+      current.count += 1;
+      if (new Date(item.createdAt).getTime() > new Date(current.latestCreatedAt).getTime()) {
+        current.latestCreatedAt = item.createdAt;
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.instance.localeCompare(b.instance));
+  };
+
+  const loadInstances = async () => {
     setLoading(true);
     setError('');
-      try {
-      const data = await fetchAiVersions({ limit: 300, latestOnly: true });
-      setItems(data);
+    setSelected(null);
+
+    try {
+      const data = await fetchAiVersions({ limit: 500, latestOnly: true });
+      setItems([]);
+      setInstances(buildInstancesSummary(data));
+      setSelectedInstance('');
     } catch (err: any) {
       console.error(err);
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          'Falha ao carregar as IAs salvas.',
+          'Falha ao carregar clientes (instancias).',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadInstanceIas = async (instance: string) => {
+    setLoading(true);
+    setError('');
+    setSelected(null);
+
+    try {
+      const data = await fetchAiVersions({
+        limit: 500,
+        latestOnly: true,
+        instance,
+      });
+      setItems(data);
+      setSelectedInstance(instance);
+    } catch (err: any) {
+      console.error(err);
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          'Falha ao carregar IAs da instancia selecionada.',
       );
     } finally {
       setLoading(false);
@@ -53,14 +114,21 @@ export default function AiVersionsPage() {
   };
 
   useEffect(() => {
-    loadData();
+    loadInstances();
   }, []);
 
   useEffect(() => {
     setCopiedJson(false);
   }, [selected]);
 
-  const filtered = useMemo(() => {
+  const filteredInstances = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return instances;
+
+    return instances.filter((item) => item.instance.toLowerCase().includes(term));
+  }, [instances, search]);
+
+  const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return items;
 
@@ -94,10 +162,19 @@ export default function AiVersionsPage() {
       await navigator.clipboard.writeText(jsonText);
       setCopiedJson(true);
       window.setTimeout(() => setCopiedJson(false), 1800);
-    } catch (error) {
-      console.error('Falha ao copiar JSON:', error);
-      setError('Não foi possível copiar o JSON.');
+    } catch (copyError) {
+      console.error('Falha ao copiar JSON:', copyError);
+      setError('Nao foi possivel copiar o JSON.');
     }
+  };
+
+  const handleRefresh = async () => {
+    if (selectedInstance) {
+      await loadInstanceIas(selectedInstance);
+      return;
+    }
+
+    await loadInstances();
   };
 
   return (
@@ -111,27 +188,40 @@ export default function AiVersionsPage() {
                 className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Voltar para criação de IAs
+                Voltar para criacao de IAs
               </button>
+
               <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
                 <Brain className="h-7 w-7 text-violet-600" />
-                IAs Atuais (Última Versão)
+                IAs Atuais por Cliente
               </h1>
+
               <p className="mt-1 text-sm text-slate-500">
-                Mostra a versão mais recente de cada IA salva no banco.
+                Visualize primeiro os clientes (instancias) e depois entre para ver as IAs daquele cliente.
               </p>
             </div>
 
-            <button
-              onClick={loadData}
-              disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RefreshCcw
-                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-              />
-              Atualizar
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {selectedInstance ? (
+                <button
+                  onClick={() => loadInstances()}
+                  disabled={loading}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Voltar para clientes
+                </button>
+              ) : null}
+
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Atualizar
+              </button>
+            </div>
           </div>
 
           <div className="relative">
@@ -139,7 +229,11 @@ export default function AiVersionsPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por instância, nome, assinatura ou ID da IA..."
+              placeholder={
+                selectedInstance
+                  ? 'Buscar IA por nome, assinatura ou ID...'
+                  : 'Buscar cliente por instancia...'
+              }
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-violet-300 focus:bg-white focus:ring-2 focus:ring-violet-200"
             />
           </div>
@@ -151,71 +245,57 @@ export default function AiVersionsPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
+        {!selectedInstance ? (
           <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-100 px-5 py-4 text-sm font-semibold text-slate-700">
-              IAs atuais encontradas: {filtered.length}
+              Clientes encontrados: {filteredInstances.length}
             </div>
 
-            <div className="max-h-[68vh] overflow-auto">
+            <div className="max-h-[70vh] overflow-auto">
               <table className="w-full text-left text-sm">
                 <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">IA</th>
-                    <th className="px-4 py-3 font-semibold">Instância</th>
-                    <th className="px-4 py-3 font-semibold">Versão</th>
-                    <th className="px-4 py-3 font-semibold">Criado em</th>
-                    <th className="px-4 py-3 font-semibold text-right">Ações</th>
+                    <th className="px-4 py-3 font-semibold">Instancia</th>
+                    <th className="px-4 py-3 font-semibold">Total de IAs</th>
+                    <th className="px-4 py-3 font-semibold">Ultima atualizacao</th>
+                    <th className="px-4 py-3 font-semibold text-right">Acao</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {!loading && filtered.length === 0 && (
+                  {!loading && filteredInstances.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                        Nenhuma IA encontrada.
+                      <td colSpan={4} className="px-6 py-12 text-center text-slate-400">
+                        Nenhum cliente encontrado.
                       </td>
                     </tr>
                   )}
 
-                  {filtered.map((item) => (
-                    <tr
-                      key={item.id}
-                      className={`transition-colors hover:bg-slate-50 ${
-                        selected?.id === item.id ? 'bg-violet-50/50' : ''
-                      }`}
-                    >
-                      <td className="px-4 py-3 align-top">
-                        <div className="font-semibold text-slate-800">
-                          {item.signaturename || item.name || 'Sem nome'}
-                        </div>
-                        <div className="mt-1 text-xs text-slate-500">
-                          ID IA: {item.aiId ?? '-'}
-                        </div>
-                      </td>
+                  {filteredInstances.map((item) => (
+                    <tr key={item.instance} className="transition-colors hover:bg-slate-50">
                       <td className="px-4 py-3 align-top">
                         <div className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-2 py-1 text-xs text-blue-700">
                           <Server className="h-3.5 w-3.5" />
-                          <span className="max-w-[240px] truncate">{item.instance}</span>
+                          <span className="max-w-[480px] truncate">{item.instance}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3 align-top">
                         <span className="inline-flex rounded-md bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700">
-                          v{item.version}
+                          {item.count} IA(s)
                         </span>
                       </td>
                       <td className="px-4 py-3 align-top text-xs text-slate-600">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                          {formatDate(item.createdAt)}
+                          {formatDate(item.latestCreatedAt)}
                         </div>
                       </td>
                       <td className="px-4 py-3 align-top text-right">
                         <button
-                          onClick={() => setSelected(item)}
+                          onClick={() => loadInstanceIas(item.instance)}
                           className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-white"
                         >
-                          <Eye className="h-3.5 w-3.5" />
-                          Ver payload
+                          Entrar
+                          <ChevronRight className="h-3.5 w-3.5" />
                         </button>
                       </td>
                     </tr>
@@ -224,66 +304,131 @@ export default function AiVersionsPage() {
               </table>
             </div>
           </section>
-
-          <aside className="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-5 py-4">
-              <div className="flex items-center gap-2">
-                <FileJson className="h-4 w-4 text-violet-600" />
-                <h2 className="text-sm font-semibold text-slate-800">
-                  Payload JSON
-                </h2>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
+            <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 px-5 py-4 text-sm font-semibold text-slate-700">
+                Instancia selecionada: {selectedInstance} | IAs encontradas: {filteredItems.length}
               </div>
 
-              <button
-                onClick={handleCopyJson}
-                disabled={!selected}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                title="Copiar JSON"
-              >
-                {copiedJson ? (
-                  <>
-                    <Check className="h-3.5 w-3.5 text-emerald-600" />
-                    Copiado
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5" />
-                    Copiar JSON
-                  </>
-                )}
-              </button>
-            </div>
+              <div className="max-h-[68vh] overflow-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">IA</th>
+                      <th className="px-4 py-3 font-semibold">Versao</th>
+                      <th className="px-4 py-3 font-semibold">Criado em</th>
+                      <th className="px-4 py-3 font-semibold text-right">Acoes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {!loading && filteredItems.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-slate-400">
+                          Nenhuma IA encontrada nesta instancia.
+                        </td>
+                      </tr>
+                    )}
 
-            {selected ? (
-              <div className="space-y-4 p-5">
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-700">
-                  <div>
-                    <strong>IA:</strong>{' '}
-                    {selected.signaturename || selected.name || 'Sem nome'}
-                  </div>
-                  <div>
-                    <strong>Instância:</strong> {selected.instance}
-                  </div>
-                  <div>
-                    <strong>Versão:</strong> v{selected.version}
-                  </div>
+                    {filteredItems.map((item) => (
+                      <tr
+                        key={item.id}
+                        className={`transition-colors hover:bg-slate-50 ${
+                          selected?.id === item.id ? 'bg-violet-50/50' : ''
+                        }`}
+                      >
+                        <td className="px-4 py-3 align-top">
+                          <div className="font-semibold text-slate-800">
+                            {item.signaturename || item.name || 'Sem nome'}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            ID IA: {item.aiId ?? '-'}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <span className="inline-flex rounded-md bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700">
+                            v{item.version}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 align-top text-xs text-slate-600">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                            {formatDate(item.createdAt)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 align-top text-right">
+                          <button
+                            onClick={() => setSelected(item)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-white"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            Ver payload
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <aside className="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-5 py-4">
+                <div className="flex items-center gap-2">
+                  <FileJson className="h-4 w-4 text-violet-600" />
+                  <h2 className="text-sm font-semibold text-slate-800">Payload JSON</h2>
                 </div>
 
-                <pre
-                  className="w-full max-w-full min-w-0 max-h-[58vh] overflow-auto rounded-xl border border-slate-200 bg-slate-950 p-4 text-xs leading-relaxed text-slate-100 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
-                  style={{ tabSize: 2 }}
+                <button
+                  onClick={handleCopyJson}
+                  disabled={!selected}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  title="Copiar JSON"
                 >
-                  {JSON.stringify(selected.payload, null, 2)}
-                </pre>
+                  {copiedJson ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      Copiado
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" />
+                      Copiar JSON
+                    </>
+                  )}
+                </button>
               </div>
-            ) : (
-              <div className="p-6 text-sm text-slate-500">
-                Selecione um registro para visualizar o payload usado na criação
-                da IA.
-              </div>
-            )}
-          </aside>
-        </div>
+
+              {selected ? (
+                <div className="space-y-4 p-5">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-700">
+                    <div>
+                      <strong>IA:</strong>{' '}
+                      {selected.signaturename || selected.name || 'Sem nome'}
+                    </div>
+                    <div>
+                      <strong>Instancia:</strong> {selected.instance}
+                    </div>
+                    <div>
+                      <strong>Versao:</strong> v{selected.version}
+                    </div>
+                  </div>
+
+                  <pre
+                    className="w-full max-w-full min-w-0 max-h-[58vh] overflow-auto rounded-xl border border-slate-200 bg-slate-950 p-4 text-xs leading-relaxed text-slate-100 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
+                    style={{ tabSize: 2 }}
+                  >
+                    {JSON.stringify(selected.payload, null, 2)}
+                  </pre>
+                </div>
+              ) : (
+                <div className="p-6 text-sm text-slate-500">
+                  Selecione um registro para visualizar o payload usado na criacao da IA.
+                </div>
+              )}
+            </aside>
+          </div>
+        )}
       </div>
     </div>
   );
