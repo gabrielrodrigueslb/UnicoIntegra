@@ -146,14 +146,14 @@ export default function AiPage() {
       title="Agentes de IA"
       description="Crie e gerencie inteligências artificiais para automatizar seu atendimento."
       icon={Brain}
-      iconClassName="text-violet-600"
+      iconClassName="text-primary"
       searchTerm={searchTerm}
       onSearchTermChange={(event) => setSearchTerm(event.target.value)}
       searchPlaceholder="Buscar modelos de IA..."
       headerActions={
         <button
           onClick={() => navigate('/main/iaPage/list')}
-          className="mt-3 inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-700 transition-colors hover:bg-violet-100"
+          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-700 transition-colors hover:bg-violet-100"
         >
           <Brain className="h-4 w-4" />
           Ver IAs criadas

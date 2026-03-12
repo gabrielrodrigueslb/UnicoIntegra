@@ -254,7 +254,7 @@ export default function ExtensionManager() {
       <header className="sticky top-0 z-10 flex flex-col justify-between gap-4 border-b border-gray-200 bg-white px-8 py-6 md:flex-row md:items-center">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-            <Shield className="h-7 w-7 text-violet-600" /> Gestao de Extensoes
+            <Shield className="h-7 w-7 text-primary" /> Gestao de Extensoes
           </h1>
           <p className="mt-1 text-sm text-slate-500">
             Gerencie instancias, configuracoes e licencas.

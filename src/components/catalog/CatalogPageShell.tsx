@@ -75,21 +75,24 @@ export function CatalogPageShell({
           <h1 className={`flex items-center gap-2 text-2xl font-bold ${styles.title}`}>
             <Icon className={`h-7 w-7 ${iconClassName}`} /> {title}
           </h1>
-          <p className={`mt-1 text-sm ${styles.description}`}>{description}</p>
-          {headerActions}
+          <p className={`mt-1  text-sm text-slate-500 ${styles.description}`}>{description}</p>
         </div>
 
-        <div className="relative w-full md:w-96">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <Search className={`h-5 w-5 ${styles.searchIcon}`} />
+        <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+          <div className="relative w-full md:w-96">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Search className={`h-5 w-5 ${styles.searchIcon}`} />
+            </div>
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={onSearchTermChange}
+            />
           </div>
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder={searchPlaceholder}
-            value={searchTerm}
-            onChange={onSearchTermChange}
-          />
+
+          {headerActions ? <div className="shrink-0">{headerActions}</div> : null}
         </div>
       </header>
 
