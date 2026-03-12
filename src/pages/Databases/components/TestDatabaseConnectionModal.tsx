@@ -277,27 +277,27 @@ export function TestDatabaseConnectionModal({
 
                 <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                   <div className="rounded-xl border border-emerald-100 bg-white p-3 text-sm text-slate-700">
-                    <div className="mb-1 flex items-center gap-2 text-slate-500">
+                    <div className="mb-1 flex items-center gap-2 text-slate-500 truncate">
                       <Server className="h-4 w-4" />
                       Servidor
                     </div>
-                    <div className="font-semibold">
+                    <div className="font-semibold truncate">
                       {result.details.host}:{result.details.port}
                     </div>
                   </div>
                   <div className="rounded-xl border border-emerald-100 bg-white p-3 text-sm text-slate-700">
-                    <div className="mb-1 flex items-center gap-2 text-slate-500">
+                    <div className="mb-1 flex items-center gap-2 text-slate-500 truncate">
                       <Database className="h-4 w-4" />
                       Database
                     </div>
-                    <div className="font-semibold">{result.details.database}</div>
+                    <div className="font-semibold truncate">{result.details.database}</div>
                   </div>
                   <div className="rounded-xl border border-emerald-100 bg-white p-3 text-sm text-slate-700">
                     <div className="mb-1 flex items-center gap-2 text-slate-500">
                       <UserRound className="h-4 w-4" />
                       Usuário
                     </div>
-                    <div className="font-semibold">{result.details.user}</div>
+                    <div className="font-semibold truncate">{result.details.user}</div>
                   </div>
                   <div className="rounded-xl border border-emerald-100 bg-white p-3 text-sm text-slate-700">
                     <div className="mb-1 flex items-center gap-2 text-slate-500">

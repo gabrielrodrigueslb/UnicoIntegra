@@ -100,7 +100,8 @@ export function DatabaseStatusModal({
           Esta verificacao consulta apenas a existencia da tabela{' '}
           <span className="font-semibold">public.out_embalagem</span> e a
           quantidade de produtos cadastrados. Nenhum registro e exibido na
-          interface.
+          interface. Quando o banco nao libera leitura direta, a quantidade e
+          exibida por estimativa dos metadados do PostgreSQL.
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -162,6 +163,13 @@ export function DatabaseStatusModal({
                 <p className={`mt-1 text-sm ${summaryTone.descriptionClassName}`}>
                   {result.message}
                 </p>
+                {!result.requirements.hasReadAccess ? (
+                  <p className="mt-2 text-xs text-slate-600">
+                    O usuario configurado neste painel nao possui leitura direta
+                    na tabela. Por isso a contagem foi obtida pelos metadados do
+                    PostgreSQL.
+                  </p>
+                ) : null}
 
                 <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-xl border border-white/70 bg-white p-3 text-sm text-slate-700">
@@ -181,6 +189,11 @@ export function DatabaseStatusModal({
                     </div>
                     <div className="font-semibold">
                       {result.requirements.productCount.toLocaleString('pt-BR')}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      {result.requirements.productCountSource === 'estimated'
+                        ? 'Quantidade estimada pelos metadados do PostgreSQL'
+                        : 'Quantidade exata lida diretamente da tabela'}
                     </div>
                   </div>
 

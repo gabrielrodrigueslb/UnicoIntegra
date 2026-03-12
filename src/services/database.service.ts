@@ -39,6 +39,8 @@ export interface DatabaseIntegrationStatusResult {
         tableExists: boolean;
         hasProducts: boolean;
         productCount: number;
+        productCountSource: 'exact' | 'estimated';
+        hasReadAccess: boolean;
     };
     readyForIntegration: boolean;
 }
