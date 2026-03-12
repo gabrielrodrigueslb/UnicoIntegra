@@ -1,214 +1,354 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Shield } from 'lucide-react';
 
-// Serviços
+import ConfirmDialog from '../../components/ConfirmDialog';
+import { useRequireAuth } from '../../hooks/useAuthRedirect';
 import {
-  listLicenses, listInstances, listConfigs, toggleLicense, deleteLicense, unbindLicense,
-  type LicenseData, type InstanceData, type ConfigData
+  deleteLicense,
+  listConfigs,
+  listInstances,
+  listLicenses,
+  toggleLicense,
+  type ConfigData,
+  type InstanceData,
+  type LicenseData,
+  unbindLicense,
 } from '../../services/extension.service';
 import { getDatabases } from '../../services/database.service';
-
-// Componentes Refatorados
-import { LicenseList } from './components/LicenseList';
-import { CreateInstanceForm } from './components/CreateInstanceForm';
 import { CreateConfigForm } from './components/CreateConfigForm';
+import { CreateInstanceForm } from './components/CreateInstanceForm';
 import { CreateLicenseForm } from './components/CreateLicenseForm';
+import { LicenseList, type LicenseBulkAction } from './components/LicenseList';
 import { Toast } from './components/SharedUI';
 
-// Modal State Interface
 interface ConfirmModalState {
   isOpen: boolean;
   title: string;
   message: string;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
 }
 
+type ExtensionTab =
+  | 'licenses'
+  | 'new-instance'
+  | 'new-config'
+  | 'new-license';
+
 export default function ExtensionManager() {
-  const navigate = useNavigate();
+  useRequireAuth();
 
-  // Navegação (Abas)
-  const [activeTab, setActiveTab] = useState<'licenses' | 'new-instance' | 'new-config' | 'new-license'>('licenses');
-
-  // Estados Globais de Dados
+  const [activeTab, setActiveTab] = useState<ExtensionTab>('licenses');
   const [loading, setLoading] = useState(false);
   const [licenses, setLicenses] = useState<LicenseData[]>([]);
   const [instancesList, setInstancesList] = useState<InstanceData[]>([]);
   const [configsList, setConfigsList] = useState<ConfigData[]>([]);
   const [databaseOptions, setDatabaseOptions] = useState<string[]>([]);
-
-  // Feedbacks
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
-  // Init e Auth
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token) navigate('/');
-    
-    if (activeTab === 'licenses') fetchLicenses();
-    if (activeTab === 'new-config' || activeTab === 'new-license') loadAuxiliaryData();
-  }, [navigate, activeTab]);
+    if (activeTab === 'licenses') {
+      void fetchLicenses();
+    }
 
-  // Buscas de Dados
-  const fetchLicenses = async () => {
-    setLoading(true);
+    if (activeTab === 'new-config' || activeTab === 'new-license') {
+      void loadAuxiliaryData();
+    }
+  }, [activeTab]);
+
+  const fetchLicenses = async (showLoading = true) => {
+    if (showLoading) {
+      setLoading(true);
+    }
+
     try {
       const data = await listLicenses();
-      setLicenses(data);
-    } catch (error) { console.error(error); } 
-    finally { setLoading(false); }
+      setLicenses(data ?? []);
+    } catch (error) {
+      console.error(error);
+      setToastMsg('Erro ao carregar licencas.');
+    } finally {
+      if (showLoading) {
+        setLoading(false);
+      }
+    }
   };
 
   const loadAuxiliaryData = async () => {
     try {
-      const [inst, conf] = await Promise.all([listInstances(), listConfigs()]);
-      setInstancesList(inst || []);
-      setConfigsList(conf || []);
+      const [instances, configs] = await Promise.all([listInstances(), listConfigs()]);
+      setInstancesList(instances || []);
+      setConfigsList(configs || []);
+
       const dbResponse = await getDatabases(1, 100);
-      if (dbResponse?.data) setDatabaseOptions(dbResponse.data.map((db) => db.name));
-    } catch (error) { console.error('Erro ao carregar listas auxiliares', error); }
+
+      if (dbResponse?.data) {
+        setDatabaseOptions(dbResponse.data.map((db) => db.name));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar listas auxiliares', error);
+      setToastMsg('Erro ao carregar listas auxiliares.');
+    }
   };
 
-  // --- Ações da Lista ---
-  const handleToggleLicense = (license: LicenseData) => {
+  const openConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => Promise<void>,
+  ) => {
     setConfirmModal({
       isOpen: true,
-      title: license.is_active ? 'Desativar Licença?' : 'Reativar Licença?',
-      message: `Isso ${license.is_active ? 'bloqueará' : 'liberará'} o acesso para ${license.configs?.instancias?.client_name}.`,
+      title,
+      message,
       onConfirm: async () => {
-        try {
-          setConfirmModal(prev => ({ ...prev, isOpen: false }));
-          setLoading(true);
-          await toggleLicense(license.license_key, !!license.is_active);
-          await fetchLicenses();
-        } catch { setToastMsg('Erro ao alterar status.'); } 
-        finally { setLoading(false); }
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        await onConfirm();
       },
     });
   };
 
-  const handleDeleteLicense = (key: string) => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Excluir Permanentemente?',
-      message: 'Esta ação é irreversível.',
-      onConfirm: async () => {
+  const handleToggleLicense = (license: LicenseData) => {
+    const clientName =
+      license.configs?.instancias?.client_name || 'cliente selecionado';
+
+    openConfirm(
+      license.is_active ? 'Desativar licenca?' : 'Ativar licenca?',
+      `Isso ${license.is_active ? 'bloqueara' : 'liberara'} o acesso para ${clientName}.`,
+      async () => {
+        setLoading(true);
+
         try {
-          setConfirmModal(prev => ({ ...prev, isOpen: false }));
-          setLoading(true);
-          await deleteLicense(key);
-          await fetchLicenses();
-          setToastMsg('Licença deletada.');
-        } catch { setToastMsg('Erro ao deletar licença.'); } 
-        finally { setLoading(false); }
+          await toggleLicense(license.license_key, !!license.is_active);
+          await fetchLicenses(false);
+          setToastMsg('Status da licenca atualizado.');
+        } catch (error) {
+          console.error(error);
+          setToastMsg('Erro ao alterar status da licenca.');
+        } finally {
+          setLoading(false);
+        }
       },
+    );
+  };
+
+  const handleDeleteLicense = (key: string) => {
+    openConfirm('Excluir licenca?', 'Esta acao e irreversivel.', async () => {
+      setLoading(true);
+
+      try {
+        await deleteLicense(key);
+        await fetchLicenses(false);
+        setToastMsg('Licenca excluida.');
+      } catch (error) {
+        console.error(error);
+        setToastMsg('Erro ao excluir licenca.');
+      } finally {
+        setLoading(false);
+      }
     });
   };
 
   const handleUnbindMachine = (license: LicenseData) => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Desvincular Máquina?',
-      message: `Isso removerá o vínculo com a máquina ID: "${license.activated_machine_id}".`,
-      onConfirm: async () => {
+    openConfirm(
+      'Desconectar maquina?',
+      `Isso removera o vinculo com a maquina ID: "${license.activated_machine_id}".`,
+      async () => {
+        setLoading(true);
+
         try {
-          setConfirmModal(prev => ({ ...prev, isOpen: false }));
-          setLoading(true);
           await unbindLicense(license.license_key);
-          await fetchLicenses();
-          setToastMsg('Máquina desvinculada!');
-        } catch { setToastMsg('Erro ao desvincular.'); } 
-        finally { setLoading(false); }
+          await fetchLicenses(false);
+          setToastMsg('Maquina desconectada da licenca.');
+        } catch (error) {
+          console.error(error);
+          setToastMsg('Erro ao desconectar maquina.');
+        } finally {
+          setLoading(false);
+        }
       },
-    });
+    );
+  };
+
+  const executeBulkAction = async (
+    action: LicenseBulkAction,
+    targets: LicenseData[],
+  ) => {
+    let success = 0;
+    let failed = 0;
+
+    for (const license of targets) {
+      try {
+        if (action === 'activate') {
+          await toggleLicense(license.license_key, false);
+        } else if (action === 'deactivate') {
+          await toggleLicense(license.license_key, true);
+        } else if (action === 'unbind') {
+          await unbindLicense(license.license_key);
+        } else {
+          await deleteLicense(license.license_key);
+        }
+
+        success += 1;
+      } catch (error) {
+        failed += 1;
+        console.error('Falha em lote para licenca:', license.license_key, error);
+      }
+    }
+
+    await fetchLicenses(false);
+
+    const doneLabel: Record<LicenseBulkAction, string> = {
+      activate: 'ativada(s)',
+      deactivate: 'desativada(s)',
+      unbind: 'desconectada(s)',
+      delete: 'excluida(s)',
+    };
+
+    if (failed === 0) {
+      setToastMsg(`${success} licenca(s) ${doneLabel[action]} com sucesso.`);
+      return;
+    }
+
+    setToastMsg(`${success} sucesso e ${failed} erro(s) na operacao em lote.`);
+  };
+
+  const handleBulkAction = (
+    action: LicenseBulkAction,
+    targets: LicenseData[],
+    scopeLabel: string,
+  ) => {
+    if (targets.length === 0) {
+      setToastMsg('Nenhuma licenca elegivel para esta acao.');
+      return;
+    }
+
+    const actionVerb: Record<LicenseBulkAction, string> = {
+      activate: 'ativar',
+      deactivate: 'desativar',
+      unbind: 'desconectar',
+      delete: 'excluir',
+    };
+
+    openConfirm(
+      `Confirmar ${actionVerb[action]} em lote?`,
+      `Deseja ${actionVerb[action]} ${targets.length} licenca(s) ${scopeLabel}?`,
+      async () => {
+        setLoading(true);
+
+        try {
+          await executeBulkAction(action, targets);
+        } finally {
+          setLoading(false);
+        }
+      },
+    );
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden relative">
-      {/* HEADER */}
-      <header className="px-8 py-6 bg-white border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-10">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-slate-50 font-sans text-slate-800">
+      <header className="sticky top-0 z-10 flex flex-col justify-between gap-4 border-b border-gray-200 bg-white px-8 py-6 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Shield className="w-7 h-7 text-violet-600" /> Gestão de Extensões
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
+            <Shield className="h-7 w-7 text-violet-600" /> Gestao de Extensoes
           </h1>
-          <p className="text-slate-500 text-sm mt-1">Gerencie instâncias, configurações e licenças.</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Gerencie instancias, configuracoes e licencas.
+          </p>
         </div>
-        <div className="flex bg-gray-100 p-1 rounded-xl">
-           {[
-                { id: 'licenses', label: 'Licenças' },
-                { id: 'new-instance', label: '+ Cliente' },
-                { id: 'new-config', label: '+ Config' },
-                { id: 'new-license', label: '+ Licença' },
-            ].map(tab => (
-                <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-white text-violet-600 shadow-sm' : 'text-gray-500'}`}
-                >
-                    {tab.label}
-                </button>
-            ))}
+
+        <div className="flex rounded-xl bg-gray-100 p-1">
+          {[
+            { id: 'licenses', label: 'Licencas' },
+            { id: 'new-instance', label: '+ Cliente' },
+            { id: 'new-config', label: '+ Config' },
+            { id: 'new-license', label: '+ Licenca' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as ExtensionTab)}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                activeTab === tab.id
+                  ? 'bg-white text-violet-600 shadow-sm'
+                  : 'text-gray-500'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </header>
 
-      {/* ÁREA DE CONTEÚDO */}
-      <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-        {activeTab === 'licenses' && (
-            <LicenseList 
-                licenses={licenses} 
-                loading={loading}
-                onToggle={handleToggleLicense}
-                onDelete={handleDeleteLicense}
-                onUnbind={handleUnbindMachine}
-                onCopy={(text) => { navigator.clipboard.writeText(text); setToastMsg('Copiado!'); }}
-            />
-        )}
+      <main className="custom-scrollbar flex-1 overflow-y-auto p-8">
+        {activeTab === 'licenses' ? (
+          <LicenseList
+            licenses={licenses}
+            loading={loading}
+            onToggle={handleToggleLicense}
+            onDelete={handleDeleteLicense}
+            onUnbind={handleUnbindMachine}
+            onBulkAction={handleBulkAction}
+            onCopy={(text) => {
+              void navigator.clipboard.writeText(text);
+              setToastMsg('Chave copiada.');
+            }}
+          />
+        ) : null}
 
-        {activeTab === 'new-instance' && (
-            <CreateInstanceForm 
-                onSuccess={() => { setToastMsg('Instância criada!'); setActiveTab('new-config'); }}
-                onError={(msg) => alert(msg)}
-            />
-        )}
+        {activeTab === 'new-instance' ? (
+          <CreateInstanceForm
+            onSuccess={() => {
+              setToastMsg('Instancia criada.');
+              setActiveTab('new-config');
+            }}
+            onError={(msg) => setToastMsg(msg)}
+          />
+        ) : null}
 
-        {activeTab === 'new-config' && (
-            <CreateConfigForm 
-                instancesList={instancesList}
-                databaseOptions={databaseOptions}
-                onSuccess={() => { setToastMsg('Configuração criada!'); setActiveTab('new-license'); }}
-                onError={(msg) => alert(msg)}
-            />
-        )}
+        {activeTab === 'new-config' ? (
+          <CreateConfigForm
+            instancesList={instancesList}
+            databaseOptions={databaseOptions}
+            onSuccess={() => {
+              setToastMsg('Configuracao criada.');
+              setActiveTab('new-license');
+            }}
+            onError={(msg) => setToastMsg(msg)}
+          />
+        ) : null}
 
-        {activeTab === 'new-license' && (
-            <CreateLicenseForm
-                instancesList={instancesList}
-                configsList={configsList}
-                onSuccess={() => { setToastMsg('Licença criada!'); setActiveTab('licenses'); fetchLicenses(); }}
-                onError={(msg) => alert(msg)}
-            />
-        )}
+        {activeTab === 'new-license' ? (
+          <CreateLicenseForm
+            instancesList={instancesList}
+            configsList={configsList}
+            onSuccess={() => {
+              setToastMsg('Licenca criada.');
+              setActiveTab('licenses');
+              void fetchLicenses();
+            }}
+            onError={(msg) => setToastMsg(msg)}
+          />
+        ) : null}
       </main>
 
-      {/* FEEDBACK GLOBAL */}
-      {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
-      
-      {/* MODAL DE CONFIRMAÇÃO (Renderizado Globalmente) */}
-      {confirmModal.isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setConfirmModal(prev => ({...prev, isOpen: false}))}>
-             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 relative p-6 text-center" onClick={e => e.stopPropagation()}>
-                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 text-yellow-600"><AlertTriangle className="w-6 h-6" /></div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">{confirmModal.title}</h3>
-                <p className="text-slate-600 mb-6 text-sm">{confirmModal.message}</p>
-                <div className="flex gap-3 justify-center">
-                    <button onClick={() => setConfirmModal(prev => ({...prev, isOpen: false}))} className="flex-1 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">Cancelar</button>
-                    <button onClick={confirmModal.onConfirm} className="flex-1 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800">Confirmar</button>
-                </div>
-             </div>
-          </div>
-      )}
+      {toastMsg ? <Toast message={toastMsg} onClose={() => setToastMsg(null)} /> : null}
+
+      {confirmModal.isOpen ? (
+        <ConfirmDialog
+          title={confirmModal.title}
+          description={confirmModal.message}
+          confirmText="Confirmar"
+          tone="dark"
+          onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+          onConfirm={() => {
+            void confirmModal.onConfirm();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

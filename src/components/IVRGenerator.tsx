@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, type RefObject } from 'react';
-import axios from 'axios';
 import { 
   HardDriveDownload, 
   Loader2, 
@@ -9,6 +7,8 @@ import {
   Rocket, 
   Server 
 } from 'lucide-react'; 
+import { installIntegration } from '../services/installations.service';
+import { extractErrorMessage } from '../utils/error';
 import { base64ToUtf8, utf8ToBase64 } from '../utils/utils';
 
 interface Props {
@@ -83,19 +83,19 @@ export function IVRGenerator({ template, formData, closeModal, submitRef }: Prop
       console.log('Enviando payload:', ivrPayload);
 
       // 4. Instalação via API
-      await axios.post(
-        'https://unicocontato.tech/install/integration',
-        ivrPayload,
-      );
+      await installIntegration(ivrPayload);
 
       // Sucesso
       const finalBase64 = utf8ToBase64(jsonString);
       setGeneratedBase64(finalBase64);
       setStatus('success');
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed:', error);
-      const msg = error.response?.data?.message || 'Falha na conexão ou instalação.';
+      const msg = extractErrorMessage(
+        error,
+        'Falha na conexão ou instalação.',
+      );
       setErrorMessage(msg);
       setStatus('error');
     }

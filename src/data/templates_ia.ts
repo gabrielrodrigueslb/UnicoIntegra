@@ -1,4 +1,5 @@
 // src/data/templates_ia.ts
+/* eslint-disable no-useless-escape */
 
 export const templates = {
   alpha7: {

@@ -270,7 +270,7 @@ export const templates = {
     banner: '/cielo.png',
     description: 'Notificação automática de status de pagamento.',
     longDescription:
-      'Receba eventos de pagamento da Cielo e dispare ações automáticas no seu sistema (como liberar um pedido ou enviar comprovante).',
+      'Receba eventos de pagamento da Cielo e seja avisado quando o cliente finalizar uma venda.',
     type: 'Automação',
     active: true,
     benefits: [
@@ -279,29 +279,30 @@ export const templates = {
       'Integração robusta',
     ],
     fields: [
-      { label: 'Nome do cliente', key: 'nomecliente' },
-      { label: 'ClientId:ClientSecret', key: 'clientcode' },
-      { label: 'Instancia de armazenamento', key: 'instancia' },
-      { label: 'QueueId', key: 'fila' },
-      { label: 'APIKEY', key: 'apikey' },
+      { label: 'APIKEY', key: 'clientApiKey' },
+      { label: 'Instância do cliente', key: 'clientUrl'},
     ],
     steps: [
       {
         title: 'Configure a Fila (Queue)',
-        content: 'Crie uma fila no seu sistema UnicoContato para receber os eventos.'
+        content: 'Crie ou utilize uma fila no seu sistema do Unico Contato para receber os eventos.'
       },
       {
         title: 'Gere a API Key',
-        content: 'Gere uma API Key com permissão de escrita na fila criada.'
+        content: 'Gere uma API Key na fila desejada.'
       },
       {
-        title: 'Obtenha Credenciais Cielo',
-        content: 'Tenha em mãos o ClientId e ClientSecret da Cielo.'
+        title: 'Crie um Webhook para a Fila',
+        content: 'Crie um Webhook para recebimento dos status e vincule a fila desejada.'
       },
       {
-        title: 'Configure a URL de Retorno',
-        content: 'Preencha todos os campos. O sistema irá gerar uma URL de Webhook que deve ser cadastrada no painel da Cielo.'
-      }
+        title: 'Crie e vincule a automação',
+        content: 'Preencha todos os campos necessários e crie a automação no sistema do cliente. Após isso vincule-o no webhook'
+      },
+      {
+        title: 'Ative o webhook na Cielo',
+        content: 'Acesse o painel da cielo e vincule o webhook na URL de Retorno e Mudança de Status.'
+      },
     ]
   },
 

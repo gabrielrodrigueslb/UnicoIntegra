@@ -6,6 +6,43 @@ export interface DatabaseItem {
     size: string;
 }
 
+export interface DatabaseConnectionPayload {
+    host: string;
+    port: number;
+    database: string;
+    user: string;
+    password: string;
+    ssl: boolean;
+}
+
+export interface DatabaseConnectionResult {
+    success: boolean;
+    message: string;
+    latencyMs: number;
+    details: {
+        host: string;
+        port: number;
+        database: string;
+        user: string;
+        ssl: boolean;
+    };
+}
+
+export interface DatabaseIntegrationStatusResult {
+    success: boolean;
+    message: string;
+    latencyMs: number;
+    database: string;
+    requirements: {
+        schema: string;
+        table: string;
+        tableExists: boolean;
+        hasProducts: boolean;
+        productCount: number;
+    };
+    readyForIntegration: boolean;
+}
+
 export interface PaginatedResponse {
     data: DatabaseItem[];
     meta: {
@@ -40,6 +77,30 @@ export async function createDatabase(name: string) {
             /* headers: {
                 'x-api-key': import.meta.env.VITE_ADMIN_API_KEY,
             } */
+        }
+    );
+    return response.data;
+}
+
+export async function testDatabaseConnection(payload: DatabaseConnectionPayload) {
+    const username = localStorage.getItem("authUsername")
+    const response = await api.post<DatabaseConnectionResult>(
+        'api/databases/testConnection',
+        {
+            ...payload,
+            username,
+        }
+    );
+    return response.data;
+}
+
+export async function checkIntegrationDatabaseStatus(database: string) {
+    const username = localStorage.getItem("authUsername")
+    const response = await api.post<DatabaseIntegrationStatusResult>(
+        'api/databases/checkIntegrationStatus',
+        {
+            database,
+            username,
         }
     );
     return response.data;

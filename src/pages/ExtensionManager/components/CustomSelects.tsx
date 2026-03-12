@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { ChevronDown, Database, Check, Search } from 'lucide-react';
+import { useClickOutside } from '../../../hooks/useClickOutside';
 
 // --- CREATABLE SELECT ---
 export function CreatableSelect({
@@ -14,17 +15,7 @@ export function CreatableSelect({
   placeholder?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const wrapperRef = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
 
   const filteredOptions = options.filter((opt) =>
     opt.toLowerCase().includes(value.toLowerCase()),
@@ -104,17 +95,7 @@ export function SearchableSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const wrapperRef = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
 
   const filteredOptions = options.filter(
     (opt) =>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -17,12 +17,37 @@ import {
   fetchAiVersions,
   type AiVersionItem,
 } from '../../services/aiVersions.service';
+import { useRequireAuth } from '../../hooks/useAuthRedirect';
+import { extractErrorMessage } from '../../utils/error';
 
 type InstanceSummary = {
   instance: string;
   count: number;
   latestCreatedAt: string;
 };
+
+function buildInstancesSummary(rows: AiVersionItem[]) {
+  const map = new Map<string, InstanceSummary>();
+
+  for (const item of rows) {
+    const current = map.get(item.instance);
+    if (!current) {
+      map.set(item.instance, {
+        instance: item.instance,
+        count: 1,
+        latestCreatedAt: item.createdAt,
+      });
+      continue;
+    }
+
+    current.count += 1;
+    if (new Date(item.createdAt).getTime() > new Date(current.latestCreatedAt).getTime()) {
+      current.latestCreatedAt = item.createdAt;
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.instance.localeCompare(b.instance));
+}
 
 export default function AiVersionsPage() {
   const navigate = useNavigate();
@@ -35,38 +60,9 @@ export default function AiVersionsPage() {
   const [selected, setSelected] = useState<AiVersionItem | null>(null);
   const [copiedJson, setCopiedJson] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/');
-      return;
-    }
-  }, [navigate]);
+  useRequireAuth();
 
-  const buildInstancesSummary = (rows: AiVersionItem[]) => {
-    const map = new Map<string, InstanceSummary>();
-
-    for (const item of rows) {
-      const current = map.get(item.instance);
-      if (!current) {
-        map.set(item.instance, {
-          instance: item.instance,
-          count: 1,
-          latestCreatedAt: item.createdAt,
-        });
-        continue;
-      }
-
-      current.count += 1;
-      if (new Date(item.createdAt).getTime() > new Date(current.latestCreatedAt).getTime()) {
-        current.latestCreatedAt = item.createdAt;
-      }
-    }
-
-    return Array.from(map.values()).sort((a, b) => a.instance.localeCompare(b.instance));
-  };
-
-  const loadInstances = async () => {
+  const loadInstances = useCallback(async () => {
     setLoading(true);
     setError('');
     setSelected(null);
@@ -76,19 +72,17 @@ export default function AiVersionsPage() {
       setItems([]);
       setInstances(buildInstancesSummary(data));
       setSelectedInstance('');
-    } catch (err: any) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          'Falha ao carregar clientes (instancias).',
+        extractErrorMessage(error, 'Falha ao carregar clientes (instancias).'),
       );
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadInstanceIas = async (instance: string) => {
+  const loadInstanceIas = useCallback(async (instance: string) => {
     setLoading(true);
     setError('');
     setSelected(null);
@@ -101,21 +95,19 @@ export default function AiVersionsPage() {
       });
       setItems(data);
       setSelectedInstance(instance);
-    } catch (err: any) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          'Falha ao carregar IAs da instancia selecionada.',
+        extractErrorMessage(error, 'Falha ao carregar IAs da instancia selecionada.'),
       );
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadInstances();
-  }, []);
+    void loadInstances();
+  }, [loadInstances]);
 
   useEffect(() => {
     setCopiedJson(false);
