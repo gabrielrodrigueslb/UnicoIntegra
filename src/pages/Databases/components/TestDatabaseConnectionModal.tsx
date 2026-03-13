@@ -26,11 +26,30 @@ const INITIAL_FORM = {
   database: '',
   user: '',
   password: '',
+  cnpj: '',
   ssl: false,
 };
 
 interface TestDatabaseConnectionModalProps {
   onClose: () => void;
+}
+
+function normalizeCnpjDigits(value: string) {
+  return value.replace(/\D/g, '').slice(0, 14);
+}
+
+function formatCnpj(value: string) {
+  const digits = normalizeCnpjDigits(value);
+
+  if (!digits) {
+    return '';
+  }
+
+  return digits
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
 }
 
 export function TestDatabaseConnectionModal({
@@ -95,6 +114,7 @@ export function TestDatabaseConnectionModal({
         user: formData.user.trim(),
         password: formData.password,
         ssl: formData.ssl,
+        cnpj: normalizeCnpjDigits(formData.cnpj) || undefined,
       });
 
       setResult(response);
@@ -201,6 +221,30 @@ export function TestDatabaseConnectionModal({
                 disabled={status === 'loading'}
               />
             </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              CNPJ para buscar unidade de negócio
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="00.000.000/0000-00"
+              className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+              value={formData.cnpj}
+              onChange={(event) =>
+                updateField('cnpj', formatCnpj(event.target.value))
+              }
+              disabled={status === 'loading'}
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Opcional. Se informado, vamos consultar a tabela
+              <code className="mx-1 rounded bg-slate-100 px-1 py-0.5 text-[11px]">
+                unidadenegocio
+              </code>
+              para localizar o ID da unidade referente a esse CNPJ.
+            </p>
           </div>
 
           <label className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-slate-700">
@@ -316,6 +360,100 @@ export function TestDatabaseConnectionModal({
                     <div className="font-semibold">{result.latencyMs} ms</div>
                   </div>
                 </div>
+
+                {result.businessUnitLookup ? (
+                  <div
+                    className={`mt-4 rounded-2xl border p-4 ${
+                      result.businessUnitLookup.found
+                        ? 'border-emerald-100 bg-white'
+                        : 'border-amber-200 bg-amber-50'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`mt-0.5 flex h-10 w-10 items-center justify-center rounded-full ${
+                          result.businessUnitLookup.found
+                            ? 'bg-emerald-50 text-emerald-600'
+                            : 'bg-amber-100 text-amber-600'
+                        }`}
+                      >
+                        {result.businessUnitLookup.found ? (
+                          <CheckCircle2 className="h-5 w-5" />
+                        ) : (
+                          <AlertTriangle className="h-5 w-5" />
+                        )}
+                      </div>
+
+                      <div className="flex-1">
+                        <h4
+                          className={`text-sm font-bold ${
+                            result.businessUnitLookup.found
+                              ? 'text-emerald-900'
+                              : 'text-amber-900'
+                          }`}
+                        >
+                          Consulta da unidade de negÃ³cio por CNPJ
+                        </h4>
+                        <p
+                          className={`mt-1 text-sm ${
+                            result.businessUnitLookup.found
+                              ? 'text-emerald-800'
+                              : 'text-amber-800'
+                          }`}
+                        >
+                          {result.businessUnitLookup.message}
+                        </p>
+
+                        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                            <div className="mb-1 text-slate-500">CNPJ consultado</div>
+                            <div className="font-semibold">
+                              {formatCnpj(result.businessUnitLookup.requestedCnpj)}
+                            </div>
+                          </div>
+
+                          {result.businessUnitLookup.found &&
+                          result.businessUnitLookup.unit ? (
+                            <>
+                              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                                <div className="mb-1 text-slate-500">
+                                  ID da unidade de negÃ³cio
+                                </div>
+                                <div className="font-semibold">
+                                  {result.businessUnitLookup.unit.id}
+                                </div>
+                              </div>
+
+                              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                                <div className="mb-1 text-slate-500">CÃ³digo / Status</div>
+                                <div className="font-semibold">
+                                  {result.businessUnitLookup.unit.codigo || '-'} /{' '}
+                                  {result.businessUnitLookup.unit.status || '-'}
+                                </div>
+                              </div>
+                            </>
+                          ) : null}
+                        </div>
+
+                        {result.businessUnitLookup.found &&
+                        result.businessUnitLookup.unit ? (
+                          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                            <div className="font-semibold text-slate-900">
+                              {result.businessUnitLookup.unit.nomeFantasia ||
+                                result.businessUnitLookup.unit.nome ||
+                                result.businessUnitLookup.unit.razaoSocial ||
+                                'Unidade localizada'}
+                            </div>
+                            <div className="mt-1 text-slate-600">
+                              {result.businessUnitLookup.unit.razaoSocial ||
+                                'Sem razÃ£o social informada.'}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

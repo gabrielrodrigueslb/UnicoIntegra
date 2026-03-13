@@ -13,6 +13,22 @@ export interface DatabaseConnectionPayload {
     user: string;
     password: string;
     ssl: boolean;
+    cnpj?: string;
+}
+
+export interface DatabaseBusinessUnitLookup {
+    requestedCnpj: string;
+    found: boolean;
+    message: string;
+    unit: {
+        id: number;
+        status: string | null;
+        codigo: string | null;
+        nome: string | null;
+        cnpj: string | null;
+        nomeFantasia: string | null;
+        razaoSocial: string | null;
+    } | null;
 }
 
 export interface DatabaseConnectionResult {
@@ -26,6 +42,7 @@ export interface DatabaseConnectionResult {
         user: string;
         ssl: boolean;
     };
+    businessUnitLookup: DatabaseBusinessUnitLookup | null;
 }
 
 export interface DatabaseIntegrationStatusResult {
