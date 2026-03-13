@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -30,6 +30,7 @@ export default function AiPage() {
     'idle' | 'loading' | 'success' | 'error'
   >('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
 
   const navigate = useNavigate();
 
@@ -77,12 +78,16 @@ export default function AiPage() {
 
   function handleOpenModal(key: string) {
     const selectedIA = IAs[key as keyof typeof IAs];
+    const nextFormData: Record<string, string> = {
+      name: selectedIA?.name || 'IA - Unico',
+    };
+
+    if (selectedIA?.contextMode !== 'hidden') {
+      nextFormData.context = selectedIA?.context || '';
+    }
 
     setSelectedTemplate(key);
-    setFormData({
-      name: 'IA - Unico',
-      context: selectedIA?.context || '',
-    });
+    setFormData(nextFormData);
     setProcessStatus('idle');
     setErrorMessage('');
     setOpenModal(true);
@@ -106,7 +111,19 @@ export default function AiPage() {
     return url.trim().replace(/\/+$/, '');
   }
 
+  const handleEnterPress = () => {
+    if (processStatus !== 'idle') {
+      return;
+    }
+
+    submitButtonRef.current?.click();
+  };
+
   const handleCreateIa = async () => {
+    if (processStatus === 'loading') {
+      return;
+    }
+
     setProcessStatus('loading');
     setErrorMessage('');
 
@@ -121,15 +138,19 @@ export default function AiPage() {
         name: formData.name,
         username,
         password,
-        context: formData.context,
         code: formData.code,
       };
+
+      if (template?.contextMode !== 'hidden') {
+        apiBody.context = formData.context;
+      }
 
       if (selectedTemplate === 'alpha7') {
         delete apiBody.dbName;
         delete apiBody.db_name;
         delete apiBody.database;
         delete apiBody.Banco;
+        delete apiBody.context;
       }
 
       await axios.post(apiUrl, apiBody);
@@ -201,7 +222,7 @@ export default function AiPage() {
             </p>
             <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-4">
               <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                <Cpu className="h-3 w-3" /> V 1.0
+                <Cpu className="h-3 w-3" /> V {item.version || '1.0'}
               </span>
               <button className="text-sm font-medium text-violet-600 group-hover:underline">
                 Configurar &rarr;
@@ -219,7 +240,9 @@ export default function AiPage() {
               : 'Status da Instalação'
           }
           onClose={handleCloseModal}
-          maxWidthClassName="max-w-2xl"
+          maxWidthClassName={
+            uiTemplate.contextMode === 'hidden' ? 'max-w-3xl' : 'max-w-5xl'
+          }
           bodyClassName="overflow-y-auto custom-scrollbar px-6 py-3"
         >
           {processStatus === 'idle' ? (
@@ -239,12 +262,14 @@ export default function AiPage() {
                 formData={formData}
                 setFormData={setFormData}
                 isIaSetup={true}
+                onPressEnter={handleEnterPress}
               />
 
               <div className="border-t border-gray-100 pt-4">
                 <button
+                  ref={submitButtonRef}
                   onClick={handleCreateIa}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3.5 font-semibold text-white shadow-lg shadow-violet-200 transition-all hover:-translate-y-0.5 hover:bg-violet-700"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3.5 font-semibold text-white shadow-lg shadow-violet-200 transition-all hover:-translate-y-0.5 hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   <Sparkles className="h-5 w-5" />
                   Instalar e Criar IA
