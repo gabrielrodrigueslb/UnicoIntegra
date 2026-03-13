@@ -392,7 +392,7 @@ export function TestDatabaseConnectionModal({
                               : 'text-amber-900'
                           }`}
                         >
-                          Consulta da unidade de negÃ³cio por CNPJ
+                          Consulta da unidade de negócio por CNPJ
                         </h4>
                         <p
                           className={`mt-1 text-sm ${
@@ -417,7 +417,7 @@ export function TestDatabaseConnectionModal({
                             <>
                               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                                 <div className="mb-1 text-slate-500">
-                                  ID da unidade de negÃ³cio
+                                  ID da unidade de negócio
                                 </div>
                                 <div className="font-semibold">
                                   {result.businessUnitLookup.unit.id}
@@ -425,7 +425,7 @@ export function TestDatabaseConnectionModal({
                               </div>
 
                               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-                                <div className="mb-1 text-slate-500">CÃ³digo / Status</div>
+                                <div className="mb-1 text-slate-500">Código / Status</div>
                                 <div className="font-semibold">
                                   {result.businessUnitLookup.unit.codigo || '-'} /{' '}
                                   {result.businessUnitLookup.unit.status || '-'}
@@ -446,7 +446,7 @@ export function TestDatabaseConnectionModal({
                             </div>
                             <div className="mt-1 text-slate-600">
                               {result.businessUnitLookup.unit.razaoSocial ||
-                                'Sem razÃ£o social informada.'}
+                                'Sem razão social informada.'}
                             </div>
                           </div>
                         ) : null}
