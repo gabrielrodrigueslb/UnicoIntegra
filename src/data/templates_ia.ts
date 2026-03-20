@@ -48,11 +48,8 @@ export const templates = {
     key: 'vannon',
     name: 'IA - Vannon',
     type: 'assistente',
-    version: '1.0',
-    contextMode: 'editable' as const,
-    context:
-      "Você é um assistente virtual de vendas da  **[NOME DA DROGARIA]**, \n\nSeu papel é exclusivamente ajudar o cliente a encontrar produtos adequados às suas necessidades e conduzir o processo de compra. Não converse sobre temas distintos ou não relacionados à busca, disponibilidade ou compra de produtos da farmácia.\n\nSiga obrigatoriamente o fluxo abaixo, sem pular etapas.\n\nREGRAS OBRIGATÓRIAS:\n- Cumprimente o cliente de forma cordial e pergunte o que precisa.\n- Caso o cliente já tenha dito diga que adradece por escolher a [NOME DA DROGARIA] e busque o produto.\n- Somente após receber o que o cliente precisa, utilize a função busca_produtos.\n- Os produtos serão enviados automaticamente pelo sistema.\n- O cliente só poderá prosseguir com a compra após receber os produtos.\n- A finalização da compra deve ser feita por um atendente humano após coletar os dados do mesmo.\n\nFLUXO DE ATENDIMENTO:\n 1- Cumprimente o cliente de forma cordial e pergunte o que precisa.\n( Caso o cliente já tenha dito diga que adradece por escolher a [NOME DA DROGARIA] e busque o produto.)\n2 - Somente após receber o que o cliente precisa, utilize a função busca_produtos.\n3 - Os produtos serão enviados automaticamente pelo sistema.\n4. Informe que, para comprar, o cliente deve clicar no botão \"comprar\" na mensagem do produto.\n5. Quando o cliente clicar \"comprar\", ofereça a possibilidade de adicionar mais itens\n6. Caso o cliente deseje encerrar a compra solicite \n   - Nome completo\n   - CPF\n   - Se vai retirar na loja ou deseja entrega\n(Custo entrega por km)\n\n7. Após coletar todos os dados, faça um resumo, o cliente dando ok utilize a função transferir_para_humano.\n\nNão execute nenhuma ação fora dessa ordem.\n\nEXEMPLO DE CONVERSA :\n\nCliente: olá, tudo bem ?\nAssistente: Bem-vindo a **[NOME DA DROGARIA]**,  . Estou bem, obrigado por perguntar. Como posso te ajudar hoje?\n\nCliente: gostaria de uma dipirona\nAssistente: Excelente. Agradecemos por escolher a [NOME DA DROGARIA]. irei verificar a disponibilidade da dipirona para você.\n\n[Assistente executa a função busca_produtos]\n\n[Sistema envia os produtos disponíveis ao cliente]\n\nCliente: clica em comprar\n[Sistema cria o carrinho e informa os dados do carrinho ao assistente]\n\nAssistente: Perfeito. Você gostaria de adicionar mais algum produto?\n\nCliente: não obrigado\nAssistente: Tudo certo. Para finalizar seu pedido, preciso dos seguintes dados:\n- Nome completo\n- CPF\n- Endereço completo\n\n[Cliente envia os dados]\n\nAssistente: Obrigado. Segue o resumo do seu pedido.\n\n[Assistente executa a função transferir_para_humano]"
-,
+    version: '1.3',
+    contextMode: 'hidden' as const,
     description:
       'Agente inteligente capaz de processar linguagem natural e conectar-se com a Vannon.',
     banner: '/vannon1.png',
@@ -63,14 +60,56 @@ export const templates = {
         label: 'Nome da loja', 
         type: 'text', 
         placeholder: 'Farmacia X', 
-        width: 'full' as const 
+        width: 'half' as const 
       },
       { 
         key: 'apiKey', 
         label: 'API Key', 
         type: 'password', 
         placeholder: 'Sua chave de API', 
-        width: 'full' as const 
+        width: 'half' as const 
+      },
+      { 
+        key: 'clientEndpoint', 
+        label: 'Endpoint do E-commerce', 
+        type: 'text', 
+        placeholder: 'Ex: farmaciax', 
+        width: 'half' as const 
+      },
+      { 
+        key: 'cepLoja', 
+        label: 'CEP da loja', 
+        type: 'number', 
+        placeholder: 'Ex: 12345487', 
+        width: 'half' as const 
+      }
+    ]
+  },
+
+  vetor: {
+    key: 'vetor',
+    name: 'IA - Vetor',
+    type: 'assistente',
+    version: '1.0',
+    contextMode: 'hidden' as const,
+    description:
+      'Agente inteligente capaz de processar linguagem natural e conectar-se com a Vetor.',
+    banner: '/vetor.jpg',
+    endpoint: '/vetor',
+    fields: [
+      { 
+        key: 'clientName', 
+        label: 'Nome da loja', 
+        type: 'text', 
+        placeholder: 'Farmacia X', 
+        width: 'half' as const 
+      },
+      { 
+        key: 'apiKey', 
+        label: 'API Key', 
+        type: 'password', 
+        placeholder: 'Sua chave de API', 
+        width: 'half' as const 
       },
       { 
         key: 'clientEndpoint', 
@@ -78,26 +117,9 @@ export const templates = {
         type: 'text', 
         placeholder: 'Ex: farmaciax', 
         width: 'full' as const 
-      },
-      { 
-        key: 'cepLoja', 
-        label: 'CEP da loja', 
-        type: 'number', 
-        placeholder: 'Ex: 12345487', 
-        width: 'full' as const 
-      },
-      { 
-        key: 'queueId', 
-        label: 'ID da Fila', 
-        type: 'number', 
-        placeholder: 'Ex: 11', 
-        width: 'full' as const 
       }
     ]
   },
-
-
-  
 
   atendimento: {
     key: 'ia_atendimento',

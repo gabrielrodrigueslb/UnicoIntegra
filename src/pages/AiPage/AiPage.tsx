@@ -289,7 +289,7 @@ export default function AiPage() {
               </div>
               <h3 className="text-xl font-bold text-slate-800">Criando Agente...</h3>
               <p className="mt-2 max-w-xs text-slate-500">
-                Estamos configurando o contexto e gerando a instância.
+                Estamos configurando a IA, aguarde alguns segundos.
               </p>
             </div>
           ) : null}

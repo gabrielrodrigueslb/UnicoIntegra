@@ -59,7 +59,7 @@ export default function Header() {
               {menuItems.map((item, index) => (
                 <Link to={item.path} key={index} className="relative group">
                   <li
-                    className={`p-3.5 bg-gray-950 text-white rounded-full text-2xl cursor-pointer transition-colors duration-150 relative hover:flex ${
+                    className={`p-3 bg-gray-950 text-white rounded-full text-xl cursor-pointer transition-colors duration-150 relative items-center justify-center flex ${
                       item.path == location.pathname ? 'active' : ''
                     }`}
                     key={index}
