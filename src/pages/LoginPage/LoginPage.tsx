@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  useRedirectIfAuthenticated('/main');
+  useRedirectIfAuthenticated('/main/home');
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -31,7 +31,7 @@ export default function LoginPage() {
       localStorage.setItem('authPassword', password);
       localStorage.setItem('username', response.data.user.fullname);
 
-      navigate('/main');
+      navigate('/main/home');
     } catch (err) {
       console.error(err);
       setError('Usuario ou senha invalidos. Tente novamente.');

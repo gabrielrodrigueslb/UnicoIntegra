@@ -112,10 +112,10 @@ export const templates = {
         width: 'half' as const 
       },
       { 
-        key: 'clientEndpoint', 
-        label: 'Endpoint do E-commerce', 
+        key: 'vetorToken', 
+        label: 'Token Vetor', 
         type: 'text', 
-        placeholder: 'Ex: farmaciax', 
+        placeholder: 'AgAAAGmNu9AtfU9...', 
         width: 'full' as const 
       }
     ]

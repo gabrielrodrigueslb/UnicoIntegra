@@ -139,6 +139,8 @@ export default function Home() {
     );
   };
 
+  const newsItems = Array.isArray(news) ? news : [];
+
   return (
     // CONTAINER PRINCIPAL: h-screen e overflow-hidden para travar o scroll da janela
     <div className="h-screen bg-[#F8FAFC] flex flex-col overflow-hidden font-sans text-slate-800">
@@ -257,14 +259,14 @@ export default function Home() {
 
               {/* Lista com Scroll Interno Independente */}
               <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
-  {news.length > 0 ? (
-    news.map((item, index) => (
+  {newsItems.length > 0 ? (
+    newsItems.map((item, index) => (
       // 1. Wrapper com relative e padding na esquerda para a linha
       <div key={item.id} className="relative pl-6 pb-2">
         
         {/* 2. LINHA VERTICAL */}
         {/* Só renderiza a linha se não for o último item (opcional, remova a condição se quiser linha infinita) */}
-        {index !== news.length - 1 && (
+        {index !== newsItems.length - 1 && (
            <div className="absolute left-[11px] top-6 bottom-0 w-[2px] bg-slate-200"></div>
         )}
 

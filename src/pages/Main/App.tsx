@@ -34,7 +34,7 @@ export default function App() {
         {/* O Provider envolve TUDO nessa seção */}
         <GenerationProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="home" replace />} />
+            <Route index element={<Navigate to="home" replace />} />
             <Route path="home" element={<Home />} />
             <Route path="aplications" element={<PkgGenerator />} />
             <Route path="integrations" element={<Integrations />} />
@@ -44,6 +44,7 @@ export default function App() {
             <Route path="extensions" element={<ExtensionManager />} />
             <Route path="databases" element={<Databases />} />
             <Route path="logs" element={<Logs/>} />
+            <Route path="*" element={<Navigate to="home" replace />} />
           </Routes>
 
           {/* 2. ADICIONE O POPUP AQUI. 

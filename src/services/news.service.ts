@@ -8,7 +8,25 @@ export interface NewsItem {
   created_at: string;
 }
 
-export async function getLatestNews() {
-  const response = await api.get<NewsItem[]>('/api/news/latest');
-  return response.data;
+function normalizeNewsResponse(payload: unknown): NewsItem[] {
+  if (Array.isArray(payload)) {
+    return payload as NewsItem[];
+  }
+
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    'data' in payload &&
+    Array.isArray((payload as { data?: unknown }).data)
+  ) {
+    return (payload as { data: NewsItem[] }).data;
+  }
+
+  console.warn('Resposta inesperada ao buscar novidades:', payload);
+  return [];
+}
+
+export async function getLatestNews(): Promise<NewsItem[]> {
+  const response = await api.get<unknown>('/api/news/latest');
+  return normalizeNewsResponse(response.data);
 }
