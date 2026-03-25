@@ -1,10 +1,12 @@
 import axios from 'axios';
 
+const AI_SERVICES_BASE_URL = (
+  import.meta.env.VITE_AI_SERVICES_BASE_URL ||
+  (import.meta.env.DEV ? '/ai-services' : 'https://unicocontato.tech/ai-services')
+).replace(/\/+$/, '');
+
 const aiServicesApi = axios.create({
-  baseURL: (import.meta.env.VITE_AI_SERVICES_BASE_URL || '/ai-services').replace(
-    /\/+$/,
-    '',
-  ),
+  baseURL: AI_SERVICES_BASE_URL,
   timeout: 30000,
 });
 
