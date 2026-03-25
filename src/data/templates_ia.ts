@@ -44,7 +44,42 @@ export const templates = {
     ]
   },
 
-    vannon: {
+  trier: {
+    key: 'trier',
+    name: 'IA - Trier',
+    type: 'assistente',
+    version: '1.0',
+    contextMode: 'hidden' as const,
+    description:
+      'Agente inteligente capaz de processar linguagem natural e conectar-se com a Trier.',
+    banner: '/trier.jpg',
+    endpoint: '/trier',
+    fields: [
+      {
+        key: 'nomeCliente',
+        label: 'Nome da loja',
+        type: 'text',
+        placeholder: 'Farmacia X',
+        width: 'half' as const
+      },
+      {
+        key: 'porta_cliente',
+        label: 'Porta da API',
+        type: 'text',
+        placeholder: 'Ex: 5235',
+        width: 'half' as const
+      },
+      {
+        key: 'apiKey',
+        label: 'API Key Global',
+        type: 'password',
+        placeholder: 'Sua chave de API',
+        width: 'full' as const
+      },
+    ]
+  },
+
+  vannon: {
     key: 'vannon',
     name: 'IA - Vannon',
     type: 'assistente',

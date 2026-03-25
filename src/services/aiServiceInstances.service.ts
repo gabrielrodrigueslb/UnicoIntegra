@@ -9,13 +9,6 @@ const aiServicesApi = axios.create({
   timeout: 30000,
 });
 
-function buildNoCacheParams(params?: Record<string, string | number>) {
-  return {
-    ...params,
-    _ts: Date.now(),
-  };
-}
-
 export interface AiServiceInstance {
   nome: string;
   status: string;
@@ -57,13 +50,7 @@ export async function createAiServiceInstance(
 }
 
 export async function listAiServiceInstances(): Promise<AiServiceInstance[]> {
-  const response = await aiServicesApi.get('/api/ia/listar', {
-    params: buildNoCacheParams(),
-    headers: {
-      'Cache-Control': 'no-cache',
-      Pragma: 'no-cache',
-    },
-  });
+  const response = await aiServicesApi.get('/api/ia/listar');
   return response.data?.instancias ?? [];
 }
 
@@ -72,13 +59,6 @@ export async function fetchAiServiceInstanceStatus(
 ): Promise<AiServiceInstanceStatus> {
   const response = await aiServicesApi.get(
     `/api/ia/${encodeURIComponent(nome)}/status`,
-    {
-      params: buildNoCacheParams(),
-      headers: {
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-      },
-    },
   );
 
   return response.data;
@@ -91,11 +71,7 @@ export async function fetchAiServiceInstanceLogs(
   const response = await aiServicesApi.get(
     `/api/ia/${encodeURIComponent(nome)}/logs`,
     {
-      params: buildNoCacheParams({ linhas }),
-      headers: {
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-      },
+    params: { linhas },
     },
   );
 
