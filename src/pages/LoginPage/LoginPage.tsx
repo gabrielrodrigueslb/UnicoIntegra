@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 import { useRedirectIfAuthenticated } from '../../hooks/useAuthRedirect';
+import { setAuthSession } from '../../utils/authSession';
 import './LoginPage.scss';
 
 export default function LoginPage() {
@@ -26,10 +27,12 @@ export default function LoginPage() {
         'https://ambientesdetesteunicocontato.atenderbem.com/login';
       const response = await axios.post(apiUrl, { username, password, code });
 
-      localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('authUsername', username);
-      localStorage.setItem('authPassword', password);
-      localStorage.setItem('username', response.data.user.fullname);
+      setAuthSession({
+        authToken: response.data.token,
+        authUsername: username,
+        authPassword: password,
+        username: response.data.user.fullname,
+      });
 
       navigate('/main/home');
     } catch (err) {

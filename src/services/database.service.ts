@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { requireAuthSession } from "../utils/authSession";
 
 // Definindo a tipagem da resposta paginada
 export interface DatabaseItem {
@@ -88,7 +89,7 @@ export async function getDatabases(page = 1, limit = 9, search = '') {
 
 export async function createDatabase(name: string) {
 
-    const username = localStorage.getItem("authUsername")
+    const username = requireAuthSession().authUsername
     const response = await api.post(
         'api/databases/createDatabase', // URL completa conforme sua rota
         { name,  username}, // Body do POST
@@ -102,7 +103,7 @@ export async function createDatabase(name: string) {
 }
 
 export async function testDatabaseConnection(payload: DatabaseConnectionPayload) {
-    const username = localStorage.getItem("authUsername")
+    const username = requireAuthSession().authUsername
     const response = await api.post<DatabaseConnectionResult>(
         'api/databases/testConnection',
         {
@@ -114,7 +115,7 @@ export async function testDatabaseConnection(payload: DatabaseConnectionPayload)
 }
 
 export async function checkIntegrationDatabaseStatus(database: string) {
-    const username = localStorage.getItem("authUsername")
+    const username = requireAuthSession().authUsername
     const response = await api.post<DatabaseIntegrationStatusResult>(
         'api/databases/checkIntegrationStatus',
         {

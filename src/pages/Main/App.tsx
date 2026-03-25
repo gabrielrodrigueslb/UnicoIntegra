@@ -18,13 +18,14 @@ import Databases from '../Databases/Databases';
 import ExtensionManager from '../ExtensionManager/ExtensionManager';
 import Home from '../Home/Home';
 import Logs from '../SystemLogs/Logs';
+import { getAuthSession } from '../../utils/authSession';
 
 
 
 export default function App() {
-  const token = localStorage.getItem('authToken');
+  const session = getAuthSession();
 
-  if (!token) {
+  if (!session) {
     return <Navigate to="/" replace />;
   }
 

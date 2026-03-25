@@ -8,6 +8,7 @@ import {
   Server 
 } from 'lucide-react'; 
 import { installIntegration } from '../services/installations.service';
+import { requireAuthSession } from '../utils/authSession';
 import { extractErrorMessage } from '../utils/error';
 import { base64ToUtf8, utf8ToBase64 } from '../utils/utils';
 
@@ -68,15 +69,14 @@ export function IVRGenerator({ template, formData, closeModal, submitRef }: Prop
       const instanceURL = formData['instanceURL'] || '';
       const sanitizedInstanceURL = instanceURL.replace(/\/$/, '');
       const code = formData['code'] || '';
-      const username = localStorage.getItem('authUsername');
-      const password = localStorage.getItem('authPassword');
+      const session = requireAuthSession();
 
       const ivrPayload = {
         instance: sanitizedInstanceURL,
         integrationData: JSON.parse(jsonString),
         integration: template.name,
-        username: username,
-        password: password,
+        username: session.authUsername,
+        password: session.authPassword,
         code: code
       };
 

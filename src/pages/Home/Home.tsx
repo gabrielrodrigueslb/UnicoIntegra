@@ -20,6 +20,7 @@ import {
 import { getDatabases } from '../../services/database.service';
 import { listLicenses } from '../../services/extension.service'; 
 import { getLatestNews, type NewsItem } from '../../services/news.service';
+import { getAuthSession } from '../../utils/authSession';
 import { templates } from '../../data/templates_ia'; // Importação dos templates
 
 // --- HELPERS ---
@@ -94,8 +95,9 @@ const NewsTag = ({ type }: { type: string }) => {
 
 export default function Home() {
   const navigate = useNavigate();
-  const username = localStorage.getItem('authUsername');
+  const username = getAuthSession()?.authUsername ?? null;
   const formattedUsername = username?.split('--')[1]
+  const appVersion = __APP_VERSION__;
   
   const [stats, setStats] = useState({ databases: 0, licenses: 0, activeLicenses: 0 });
   const [loading, setLoading] = useState(true);
@@ -161,7 +163,7 @@ export default function Home() {
                 <p className="text-sm font-medium text-slate-900">
                   {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </p>
-                <p className="text-xs text-slate-400">Sistema v1.2.7</p>
+                <p className="text-xs text-slate-400">Sistema v{appVersion}</p>
              </div>
              <div className="h-10 w-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
                 <Calendar className="w-5 h-5" />

@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GrIntegration } from 'react-icons/gr';
 import { AiOutlineHome } from 'react-icons/ai';
-/* import { TbSettingsAutomation } from "react-icons/tb";
- */ import { AiOutlineAppstoreAdd } from 'react-icons/ai';
 import { Cpu, Database, Logs, Boxes} from 'lucide-react';
 import { MdLogout } from 'react-icons/md';
 import ConfirmDialog from '../ConfirmDialog';
 import './Header.scss';
 import { BsPuzzle } from 'react-icons/bs';
+import { clearAuthSession } from '../../utils/authSession';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -16,10 +15,7 @@ export default function Header() {
 
   function handleLogout() {
     setIsLogoutDialogOpen(false);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('username');
-    localStorage.removeItem('authUsername');
-    localStorage.removeItem('authPassword');
+    clearAuthSession();
 
     navigate('/'); // Redireciona para a página de login
   }

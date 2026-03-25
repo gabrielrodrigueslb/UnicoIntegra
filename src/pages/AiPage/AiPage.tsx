@@ -17,6 +17,7 @@ import { TemplateForm } from '../../components/TemplateForm';
 import { templates } from '../../data/templates_ia';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useRequireAuth } from '../../hooks/useAuthRedirect';
+import { requireAuthSession } from '../../utils/authSession';
 import { extractErrorMessage } from '../../utils/error';
 
 const IAs = templates;
@@ -130,14 +131,13 @@ export default function AiPage() {
     try {
       const baseUrl = import.meta.env.VITE_URLBASE || 'https://unicocontato.tech';
       const apiUrl = `${baseUrl}/api/ia/create-ai${template?.endpoint || ''}`;
-      const username = localStorage.getItem('authUsername');
-      const password = localStorage.getItem('authPassword');
+      const session = requireAuthSession();
       const apiBody: Record<string, unknown> = {
         ...formData,
         instance: normalizeInstanceUrl(formData.instance),
         name: formData.name,
-        username,
-        password,
+        username: session.authUsername,
+        password: session.authPassword,
         code: formData.code,
       };
 
