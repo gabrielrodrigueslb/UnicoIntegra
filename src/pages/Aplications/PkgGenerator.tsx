@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { HardDriveDownload, Zap, Server, Key, Database, User, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { HardDriveDownload, Zap, Server, Key, Database, User, Lock, ArrowLeft } from 'lucide-react';
 
 import {
   useGeneration,
@@ -7,6 +8,7 @@ import {
 } from '../../context/GenerationContext';
 
 export function PkgGenerator() {
+  const navigate = useNavigate();
   const { generateApp, status } = useGeneration();
 
   const [formData, setFormData] = useState<PkgFormData>({
@@ -27,56 +29,54 @@ export function PkgGenerator() {
     generateApp(formData);
   };
 
-  const labelClass = "block text-xs font-semibold text-muted-foreground mb-1.5 ml-1 uppercase tracking-wide";
+  const labelClass = "mb-1 block text-sm font-medium text-foreground/80";
 
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden font-sans text-foreground">
+    <div className="flex min-h-screen flex-col bg-gray-50 font-sans text-foreground">
       
-      {/* HEADER COMPACTO */}
-      <header className="px-8 py-6 bg-card border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-10 bg-background">
+      <header className="sticky top-0 z-10 flex flex-col justify-between gap-4 border-b border-border bg-background px-8 py-6 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <HardDriveDownload className="w-6 h-6 text-primary" />
-            Gerador de Executável
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+            <HardDriveDownload className="h-7 w-7 text-primary" /> Gerador de Executável
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Geração de pacotes de instalação (.exe)
+          <p className="mt-1 text-sm text-foreground/60">
+            Geração de pacotes de instalação (.exe) para o Alpha 7.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => navigate('/main/aplications')}
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-gray-50"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </button>
       </header>
 
-      {/* CONTENT - Centralizado verticalmente e horizontalmente */}
-      <main className="flex-1 flex items-center justify-center p-6 bg-muted/30 overflow-y-auto">
-        <div className="w-full max-w-5xl">
-          
-          <div className="bg-card border border-border rounded-2xl shadow-lg p-8 animate-in fade-in zoom-in-95 duration-300">
+      <main className="scrollbar-clean flex-1 overflow-y-auto p-8 flex items-center justify-center">
+        <div className="w-full max-w-4xl">
+          <div className="rounded-2xl border border-border bg-background p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4">
             
-            {/* Bloco Informativo Compacto */}
-            <div className="mb-6 p-3 bg-blue-50 border border-blue-100  rounded-xl flex items-center gap-3">
-               <div className="p-2 bg-blue-100 rounded-lg text-blue-600  shrink-0">
-                 <Zap className="w-4 h-4" />
+            <div className="mb-6 flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
+               <div className="mt-0.5 shrink-0 rounded-lg bg-blue-100 p-1.5 text-blue-600">
+                 <Zap className="h-4 w-4" />
                </div>
-               <div>
-                 <p className="text-xs text-blue-800 font-medium">
-                   O sistema irá compilar e gerar um instalador Windows automaticamente baseado nas credenciais abaixo.
-                 </p>
-               </div>
+               <p className="text-sm text-blue-800">
+                 O sistema irá compilar e gerar um instalador Windows automaticamente baseado nas credenciais abaixo. Certifique-se de que as informações do banco estão corretas.
+               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               
-              {/* GRID DE INPUTS (3 Colunas para economizar altura) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                
-                {/* 1. Nome do Cliente */}
-                <div className="group">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
                   <label className={labelClass}>Nome do Cliente</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                     <input
                       type="text"
                       name="nome_cliente"
-                      className="w-full p-2.5 pl-10 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-sm text-foreground placeholder:text-muted-foreground focus:bg-card"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
                       value={formData.nome_cliente}
                       onChange={handleChange}
                       placeholder="Ex: Farmácia Central"
@@ -85,15 +85,14 @@ export function PkgGenerator() {
                   </div>
                 </div>
 
-                {/* 2. Host */}
-                <div className="group">
+                <div>
                   <label className={labelClass}>Host (IP)</label>
                   <div className="relative">
-                    <Server className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
+                    <Server className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                     <input
                       type="text"
                       name="db_host"
-                      className="w-full p-2.5 pl-10 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-sm text-foreground placeholder:text-muted-foreground focus:bg-card"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
                       value={formData.db_host}
                       onChange={handleChange}
                       placeholder="192.168.x.x"
@@ -102,15 +101,14 @@ export function PkgGenerator() {
                   </div>
                 </div>
 
-                {/* 3. Database Name */}
-                <div className="group">
+                <div>
                   <label className={labelClass}>Database Name</label>
                   <div className="relative">
-                    <Database className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
+                    <Database className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                     <input
                       type="text"
                       name="db_database"
-                      className="w-full p-2.5 pl-10 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-sm text-foreground placeholder:text-muted-foreground focus:bg-card"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
                       value={formData.db_database}
                       onChange={handleChange}
                       placeholder="db_cliente"
@@ -119,15 +117,14 @@ export function PkgGenerator() {
                   </div>
                 </div>
 
-                {/* 4. DB User */}
-                <div className="group">
+                <div>
                   <label className={labelClass}>Usuário do Banco</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                     <input
                       type="text"
                       name="db_user"
-                      className="w-full p-2.5 pl-10 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-sm text-foreground placeholder:text-muted-foreground focus:bg-card"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
                       value={formData.db_user}
                       onChange={handleChange}
                       placeholder="postgres"
@@ -136,15 +133,14 @@ export function PkgGenerator() {
                   </div>
                 </div>
 
-                {/* 5. DB Password */}
-                <div className="group">
+                <div>
                   <label className={labelClass}>Senha do Banco</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                     <input
-                      type="text"
+                      type="password"
                       name="db_password"
-                      className="w-full p-2.5 pl-10 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-sm text-foreground placeholder:text-muted-foreground focus:bg-card"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
                       value={formData.db_password}
                       placeholder="********"
                       onChange={handleChange}
@@ -152,15 +148,14 @@ export function PkgGenerator() {
                   </div>
                 </div>
 
-                {/* 6. Access Key */}
-                <div className="group">
+                <div>
                   <label className={labelClass}>Chave de Acesso</label>
                   <div className="relative">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                     <input
                       type="text"
                       name="access_key"
-                      className="w-full p-2.5 pl-10 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-sm text-foreground placeholder:text-muted-foreground focus:bg-card font-mono"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm font-mono outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
                       value={formData.access_key}
                       onChange={handleChange}
                       placeholder="Auth Key"
@@ -171,30 +166,28 @@ export function PkgGenerator() {
 
               </div>
 
-              {/* Botão de Ação */}
-              <div className="mt-2">
+              <div className="mt-4 border-t border-border pt-6">
                 <button
                   type="submit"
                   disabled={status === 'generating'}
                   className={`
-                    w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-3 text-base
+                    flex w-full md:w-auto md:min-w-[200px] ml-auto items-center justify-center gap-2 rounded-xl py-3 px-6 font-bold transition-colors text-primary-foreground
                     ${
                       status === 'generating'
-                        ? 'bg-muted cursor-wait text-muted-foreground shadow-none'
-                        : 'bg-primary hover:opacity-90 hover:-translate-y-0.5 hover:shadow-primary/30'
+                        ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                        : 'bg-primary hover:opacity-90'
                     }
                   `}
                 >
                   {status === 'generating' ? (
-                    'Gerando em 2º plano...'
+                    'Gerando pacote...'
                   ) : (
                     <>
-                      Iniciar Geração <HardDriveDownload className="w-5 h-5" />
+                      <HardDriveDownload className="h-5 w-5" /> Iniciar Geração
                     </>
                   )}
                 </button>
               </div>
-
             </form>
           </div>
         </div>

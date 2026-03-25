@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import './App.scss';
 
 import Header from '../../components/Header/Header';
+import ApplicationsHub from '../Aplications/ApplicationsHub';
+import AiServicesManager from '../Aplications/AiServicesManager';
 import { PkgGenerator } from '../Aplications/PkgGenerator';
 import Integrations from '../Integrations/Integrations';
 import Automations from '../Automations/Automations';
@@ -36,7 +38,9 @@ export default function App() {
           <Routes>
             <Route index element={<Navigate to="home" replace />} />
             <Route path="home" element={<Home />} />
-            <Route path="aplications" element={<PkgGenerator />} />
+            <Route path="aplications" element={<ApplicationsHub />} />
+            <Route path="aplications/pkg-generator" element={<PkgGenerator />} />
+            <Route path="aplications/ia-services" element={<AiServicesManager />} />
             <Route path="integrations" element={<Integrations />} />
             <Route path="automations" element={<Automations />} />
             <Route path="iaPage" element={<AiPage />} />

@@ -7,6 +7,13 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(),tailwindcss()],
   server: {
+    proxy: {
+      '/ai-services': {
+        target: 'https://unicocontato.tech',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
     fs: {
       allow: [
         path.resolve(__dirname, 'src'), // permite a pasta src

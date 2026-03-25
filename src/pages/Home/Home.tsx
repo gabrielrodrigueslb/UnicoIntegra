@@ -217,7 +217,7 @@ export default function Home() {
               </h2>
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 {[
-                  { label: 'Gerar Aplicativo', desc: 'Compilar executável (.exe)', icon: Layout, path: '/main/aplications', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Aplicacoes', desc: 'Executaveis e servicos de IA', icon: Layout, path: '/main/aplications', color: 'text-indigo-600', bg: 'bg-indigo-50' },
                   { label: 'Novo Banco de Dados', desc: 'Criar estrutura SQL', icon: Plus, path: '/main/databases', color: 'text-blue-600', bg: 'bg-blue-50' },
                   { label: 'Gerar Licença', desc: 'Vincular cliente/instância', icon: KeySquare, path: '/main/extensions', color: 'text-violet-600', bg: 'bg-violet-50' },
                   { label: 'Configurar IA', desc: 'Treinar novo agente', icon: Cpu, path: '/main/iaPage', color: 'text-emerald-600', bg: 'bg-emerald-50' },

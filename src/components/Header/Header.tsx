@@ -4,7 +4,7 @@ import { GrIntegration } from 'react-icons/gr';
 import { AiOutlineHome } from 'react-icons/ai';
 /* import { TbSettingsAutomation } from "react-icons/tb";
  */ import { AiOutlineAppstoreAdd } from 'react-icons/ai';
-import { Cpu, Database, Logs } from 'lucide-react';
+import { Cpu, Database, Logs, Boxes} from 'lucide-react';
 import { MdLogout } from 'react-icons/md';
 import ConfirmDialog from '../ConfirmDialog';
 import './Header.scss';
@@ -36,8 +36,8 @@ export default function Header() {
     },
     {
       path: '/main/aplications',
-      icon: <AiOutlineAppstoreAdd />,
-      description: 'Aplicações',
+      icon: <Boxes />,
+      description: 'Serviços',
     },
     {
       path: '/main/integrations',
