@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 const AI_SERVICES_BASE_URL = (
-  import.meta.env.VITE_AI_SERVICES_BASE_URL ||
-  (import.meta.env.DEV ? '/ai-services' : 'https://unicocontato.tech/ai-services')
+  import.meta.env.VITE_AI_SERVICES_BASE_URL || '/ai-services'
 ).replace(/\/+$/, '');
 
 const aiServicesApi = axios.create({
