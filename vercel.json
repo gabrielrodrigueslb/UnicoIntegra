@@ -1,8 +1,27 @@
 {
+  "headers": [
+    {
+      "source": "/ai-services/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, proxy-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
-      "source": "/ai-services/:match*",
-      "destination": "https://unicocontato.tech/ai-services/:match*"
+      "source": "/ai-services/(.*)",
+      "destination": "https://unicocontato.tech/ai-services/$1"
     },
     {
       "source": "/(.*)",
