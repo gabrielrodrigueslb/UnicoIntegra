@@ -13,28 +13,29 @@ export const installParams = [
   { field: 'instance', type: 'string', required: true, description: 'URL da instância onde a IA será instalada.' },
   { field: 'nomeCliente', type: 'string', required: true, description: 'Nome da farmácia ou da loja.' },
   { field: 'porta_cliente', type: 'string', required: true, description: 'Porta da API criada no serviço IA Trier API.' },
-  { field: 'apiKey', type: 'string', required: true, description: 'API key global do sistema usada na integração.' },
+  { field: 'apiKey', type: 'string', required: true, description: 'API key global do sistema usada na instalação.' },
   { field: 'code', type: 'string', required: true, description: 'Código 2FA para autorizar a criação da IA.' },
 ]
 
 # IA Trier
 
 Esta página deve ser lida como **procedimento de implantação** da Trier.
-O foco aqui é operacional: receber o token, criar o serviço e instalar a IA.
+O foco aqui é operacional: receber o token, criar o serviço, instalar a IA e homologar.
 
-<Callout type="info" title="Diferença em relação ao Alpha 7">
-  Na Trier, o ponto de partida não é a liberação de banco. O primeiro passo é orientar o cliente
-  a solicitar a integração junto à própria Trier para que o token seja disponibilizado.
+<Callout type="info" title="Ponto de partida">
+  O processo da Trier começa pela solicitação da integração diretamente junto à própria Trier.
+  Sem o token enviado por eles, a implantação não deve avançar.
 </Callout>
 
 ## Visão geral do processo
 
-1. Orientar o cliente a entrar em contato com a Trier solicitando a integração.
-2. Aguardar o envio do token ou das credenciais da API.
+1. Orientar o cliente a solicitar a integração junto à Trier.
+2. Aguardar o envio do token de autenticação.
 3. Criar o serviço em **Serviços > IA Trier API**.
 4. Validar se o serviço ficou operacional.
 5. Instalar a IA no módulo de IAs.
-6. Homologar com a mesma lógica usada no Alpha 7.
+6. Verificar se a fila possui a API key correta.
+7. Homologar antes de liberar em produção.
 
 ## Passo 1: Solicitação junto à Trier
 
@@ -87,7 +88,19 @@ Preencha os campos da instalação:
 
 Esses dados são os que autorizam e concluem a criação da IA na instância do cliente.
 
-## Passo 5: Homologação inicial
+## Passo 5: Verificar a API key da fila
+
+Antes de vincular a IA a uma fila de atendimento, confira se a fila tem uma API key definida.
+
+Essa API key precisa estar alinhada com a API key global informada na instalação.
+Se a fila estiver sem essa chave, a integração não vai funcionar.
+
+<Callout type="warning" title="Validação obrigatória">
+  Se a fila não tiver API key, ou se a chave estiver diferente da API key global usada na instalação,
+  a IA não vai funcionar corretamente no atendimento.
+</Callout>
+
+## Passo 6: Homologação inicial
 
 Após a instalação:
 
@@ -98,11 +111,8 @@ Após a instalação:
 
 Essa etapa é obrigatória antes de liberar o fluxo em produção.
 
-
-
 ## Ver também
 
 - <Link to="/main/docs/ias">Visão geral das IAs</Link>
-- <Link to="/main/docs/ias/alpha7">Fluxo da IA Alpha 7</Link>
 - <Link to="/main/docs/getting-started/autenticacao">Autenticação</Link>
 - <Link to="/main/docs/erros">Tabela de erros</Link>

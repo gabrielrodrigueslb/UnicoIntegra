@@ -9,32 +9,14 @@ const DocsIntro: React.FC = () => {
     {
       icon: 'AI',
       title: 'Agentes de IA',
-      description: 'Consulte modelos, campos e endpoints usados no provisionamento das IAs.',
+      description: 'Consulte os fluxos operacionais e os campos usados na implantação das IAs.',
       path: '/main/docs/ias',
     },
     {
-      icon: 'API',
-      title: 'Autenticação',
-      description: 'Aprenda a autenticar suas requisições com Bearer Token.',
-      path: '/main/docs/getting-started/autenticacao',
-    },
-    {
-      icon: 'DOC',
-      title: 'Referência da API',
-      description: 'Documentação completa de todos os endpoints.',
-      path: '/main/docs/referencia/contatos/listar',
-    },
-    {
-      icon: 'WEB',
-      title: 'Webhooks',
-      description: 'Receba notificações em tempo real de eventos.',
-      path: '/main/docs/conceitos/webhooks',
-    },
-    {
-      icon: 'GO',
-      title: 'Primeiros Passos',
-      description: 'Configure sua primeira integração em minutos.',
-      path: '/main/docs/getting-started/primeiros-passos',
+      icon: 'LOG',
+      title: 'Changelog',
+      description: 'Acompanhe mudanças recentes e versões publicadas.',
+      path: '/main/docs/changelog',
     },
   ]
 
@@ -43,7 +25,7 @@ const DocsIntro: React.FC = () => {
       <PageHeader
         badge="Documentação"
         title="API Unico Contato"
-        description="Bem-vindo à documentação oficial da API Unico Contato. Aqui você encontra guias, referências, exemplos e fluxos de IA para integrar e operar a plataforma."
+        description="Bem-vindo à documentação oficial da API Unico Contato. Aqui você encontra changelog e fluxos operacionais das IAs."
       />
 
       <Callout type="info" title="Versão atual: v1">
@@ -98,9 +80,8 @@ const DocsIntro: React.FC = () => {
 
       <h2>Visão geral</h2>
       <p>
-        A documentação cobre a API REST da plataforma e os fluxos internos de provisionamento de
-        assistentes. Todas as requisições usam JSON e autenticação via Bearer Token ou sessão
-        autenticada, dependendo do módulo.
+        A documentação concentra os fluxos internos de provisionamento e operação dos assistentes.
+        Todas as requisições usam JSON e autenticação operacional conforme o fluxo de cada módulo.
       </p>
 
       <h3>URLs Base</h3>
@@ -126,7 +107,6 @@ const DocsIntro: React.FC = () => {
       <h3>Formato das respostas</h3>
       <p>
         Todas as respostas são retornadas em JSON. Datas seguem o formato <code>ISO 8601</code>.
-        Erros retornam sempre um objeto com <code>code</code> e <code>message</code>.
       </p>
     </div>
   )

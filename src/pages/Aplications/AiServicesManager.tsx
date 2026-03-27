@@ -263,7 +263,7 @@ export default function AiServicesManager() {
       <main className="custom-scrollbar mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col gap-6 overflow-y-auto p-6 lg:flex-row lg:items-start lg:gap-8 lg:p-8 min-w-0">
         
         {/* SIDEBAR */}
-        <aside className="w-full shrink-0 lg:sticky lg:top-28 lg:w-[320px] flex flex-col gap-6">
+        <aside className="flex w-full shrink-0 flex-col gap-6 lg:sticky lg:top-0 lg:w-[320px] lg:self-start">
           <div className="rounded-2xl border border-border bg-background p-5 shadow-sm space-y-6">
             
             <div>
@@ -413,7 +413,7 @@ export default function AiServicesManager() {
         <ModalFrame
           onClose={() => setIsCreateModalOpen(false)}
           maxWidthClassName="max-w-2xl"
-          bodyClassName="flex min-h-0 flex-1 flex-col p-0"
+          bodyClassName="p-0"
           header={
             <div className="flex items-center justify-between border-b border-border bg-background px-6 py-5">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2"><ServerCog className="h-6 w-6 text-primary"/> Nova Instância</h2>
@@ -422,8 +422,8 @@ export default function AiServicesManager() {
           }
         >
           {/* Note o onSubmit={handleFormSubmit} - Isso abre o ConfirmDialog! */}
-          <form onSubmit={handleFormSubmit} className="flex min-h-0 flex-1 flex-col bg-gray-50/50">
-             <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-6 space-y-8">
+          <form onSubmit={handleFormSubmit} className="bg-gray-50/50 flex flex-col max-h-[75vh]">
+             <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-8">
                 
                 <section>
                   <label className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
@@ -443,7 +443,7 @@ export default function AiServicesManager() {
 
                 <hr className="border-border" />
 
-                <section>
+                <section className='flex flex-col'>
                   <label className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
                     <Database className="h-4 w-4" /> Banco de Dados
                   </label>

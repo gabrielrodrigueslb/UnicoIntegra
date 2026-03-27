@@ -1,101 +1,92 @@
 import { Link } from 'react-router-dom'
 import {
-  MethodBadge,
-  CodeBlock,
   ParamsTable,
   Callout,
 } from '../../components/DocsComponents'
 
-export const bodyParams = [
-  { field: 'instance', type: 'string', required: true, description: 'URL da instância que receberá a IA.' },
-  { field: 'username', type: 'string', required: true, description: 'Usuário usado para login na instância.' },
-  { field: 'password', type: 'string', required: true, description: 'Senha usada para login na instância.' },
-  { field: 'code', type: 'string', required: true, description: 'Código 2FA da instância.' },
+export const installParams = [
   { field: 'name', type: 'string', required: true, description: 'Nome final da IA.' },
+  { field: 'instance', type: 'string', required: true, description: 'URL da instância onde a IA será instalada.' },
   { field: 'clientName', type: 'string', required: true, description: 'Nome da loja.' },
-  { field: 'apiKey', type: 'string', required: true, description: 'API key usada pelos fluxos da Vannon.' },
-  { field: 'clientEndpoint', type: 'string', required: true, description: 'Endpoint do e-commerce da loja.' },
-  { field: 'cepLoja', type: 'number', required: true, description: 'CEP da unidade usado no contexto operacional.' },
+  { field: 'apiKey', type: 'string', required: true, description: 'API key global do sistema usada na instalação.' },
+  { field: 'clientEndpoint', type: 'string', required: true, description: 'Endpoint público do e-commerce da loja.' },
+  { field: 'cepLoja', type: 'number', required: true, description: 'CEP real da unidade usado no contexto operacional.' },
+  { field: 'code', type: 'string', required: true, description: 'Código 2FA para autorizar a criação da IA.' },
 ]
 
-# Criar IA Vannon
+# IA Vannon
 
-Cria uma IA voltada para fluxo de e-commerce com busca de produtos, pré-processamento e contexto por loja.
+Esta página deve ser lida como **procedimento de implantação** da Vannon.
+O foco aqui é operacional: solicitar as credenciais, validar internamente, instalar a IA e homologar.
 
-<MethodBadge method="POST" path="/api/ia/create-ai/vannon" />
-
-<Callout type="warning" title="Endpoint do cliente">
-  Use o endpoint público da loja. O backend extrai o domínio base desse valor para preencher
-  as variáveis do template.
+<Callout type="info" title="Primeiro passo">
+  Assim que o cliente chegar, a solicitação das credenciais da Vannon deve ser feita diretamente
+  no grupo do WhatsApp. Depois disso, confirme com Maicon ou Moara antes de prosseguir com os dados do cliente.
 </Callout>
 
-## Autenticação
+## Visão geral do processo
 
-O backend autentica diretamente na instância usando `username`, `password` e `code`.
-Quando a criação parte do painel, esses campos são preenchidos pela sessão atual.
+1. Solicitar as credenciais da Vannon no grupo do WhatsApp.
+2. Validar com Maicon ou Moara antes de seguir com os dados do cliente.
+3. Receber os dados necessários para a instalação.
+4. Acessar o módulo de IAs e configurar a IA Vannon.
+5. Verificar se a fila possui a API key correta.
+6. Homologar antes de liberar em produção.
 
-Veja também: <Link to="/main/docs/getting-started/autenticacao">Autenticação</Link>
+## Passo 1: Solicitar as credenciais
 
-## Headers
+Assim que o cliente chegar, solicite as credenciais da Vannon diretamente no grupo do WhatsApp.
 
-| Header | Valor |
-| --- | --- |
-| `Content-Type` | `application/json` |
+Esse é o ponto de partida da implantação. Sem os dados enviados pela Vannon, a configuração da IA não deve começar.
 
-## Body
+## Passo 2: Validar internamente
 
-<ParamsTable params={bodyParams} />
+Quando a solicitação for feita, confirme com **Maicon** ou **Moara** antes de prosseguir com a
+solicitação dos dados do cliente.
 
-## Fluxo interno
+Essa validação deve acontecer antes da instalação, para garantir que o processo está liberado para seguir.
 
-- Autentica na instância.
-- Cria um assistente base.
-- Instala download de imagens, busca de produtos, pré-processamento, URA principal e URA AB.
-- Atualiza o assistente com o template final da IA Vannon.
+## Passo 3: Instalar a IA Vannon
 
-## Exemplo de requisição
+Depois de receber os dados, vá diretamente para a **sexta opção da barra lateral do sistema**,
+na área de **IAs**, e entre em **Configurar IA Vannon**.
 
-<CodeBlock language="json">{`{
-  "instance": "https://cliente.exemplo.com",
-  "username": "operacao@cliente.com",
-  "password": "senha-da-instancia",
-  "code": "123456",
-  "name": "IA - Vannon Loja Centro",
-  "clientName": "Farmácia Centro",
-  "apiKey": "vannon-api-key",
-  "clientEndpoint": "https://farmaciacentro.vannon.app",
-  "cepLoja": 30140071
-}`}</CodeBlock>
+Preencha os campos da instalação:
 
-## Respostas
+<ParamsTable params={installParams} />
 
-### 200 OK
+Esses dados são os que autorizam a criação da IA na instância do cliente.
 
-<CodeBlock language="json">{`{
-  "id": 302,
-  "name": "IA - Vannon Loja Centro",
-  "status": "configured",
-  "templateKey": "vannon",
-  "instance": "https://cliente.exemplo.com",
-  "updatedAt": "2026-03-27T15:10:00.000Z"
-}`}</CodeBlock>
+<Callout type="warning" title="Ponto de atenção">
+  O campo <code>clientEndpoint</code> deve receber o endpoint público da loja, e não uma URL interna.
+  O campo <code>cepLoja</code> também precisa refletir o CEP real da unidade que será atendida.
+</Callout>
 
-### 400 Bad Request
+## Passo 4: Verificar a API key da fila
 
-<CodeBlock language="json">{`{
-  "message": "O campo \\"clientEndpoint\\" é obrigatório"
-}`}</CodeBlock>
+Antes de vincular a IA a uma fila de atendimento, confira se a fila tem uma API key definida.
 
-### 500 Internal Server Error
+Essa API key precisa estar alinhada com a API key global informada na instalação.
+Se a fila estiver sem essa chave, a integração não vai funcionar.
 
-<CodeBlock language="json">{`{
-  "message": "Ocorreu um erro ao criar a IA. Falha ao configurar a IA Vannon.",
-  "error": "Falha ao configurar a IA Vannon."
-}`}</CodeBlock>
+<Callout type="warning" title="Validação obrigatória">
+  Se a fila não tiver API key, ou se a chave estiver diferente da API key global usada na instalação,
+  a IA não vai funcionar corretamente no atendimento.
+</Callout>
+
+## Passo 5: Homologação inicial
+
+Após a instalação:
+
+- configure a URAB inicialmente para transferir apenas para a loja e para você
+- rode a validação e homologação junto com o cliente
+- confirme se a IA está respondendo bem
+- só depois direcione definitivamente para o cliente
+
+Essa etapa é obrigatória antes de liberar o fluxo em produção.
 
 ## Ver também
 
 - <Link to="/main/docs/ias">Visão geral das IAs</Link>
-- <Link to="/main/docs/ias/alpha7">Criar IA Alpha 7</Link>
-- <Link to="/main/docs/ias/vetor">Criar IA Vetor</Link>
+- <Link to="/main/docs/getting-started/autenticacao">Autenticação</Link>
 - <Link to="/main/docs/erros">Tabela de erros</Link>

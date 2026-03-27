@@ -1,99 +1,90 @@
 import { Link } from 'react-router-dom'
 import {
-  MethodBadge,
-  CodeBlock,
   ParamsTable,
   Callout,
 } from '../../components/DocsComponents'
 
-export const bodyParams = [
-  { field: 'instance', type: 'string', required: true, description: 'URL da instância que receberá a IA.' },
-  { field: 'username', type: 'string', required: true, description: 'Usuário usado para login na instância.' },
-  { field: 'password', type: 'string', required: true, description: 'Senha usada para login na instância.' },
-  { field: 'code', type: 'string', required: true, description: 'Código 2FA da instância.' },
+export const installParams = [
   { field: 'name', type: 'string', required: true, description: 'Nome final da IA.' },
+  { field: 'instance', type: 'string', required: true, description: 'URL da instância onde a IA será instalada.' },
   { field: 'clientName', type: 'string', required: true, description: 'Nome da loja.' },
-  { field: 'apiKey', type: 'string', required: true, description: 'API key usada pelos fluxos da Vetor.' },
-  { field: 'vetorToken', type: 'string', required: true, description: 'Token dedicado da integração Vetor.' },
+  { field: 'apiKey', type: 'string', required: true, description: 'API key global do sistema usada na instalação.' },
+  { field: 'vetorToken', type: 'string', required: true, description: 'Token enviado pela Vetor para autenticar a integração.' },
+  { field: 'code', type: 'string', required: true, description: 'Código 2FA para autorizar a criação da IA.' },
 ]
 
-# Criar IA Vetor
+# IA Vetor
 
-Cria uma IA integrada ao fluxo Vetor com token dedicado, busca de produtos e automações auxiliares.
+Esta página deve ser lida como **procedimento de implantação** da Vetor.
+O foco aqui é operacional: solicitar as credenciais, validar internamente, instalar a IA e homologar.
 
-<MethodBadge method="POST" path="/api/ia/create-ai/vetor" />
-
-<Callout type="warning" title="Mensagem atual de validação">
-  Se <code>vetorToken</code> não for enviado, a controller atual responde com uma mensagem
-  incorreta para <code>clientEndpoint</code>. O campo exigido de fato é <code>vetorToken</code>.
+<Callout type="info" title="Primeiro passo">
+  Assim que o cliente chegar, a solicitação das credenciais da Vetor deve ser feita diretamente
+  no grupo do WhatsApp. Depois disso, confirme com Maicon ou Moara antes de prosseguir com os dados do cliente.
 </Callout>
 
-## Autenticação
+## Visão geral do processo
 
-O backend autentica diretamente na instância usando `username`, `password` e `code`.
-Quando a criação acontece pelo painel, esses valores são preenchidos automaticamente pela sessão.
+1. Solicitar as credenciais da Vetor no grupo do WhatsApp.
+2. Validar com Maicon ou Moara antes de seguir com os dados do cliente.
+3. Receber os dados necessários para a instalação.
+4. Acessar o módulo de IAs e configurar a IA Vetor.
+5. Verificar se a fila possui a API key correta.
+6. Homologar antes de liberar em produção.
 
-Veja também: <Link to="/main/docs/getting-started/autenticacao">Autenticação</Link>
+## Passo 1: Solicitar as credenciais
 
-## Headers
+Assim que o cliente chegar, solicite as credenciais da Vetor diretamente no grupo do WhatsApp.
 
-| Header | Valor |
-| --- | --- |
-| `Content-Type` | `application/json` |
+Esse é o ponto de partida da implantação. Sem o token enviado pela Vetor, a configuração da IA não deve começar.
 
-## Body
+## Passo 2: Validar internamente
 
-<ParamsTable params={bodyParams} />
+Quando a solicitação for feita, confirme com **Maicon** ou **Moara** antes de prosseguir com a
+solicitação dos dados do cliente.
 
-## Fluxo interno
+Essa validação deve acontecer antes da instalação, para garantir que o processo está liberado para seguir.
 
-- Autentica na instância.
-- Cria um assistente base.
-- Instala download de imagens, busca de produtos, pré-processamento, URA principal e URA AB.
-- Atualiza o assistente com o template final da IA Vetor.
+## Passo 3: Instalar a IA Vetor
 
-## Exemplo de requisição
+Depois de receber os dados, vá diretamente para a **sexta opção da barra lateral do sistema**,
+na área de **IAs**, e entre em **Configurar IA Vetor**.
 
-<CodeBlock language="json">{`{
-  "instance": "https://cliente.exemplo.com",
-  "username": "operacao@cliente.com",
-  "password": "senha-da-instancia",
-  "code": "123456",
-  "name": "IA - Vetor Loja Centro",
-  "clientName": "Farmácia Centro",
-  "apiKey": "vetor-api-key",
-  "vetorToken": "AgAAAGmNu9AtfU9..."
-}`}</CodeBlock>
+Preencha os campos da instalação:
 
-## Respostas
+<ParamsTable params={installParams} />
 
-### 200 OK
+Esses dados são os que autorizam a criação da IA na instância do cliente.
 
-<CodeBlock language="json">{`{
-  "id": 347,
-  "name": "IA - Vetor Loja Centro",
-  "status": "configured",
-  "templateKey": "vetor",
-  "instance": "https://cliente.exemplo.com",
-  "updatedAt": "2026-03-27T15:28:00.000Z"
-}`}</CodeBlock>
+<Callout type="warning" title="Ponto de atenção">
+  O token enviado pela Vetor é obrigatório. Sem ele, a instalação não deve prosseguir.
+</Callout>
 
-### 400 Bad Request
+## Passo 4: Verificar a API key da fila
 
-<CodeBlock language="json">{`{
-  "message": "O campo \\"clientEndpoint\\" é obrigatório"
-}`}</CodeBlock>
+Antes de vincular a IA a uma fila de atendimento, confira se a fila tem uma API key definida.
 
-### 500 Internal Server Error
+Essa API key precisa estar alinhada com a API key global informada na instalação.
+Se a fila estiver sem essa chave, a integração não vai funcionar.
 
-<CodeBlock language="json">{`{
-  "message": "Ocorreu um erro ao criar a IA. Falha ao configurar a IA Vetor.",
-  "error": "Falha ao configurar a IA Vetor."
-}`}</CodeBlock>
+<Callout type="warning" title="Validação obrigatória">
+  Se a fila não tiver API key, ou se a chave estiver diferente da API key global usada na instalação,
+  a IA não vai funcionar corretamente no atendimento.
+</Callout>
+
+## Passo 5: Homologação inicial
+
+Após a instalação:
+
+- configure a URAB inicialmente para transferir apenas para a loja e para você
+- rode a validação e homologação junto com o cliente
+- confirme se a IA está respondendo bem
+- só depois direcione definitivamente para o cliente
+
+Essa etapa é obrigatória antes de liberar o fluxo em produção.
 
 ## Ver também
 
 - <Link to="/main/docs/ias">Visão geral das IAs</Link>
-- <Link to="/main/docs/ias/trier">Criar IA Trier</Link>
-- <Link to="/main/docs/ias/vannon">Criar IA Vannon</Link>
+- <Link to="/main/docs/getting-started/autenticacao">Autenticação</Link>
 - <Link to="/main/docs/erros">Tabela de erros</Link>

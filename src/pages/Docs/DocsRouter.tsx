@@ -13,20 +13,12 @@ import AtendimentoDocs from './content/ias/atendimento.mdx'
 import Erros from './Erros'
 import Changelog from './Changelog'
 
-/**
- * DocsRouter
- *
- * Adicione novas páginas aqui conforme criar os arquivos em /content.
- * O padrão é: criar o arquivo .tsx em content/ e adicionar a rota aqui.
- */
 const DocsRouter: React.FC = () => {
   return (
     <Routes>
       <Route element={<DocsLayout />}>
-        {/* Intro */}
         <Route index element={<DocsIntro />} />
 
-        {/* Getting Started */}
         <Route path="getting-started/autenticacao" element={<Autenticacao />} />
         <Route
           path="getting-started/ambientes"
@@ -37,7 +29,6 @@ const DocsRouter: React.FC = () => {
           element={<ComingSoon title="Primeiros Passos" />}
         />
 
-        {/* Conceitos */}
         <Route
           path="conceitos/contatos"
           element={<ComingSoon title="Conceito: Contatos" />}
@@ -51,7 +42,6 @@ const DocsRouter: React.FC = () => {
           element={<ComingSoon title="Conceito: Webhooks" />}
         />
 
-        {/* Guias */}
         <Route
           path="guias/criar-contato"
           element={<ComingSoon title="Guia: Criar um Contato" />}
@@ -65,7 +55,6 @@ const DocsRouter: React.FC = () => {
           element={<ComingSoon title="Guia: Configurar Webhook" />}
         />
 
-        {/* Referência - Contatos */}
         <Route path="referencia/contatos/criar" element={<CriarContato />} />
         <Route
           path="referencia/contatos/listar"
@@ -80,7 +69,6 @@ const DocsRouter: React.FC = () => {
           element={<ComingSoon title="Deletar Contato" />}
         />
 
-        {/* Referência - Mensagens */}
         <Route
           path="referencia/mensagens/enviar"
           element={<ComingSoon title="Enviar Mensagem" />}
@@ -90,7 +78,6 @@ const DocsRouter: React.FC = () => {
           element={<ComingSoon title="Listar Mensagens" />}
         />
 
-        {/* Referência - Webhooks */}
         <Route
           path="referencia/webhooks/criar"
           element={<ComingSoon title="Criar Webhook" />}
@@ -100,7 +87,6 @@ const DocsRouter: React.FC = () => {
           element={<ComingSoon title="Listar Webhooks" />}
         />
 
-        {/* IAs */}
         <Route path="ias" element={<IAsOverview />} />
         <Route path="ias/alpha7" element={<Alpha7Docs />} />
         <Route path="ias/trier" element={<TrierDocs />} />
@@ -108,18 +94,15 @@ const DocsRouter: React.FC = () => {
         <Route path="ias/vetor" element={<VetorDocs />} />
         <Route path="ias/atendimento" element={<AtendimentoDocs />} />
 
-        {/* Misc */}
         <Route path="erros" element={<Erros />} />
         <Route path="changelog" element={<Changelog />} />
 
-        {/* Fallback */}
         <Route path="*" element={<Navigate to="/main/docs" replace />} />
       </Route>
     </Routes>
   )
 }
 
-/** Placeholder para páginas ainda não documentadas */
 const ComingSoon: React.FC<{ title: string }> = ({ title }) => (
   <div>
     <div
