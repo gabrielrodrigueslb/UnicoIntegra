@@ -13,7 +13,13 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
   },
-  plugins: [react(),tailwindcss(), mdx()],
+  plugins: [
+    { enforce: 'pre', ...mdx() },
+    react({
+      include: /\.(mdx|js|jsx|ts|tsx)$/,
+    }),
+    tailwindcss(),
+  ],
   server: {
     proxy: {
       '/ai-services': {

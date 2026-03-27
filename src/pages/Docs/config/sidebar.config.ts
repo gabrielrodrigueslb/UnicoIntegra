@@ -8,13 +8,13 @@ const DOCS_BASE = '/main/docs'
 
 export const sidebarConfig: SidebarItem[] = [
   {
-    label: 'Introducao',
+    label: 'Introdução',
     path: DOCS_BASE,
   },
   {
     label: 'Getting Started',
     items: [
-      { label: 'Autenticacao', path: `${DOCS_BASE}/getting-started/autenticacao` },
+      { label: 'Autenticação', path: `${DOCS_BASE}/getting-started/autenticacao` },
       { label: 'Ambientes', path: `${DOCS_BASE}/getting-started/ambientes` },
       { label: 'Primeiros Passos', path: `${DOCS_BASE}/getting-started/primeiros-passos` },
     ],
@@ -36,7 +36,7 @@ export const sidebarConfig: SidebarItem[] = [
     ],
   },
   {
-    label: 'Referencia da API',
+    label: 'Referência da API',
     items: [
       {
         label: 'Contatos',
@@ -61,6 +61,17 @@ export const sidebarConfig: SidebarItem[] = [
           { label: 'Listar Webhooks', path: `${DOCS_BASE}/referencia/webhooks/listar` },
         ],
       },
+    ],
+  },
+  {
+    label: 'IAs',
+    items: [
+      { label: 'Visão Geral', path: `${DOCS_BASE}/ias` },
+      { label: 'IA Alpha 7', path: `${DOCS_BASE}/ias/alpha7` },
+      { label: 'IA Trier', path: `${DOCS_BASE}/ias/trier` },
+      { label: 'IA Vannon', path: `${DOCS_BASE}/ias/vannon` },
+      { label: 'IA Vetor', path: `${DOCS_BASE}/ias/vetor` },
+      { label: 'IA Atendimento', path: `${DOCS_BASE}/ias/atendimento` },
     ],
   },
   {

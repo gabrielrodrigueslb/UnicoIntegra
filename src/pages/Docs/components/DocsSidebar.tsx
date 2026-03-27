@@ -11,7 +11,7 @@ interface SidebarNodeProps {
 const SidebarNode: React.FC<SidebarNodeProps> = ({ item, depth = 0 }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   const isActive = item.path === location.pathname
   const hasChildren = item.items && item.items.length > 0
@@ -53,7 +53,7 @@ const DocsSidebar: React.FC = () => {
       <div className="docs-sidebar-header">
         <span className="docs-sidebar-badge">DOCS</span>
         <h2 className="docs-sidebar-title">Unico Contato</h2>
-        <p className="docs-sidebar-subtitle">API Reference</p>
+        <p className="docs-sidebar-subtitle">API + IAs</p>
       </div>
 
       <div className="docs-sidebar-search">

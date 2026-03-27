@@ -1,0 +1,99 @@
+import { Link } from 'react-router-dom'
+import {
+  MethodBadge,
+  CodeBlock,
+  ParamsTable,
+  Callout,
+} from '../../components/DocsComponents'
+
+export const bodyParams = [
+  { field: 'instance', type: 'string', required: true, description: 'URL da instância que receberá a IA.' },
+  { field: 'username', type: 'string', required: true, description: 'Usuário usado para login na instância.' },
+  { field: 'password', type: 'string', required: true, description: 'Senha usada para login na instância.' },
+  { field: 'code', type: 'string', required: true, description: 'Código 2FA da instância.' },
+  { field: 'name', type: 'string', required: true, description: 'Nome final da IA.' },
+  { field: 'clientName', type: 'string', required: true, description: 'Nome da loja.' },
+  { field: 'apiKey', type: 'string', required: true, description: 'API key usada pelos fluxos da Vetor.' },
+  { field: 'vetorToken', type: 'string', required: true, description: 'Token dedicado da integração Vetor.' },
+]
+
+# Criar IA Vetor
+
+Cria uma IA integrada ao fluxo Vetor com token dedicado, busca de produtos e automações auxiliares.
+
+<MethodBadge method="POST" path="/api/ia/create-ai/vetor" />
+
+<Callout type="warning" title="Mensagem atual de validação">
+  Se <code>vetorToken</code> não for enviado, a controller atual responde com uma mensagem
+  incorreta para <code>clientEndpoint</code>. O campo exigido de fato é <code>vetorToken</code>.
+</Callout>
+
+## Autenticação
+
+O backend autentica diretamente na instância usando `username`, `password` e `code`.
+Quando a criação acontece pelo painel, esses valores são preenchidos automaticamente pela sessão.
+
+Veja também: <Link to="/main/docs/getting-started/autenticacao">Autenticação</Link>
+
+## Headers
+
+| Header | Valor |
+| --- | --- |
+| `Content-Type` | `application/json` |
+
+## Body
+
+<ParamsTable params={bodyParams} />
+
+## Fluxo interno
+
+- Autentica na instância.
+- Cria um assistente base.
+- Instala download de imagens, busca de produtos, pré-processamento, URA principal e URA AB.
+- Atualiza o assistente com o template final da IA Vetor.
+
+## Exemplo de requisição
+
+<CodeBlock language="json">{`{
+  "instance": "https://cliente.exemplo.com",
+  "username": "operacao@cliente.com",
+  "password": "senha-da-instancia",
+  "code": "123456",
+  "name": "IA - Vetor Loja Centro",
+  "clientName": "Farmácia Centro",
+  "apiKey": "vetor-api-key",
+  "vetorToken": "AgAAAGmNu9AtfU9..."
+}`}</CodeBlock>
+
+## Respostas
+
+### 200 OK
+
+<CodeBlock language="json">{`{
+  "id": 347,
+  "name": "IA - Vetor Loja Centro",
+  "status": "configured",
+  "templateKey": "vetor",
+  "instance": "https://cliente.exemplo.com",
+  "updatedAt": "2026-03-27T15:28:00.000Z"
+}`}</CodeBlock>
+
+### 400 Bad Request
+
+<CodeBlock language="json">{`{
+  "message": "O campo \\"clientEndpoint\\" é obrigatório"
+}`}</CodeBlock>
+
+### 500 Internal Server Error
+
+<CodeBlock language="json">{`{
+  "message": "Ocorreu um erro ao criar a IA. Falha ao configurar a IA Vetor.",
+  "error": "Falha ao configurar a IA Vetor."
+}`}</CodeBlock>
+
+## Ver também
+
+- <Link to="/main/docs/ias">Visão geral das IAs</Link>
+- <Link to="/main/docs/ias/trier">Criar IA Trier</Link>
+- <Link to="/main/docs/ias/vannon">Criar IA Vannon</Link>
+- <Link to="/main/docs/erros">Tabela de erros</Link>

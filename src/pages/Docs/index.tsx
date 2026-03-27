@@ -7,47 +7,60 @@ const DocsIntro: React.FC = () => {
 
   const cards = [
     {
-      icon: '⚡',
-      title: 'Primeiros Passos',
-      description: 'Configure sua primeira integracao em minutos.',
-      path: '/main/docs/getting-started/primeiros-passos',
+      icon: 'AI',
+      title: 'Agentes de IA',
+      description: 'Consulte modelos, campos e endpoints usados no provisionamento das IAs.',
+      path: '/main/docs/ias',
     },
     {
-      icon: '🔐',
-      title: 'Autenticacao',
-      description: 'Aprenda a autenticar suas requisicoes com Bearer Token.',
+      icon: 'API',
+      title: 'Autenticação',
+      description: 'Aprenda a autenticar suas requisições com Bearer Token.',
       path: '/main/docs/getting-started/autenticacao',
     },
     {
-      icon: '📋',
-      title: 'Referencia da API',
-      description: 'Documentacao completa de todos os endpoints.',
+      icon: 'DOC',
+      title: 'Referência da API',
+      description: 'Documentação completa de todos os endpoints.',
       path: '/main/docs/referencia/contatos/listar',
     },
     {
-      icon: '📡',
+      icon: 'WEB',
       title: 'Webhooks',
-      description: 'Receba notificacoes em tempo real de eventos.',
+      description: 'Receba notificações em tempo real de eventos.',
       path: '/main/docs/conceitos/webhooks',
+    },
+    {
+      icon: 'GO',
+      title: 'Primeiros Passos',
+      description: 'Configure sua primeira integração em minutos.',
+      path: '/main/docs/getting-started/primeiros-passos',
     },
   ]
 
   return (
     <div>
       <PageHeader
-        badge="Documentacao"
+        badge="Documentação"
         title="API Unico Contato"
-        description="Bem-vindo a documentacao oficial da API Unico Contato. Aqui voce encontra guias, referencias e exemplos para integrar com nossa plataforma."
+        description="Bem-vindo à documentação oficial da API Unico Contato. Aqui você encontra guias, referências, exemplos e fluxos de IA para integrar e operar a plataforma."
       />
 
-      <Callout type="info" title="Versao atual: v1">
-        Esta documentacao cobre a versao estavel v1 da API. Para mudancas recentes, consulte o{' '}
+      <Callout type="info" title="Versão atual: v1">
+        Esta documentação cobre a versão estável v1 da API. Para mudanças recentes, consulte o{' '}
         <Link to="/main/docs/changelog">Changelog</Link>.
       </Callout>
 
-      <h2>Por onde comecar?</h2>
+      <h2>Por onde começar?</h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', margin: '0 0 32px' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '12px',
+          margin: '0 0 32px',
+        }}
+      >
         {cards.map((card) => (
           <button
             key={card.title}
@@ -74,17 +87,20 @@ const DocsIntro: React.FC = () => {
               e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
             }}
           >
-            <span style={{ fontSize: '20px' }}>{card.icon}</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', color: '#3b82f6' }}>
+              {card.icon}
+            </span>
             <span style={{ fontSize: '14px', fontWeight: 600, color: '#f1f5f9' }}>{card.title}</span>
             <span style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>{card.description}</span>
           </button>
         ))}
       </div>
 
-      <h2>Visao geral</h2>
+      <h2>Visão geral</h2>
       <p>
-        A API Unico Contato e uma API REST que permite gerenciar contatos, conversas e automacoes
-        da sua plataforma. Todas as requisicoes usam JSON e autenticacao via Bearer Token.
+        A documentação cobre a API REST da plataforma e os fluxos internos de provisionamento de
+        assistentes. Todas as requisições usam JSON e autenticação via Bearer Token ou sessão
+        autenticada, dependendo do módulo.
       </p>
 
       <h3>URLs Base</h3>
@@ -97,7 +113,7 @@ const DocsIntro: React.FC = () => {
         </thead>
         <tbody>
           <tr>
-            <td>Producao</td>
+            <td>Produção</td>
             <td><code>https://api.unicocontato.com.br/v1</code></td>
           </tr>
           <tr>
@@ -109,7 +125,7 @@ const DocsIntro: React.FC = () => {
 
       <h3>Formato das respostas</h3>
       <p>
-        Todas as respostas sao retornadas em JSON. Datas seguem o formato <code>ISO 8601</code>.
+        Todas as respostas são retornadas em JSON. Datas seguem o formato <code>ISO 8601</code>.
         Erros retornam sempre um objeto com <code>code</code> e <code>message</code>.
       </p>
     </div>

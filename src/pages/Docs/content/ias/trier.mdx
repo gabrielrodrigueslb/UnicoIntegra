@@ -1,0 +1,108 @@
+import { Link } from 'react-router-dom'
+import {
+  ParamsTable,
+  Callout,
+} from '../../components/DocsComponents'
+
+export const serviceAccessParams = [
+  { field: 'token', type: 'string', required: true, description: 'Token da API enviado pela Trier ou repassado pelo cliente.' },
+]
+
+export const installParams = [
+  { field: 'name', type: 'string', required: true, description: 'Nome final da IA na instância.' },
+  { field: 'instance', type: 'string', required: true, description: 'URL da instância onde a IA será instalada.' },
+  { field: 'nomeCliente', type: 'string', required: true, description: 'Nome da farmácia ou da loja.' },
+  { field: 'porta_cliente', type: 'string', required: true, description: 'Porta da API criada no serviço IA Trier API.' },
+  { field: 'apiKey', type: 'string', required: true, description: 'API key global do sistema usada na integração.' },
+  { field: 'code', type: 'string', required: true, description: 'Código 2FA para autorizar a criação da IA.' },
+]
+
+# IA Trier
+
+Esta página deve ser lida como **procedimento de implantação** da Trier.
+O foco aqui é operacional: receber o token, criar o serviço e instalar a IA.
+
+<Callout type="info" title="Diferença em relação ao Alpha 7">
+  Na Trier, o ponto de partida não é a liberação de banco. O primeiro passo é orientar o cliente
+  a solicitar a integração junto à própria Trier para que o token seja disponibilizado.
+</Callout>
+
+## Visão geral do processo
+
+1. Orientar o cliente a entrar em contato com a Trier solicitando a integração.
+2. Aguardar o envio do token ou das credenciais da API.
+3. Criar o serviço em **Serviços > IA Trier API**.
+4. Validar se o serviço ficou operacional.
+5. Instalar a IA no módulo de IAs.
+6. Homologar com a mesma lógica usada no Alpha 7.
+
+## Passo 1: Solicitação junto à Trier
+
+Assim que o cliente contratar a IA ou a integração da Trier, oriente-o a entrar em contato com a
+própria Trier para solicitar a integração com a Unico Contato.
+
+Depois disso, a Trier pode:
+
+- entrar em contato diretamente com a equipe
+- ou repassar as credenciais por meio do próprio cliente
+
+Sem esse retorno, não avance para a criação do serviço.
+
+## Passo 2: Receber o token de integração
+
+Com a solicitação feita, aguarde o token que será usado para autenticar a integração.
+
+<ParamsTable params={serviceAccessParams} />
+
+<Callout type="warning" title="Ponto de atenção">
+  Sem o token correto da Trier, o serviço não deve ser criado e a instalação da IA não deve prosseguir.
+</Callout>
+
+## Passo 3: Criar o serviço IA Trier API
+
+Com o token em mãos, acesse a aba de **Serviços**, abra o módulo **IA Trier API** e informe o token
+recebido da Trier.
+
+Depois da criação, esse serviço passa a concentrar a operação da integração. Nele você consegue:
+
+- visualizar status
+- visualizar logs
+- reiniciar o serviço
+- parar o serviço
+- pesquisar instâncias
+- acompanhar o status operacional
+- criar nova instância
+
+Na criação da instância do serviço, preencha os dados básicos da loja e de segurança
+conforme o ambiente do cliente.
+
+## Passo 4: Instalar a IA Trier
+
+Depois de criar a API, vá para a **sexta opção do menu lateral**, na área de **IAs**,
+e abra o card da **IA Trier**.
+
+Preencha os campos da instalação:
+
+<ParamsTable params={installParams} />
+
+Esses dados são os que autorizam e concluem a criação da IA na instância do cliente.
+
+## Passo 5: Homologação inicial
+
+Após a instalação:
+
+- configure a URAB inicialmente para transferir apenas para a loja e para você
+- rode a validação e homologação junto com o cliente
+- confirme se a IA está respondendo bem
+- só depois direcione definitivamente para o cliente
+
+Essa etapa é obrigatória antes de liberar o fluxo em produção.
+
+
+
+## Ver também
+
+- <Link to="/main/docs/ias">Visão geral das IAs</Link>
+- <Link to="/main/docs/ias/alpha7">Fluxo da IA Alpha 7</Link>
+- <Link to="/main/docs/getting-started/autenticacao">Autenticação</Link>
+- <Link to="/main/docs/erros">Tabela de erros</Link>

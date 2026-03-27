@@ -13,28 +13,28 @@ const CriarContato: React.FC = () => {
   const bodyParams = [
     { field: 'nome', type: 'string', required: true, description: 'Nome completo do contato.' },
     { field: 'telefone', type: 'string', required: true, description: 'Telefone no formato E.164 (ex: 5511999999999).' },
-    { field: 'email', type: 'string', required: false, description: 'Endereco de e-mail do contato.' },
-    { field: 'tags', type: 'string[]', required: false, description: 'Lista de tags para categorizacao.' },
+    { field: 'email', type: 'string', required: false, description: 'Endereço de e-mail do contato.' },
+    { field: 'tags', type: 'string[]', required: false, description: 'Lista de tags para categorização.' },
     { field: 'metadata', type: 'object', required: false, description: 'Dados extras em formato chave-valor.' },
   ]
 
   return (
     <div>
       <PageHeader
-        badge="Referencia · Contatos"
+        badge="Referência · Contatos"
         title="Criar Contato"
-        description="Cria um novo contato na plataforma. O telefone e o identificador unico."
+        description="Cria um novo contato na plataforma. O telefone é o identificador único."
       />
 
       <MethodBadge method="POST" path="/v1/contatos" />
 
       <Callout type="info">
-        Se ja existir um contato com o mesmo <code>telefone</code>, a API retorna <code>409 Conflict</code>.
-        Use o endpoint de atualizacao para editar contatos existentes.
+        Se já existir um contato com o mesmo <code>telefone</code>, a API retorna <code>409 Conflict</code>.
+        Use o endpoint de atualização para editar contatos existentes.
       </Callout>
 
-      <h2>Autenticacao</h2>
-      <p>Bearer Token no header <code>Authorization</code>. Ver <Link to="/main/docs/getting-started/autenticacao">Autenticacao</Link>.</p>
+      <h2>Autenticação</h2>
+      <p>Bearer Token no header <code>Authorization</code>. Ver <Link to="/main/docs/getting-started/autenticacao">Autenticação</Link>.</p>
 
       <h2>Headers</h2>
       <table>
@@ -50,9 +50,9 @@ const CriarContato: React.FC = () => {
       <h2>Body</h2>
       <ParamsTable params={bodyParams} />
 
-      <h2>Exemplo de requisicao</h2>
+      <h2>Exemplo de requisição</h2>
       <CodeBlock language="json">{`{
-  "nome": "Joao Silva",
+  "nome": "João Silva",
   "telefone": "5511999999999",
   "email": "joao@email.com",
   "tags": ["cliente", "vip"],
@@ -70,7 +70,7 @@ const CriarContato: React.FC = () => {
             language: 'json',
             code: `{
   "id": "ct_abc123xyz",
-  "nome": "Joao Silva",
+  "nome": "João Silva",
   "telefone": "5511999999999",
   "email": "joao@email.com",
   "tags": ["cliente", "vip"],
@@ -87,7 +87,7 @@ const CriarContato: React.FC = () => {
             language: 'json',
             code: `{
   "code": "VALIDATION_ERROR",
-  "message": "Campo obrigatorio ausente: telefone",
+  "message": "Campo obrigatório ausente: telefone",
   "field": "telefone"
 }`,
           },
@@ -96,14 +96,14 @@ const CriarContato: React.FC = () => {
             language: 'json',
             code: `{
   "code": "CONTACT_ALREADY_EXISTS",
-  "message": "Ja existe um contato com o telefone informado.",
+  "message": "Já existe um contato com o telefone informado.",
   "existingId": "ct_xyz789abc"
 }`,
           },
         ]}
       />
 
-      <h2>Ver tambem</h2>
+      <h2>Ver também</h2>
       <ul>
         <li><Link to="/main/docs/referencia/contatos/listar">Listar Contatos</Link></li>
         <li><Link to="/main/docs/referencia/contatos/atualizar">Atualizar Contato</Link></li>

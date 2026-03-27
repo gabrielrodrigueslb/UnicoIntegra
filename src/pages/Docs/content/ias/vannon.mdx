@@ -1,0 +1,101 @@
+import { Link } from 'react-router-dom'
+import {
+  MethodBadge,
+  CodeBlock,
+  ParamsTable,
+  Callout,
+} from '../../components/DocsComponents'
+
+export const bodyParams = [
+  { field: 'instance', type: 'string', required: true, description: 'URL da instância que receberá a IA.' },
+  { field: 'username', type: 'string', required: true, description: 'Usuário usado para login na instância.' },
+  { field: 'password', type: 'string', required: true, description: 'Senha usada para login na instância.' },
+  { field: 'code', type: 'string', required: true, description: 'Código 2FA da instância.' },
+  { field: 'name', type: 'string', required: true, description: 'Nome final da IA.' },
+  { field: 'clientName', type: 'string', required: true, description: 'Nome da loja.' },
+  { field: 'apiKey', type: 'string', required: true, description: 'API key usada pelos fluxos da Vannon.' },
+  { field: 'clientEndpoint', type: 'string', required: true, description: 'Endpoint do e-commerce da loja.' },
+  { field: 'cepLoja', type: 'number', required: true, description: 'CEP da unidade usado no contexto operacional.' },
+]
+
+# Criar IA Vannon
+
+Cria uma IA voltada para fluxo de e-commerce com busca de produtos, pré-processamento e contexto por loja.
+
+<MethodBadge method="POST" path="/api/ia/create-ai/vannon" />
+
+<Callout type="warning" title="Endpoint do cliente">
+  Use o endpoint público da loja. O backend extrai o domínio base desse valor para preencher
+  as variáveis do template.
+</Callout>
+
+## Autenticação
+
+O backend autentica diretamente na instância usando `username`, `password` e `code`.
+Quando a criação parte do painel, esses campos são preenchidos pela sessão atual.
+
+Veja também: <Link to="/main/docs/getting-started/autenticacao">Autenticação</Link>
+
+## Headers
+
+| Header | Valor |
+| --- | --- |
+| `Content-Type` | `application/json` |
+
+## Body
+
+<ParamsTable params={bodyParams} />
+
+## Fluxo interno
+
+- Autentica na instância.
+- Cria um assistente base.
+- Instala download de imagens, busca de produtos, pré-processamento, URA principal e URA AB.
+- Atualiza o assistente com o template final da IA Vannon.
+
+## Exemplo de requisição
+
+<CodeBlock language="json">{`{
+  "instance": "https://cliente.exemplo.com",
+  "username": "operacao@cliente.com",
+  "password": "senha-da-instancia",
+  "code": "123456",
+  "name": "IA - Vannon Loja Centro",
+  "clientName": "Farmácia Centro",
+  "apiKey": "vannon-api-key",
+  "clientEndpoint": "https://farmaciacentro.vannon.app",
+  "cepLoja": 30140071
+}`}</CodeBlock>
+
+## Respostas
+
+### 200 OK
+
+<CodeBlock language="json">{`{
+  "id": 302,
+  "name": "IA - Vannon Loja Centro",
+  "status": "configured",
+  "templateKey": "vannon",
+  "instance": "https://cliente.exemplo.com",
+  "updatedAt": "2026-03-27T15:10:00.000Z"
+}`}</CodeBlock>
+
+### 400 Bad Request
+
+<CodeBlock language="json">{`{
+  "message": "O campo \\"clientEndpoint\\" é obrigatório"
+}`}</CodeBlock>
+
+### 500 Internal Server Error
+
+<CodeBlock language="json">{`{
+  "message": "Ocorreu um erro ao criar a IA. Falha ao configurar a IA Vannon.",
+  "error": "Falha ao configurar a IA Vannon."
+}`}</CodeBlock>
+
+## Ver também
+
+- <Link to="/main/docs/ias">Visão geral das IAs</Link>
+- <Link to="/main/docs/ias/alpha7">Criar IA Alpha 7</Link>
+- <Link to="/main/docs/ias/vetor">Criar IA Vetor</Link>
+- <Link to="/main/docs/erros">Tabela de erros</Link>

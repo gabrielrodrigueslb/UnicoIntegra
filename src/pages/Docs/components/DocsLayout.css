@@ -1,28 +1,32 @@
 /* CSS Variables — override these to match your app's theme */
-:root {
-  --docs-sidebar-bg: #0f1117;
-  --docs-content-bg: #13161e;
-  --docs-border: rgba(255, 255, 255, 0.07);
-  --docs-text: #f1f5f9;
-  --docs-text-secondary: #94a3b8;
-  --docs-text-muted: #64748b;
-  --docs-accent: #3b82f6;
-  --docs-accent-hover: #2563eb;
-  --docs-code-bg: #1e2130;
-  --docs-code-border: rgba(255, 255, 255, 0.06);
-  --docs-tag-get: #10b981;
-  --docs-tag-post: #3b82f6;
-  --docs-tag-put: #f59e0b;
-  --docs-tag-delete: #ef4444;
-  --docs-tag-patch: #8b5cf6;
-}
-
 .docs-layout {
+  --docs-sidebar-bg: color-mix(in srgb, var(--background) 97%, var(--foreground) 3%);
+  --docs-content-bg: var(--background);
+  --docs-border: color-mix(in srgb, var(--border) 88%, transparent);
+  --docs-text: var(--foreground);
+  --docs-text-secondary: color-mix(in srgb, var(--foreground) 76%, var(--background) 24%);
+  --docs-text-muted: color-mix(in srgb, var(--foreground) 56%, var(--background) 44%);
+  --docs-accent: var(--primary);
+  --docs-accent-hover: color-mix(in srgb, var(--primary) 84%, var(--foreground) 16%);
+  --docs-code-bg: color-mix(in srgb, var(--background) 95%, var(--foreground) 5%);
+  --docs-code-border: color-mix(in srgb, var(--border) 90%, transparent);
+  --docs-surface-soft: color-mix(in srgb, var(--foreground) 3%, var(--background) 97%);
+  --docs-surface-muted: color-mix(in srgb, var(--foreground) 5%, var(--background) 95%);
+  --docs-surface-strong: color-mix(in srgb, var(--foreground) 8%, var(--background) 92%);
+  --docs-accent-soft: color-mix(in srgb, var(--primary) 10%, var(--background) 90%);
+  --docs-accent-border: color-mix(in srgb, var(--primary) 18%, var(--background) 82%);
+  --docs-scrollbar: color-mix(in srgb, var(--foreground) 18%, transparent);
+  --docs-tag-get: #10b981;
+  --docs-tag-post: var(--primary);
+  --docs-tag-put: #d97706;
+  --docs-tag-delete: #dc2626;
+  --docs-tag-patch: #7c3aed;
   display: flex;
   height: 100vh;
   overflow: hidden;
   background: var(--docs-content-bg);
-  font-family: 'DM Sans', 'Sora', sans-serif;
+  color: var(--docs-text);
+  font-family: var(--font-sans);
 }
 
 .docs-main {
@@ -79,6 +83,7 @@
 }
 
 .docs-content a:hover {
+  color: var(--docs-accent-hover);
   text-decoration: underline;
 }
 
@@ -121,7 +126,7 @@
   border: none;
   padding: 0;
   font-size: 13px;
-  color: #e2e8f0;
+  color: var(--docs-text);
   line-height: 1.6;
 }
 
@@ -134,7 +139,7 @@
 }
 
 .docs-content thead tr {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--docs-surface-soft);
 }
 
 .docs-content th {
@@ -164,7 +169,7 @@
   margin: 0 0 20px;
   padding: 12px 16px;
   border-left: 3px solid var(--docs-accent);
-  background: rgba(59, 130, 246, 0.06);
+  background: var(--docs-accent-soft);
   border-radius: 0 6px 6px 0;
 }
 
@@ -183,7 +188,7 @@
 }
 
 .docs-main::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--docs-scrollbar);
   border-radius: 3px;
 }
 

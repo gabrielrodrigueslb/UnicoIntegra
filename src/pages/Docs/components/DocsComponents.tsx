@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import './DocsComponents.css'
 
-/* ── Method Badge ── */
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 
 interface MethodBadgeProps {
@@ -16,7 +15,6 @@ export const MethodBadge: React.FC<MethodBadgeProps> = ({ method, path }) => (
   </div>
 )
 
-/* ── Code Block with copy ── */
 interface CodeBlockProps {
   language?: string
   children: string
@@ -46,7 +44,6 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language = 'json', childre
   )
 }
 
-/* ── Params Table ── */
 interface Param {
   field: string
   type: string
@@ -81,7 +78,6 @@ export const ParamsTable: React.FC<ParamsTableProps> = ({ params }) => (
   </table>
 )
 
-/* ── Callout ── */
 type CalloutType = 'info' | 'warning' | 'danger' | 'success'
 
 interface CalloutProps {
@@ -107,7 +103,6 @@ export const Callout: React.FC<CalloutProps> = ({ type = 'info', title, children
   </div>
 )
 
-/* ── Page Header ── */
 interface PageHeaderProps {
   title: string
   description?: string
@@ -123,7 +118,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, description, badg
   </div>
 )
 
-/* ── Response Tabs ── */
 interface ResponseTab {
   label: string
   code: string

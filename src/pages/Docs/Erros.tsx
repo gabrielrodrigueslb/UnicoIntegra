@@ -39,12 +39,14 @@ const Erros: React.FC = () => {
           {errors.map((err) => (
             <tr key={err.code}>
               <td>
-                <span style={{
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: statusColor[err.status[0]] || '#94a3b8',
-                }}>
+                <span
+                  style={{
+                    fontFamily: 'JetBrains Mono, monospace',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: statusColor[err.status[0]] || '#94a3b8',
+                  }}
+                >
                   {err.status}
                 </span>
               </td>

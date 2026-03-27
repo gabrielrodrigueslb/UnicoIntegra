@@ -13,7 +13,7 @@ const Autenticacao: React.FC = () => {
       <h2>Obtendo seu token</h2>
       <p>
         Acesse o painel da Unico Contato em <strong>Configurações → Integrações → API Keys</strong> e
-        gere um novo token. Guarde-o com segurança — ele não será exibido novamente.
+        gere um novo token. Guarde-o com segurança, ele não será exibido novamente.
       </p>
 
       <Callout type="warning" title="Segurança">
