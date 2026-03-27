@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
+import mdx from '@mdx-js/rollup'
 import tailwindcss from '@tailwindcss/vite'
 
 const packageJsonPath = path.resolve(__dirname, 'package.json');
@@ -12,7 +13,7 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
   },
-  plugins: [react(),tailwindcss()],
+  plugins: [react(),tailwindcss(), mdx()],
   server: {
     proxy: {
       '/ai-services': {

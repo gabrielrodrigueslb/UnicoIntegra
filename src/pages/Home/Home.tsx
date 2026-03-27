@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Database, 
@@ -103,6 +103,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const hasLoadedRef = useRef(false);
 
   // Contagem dinâmica de IAs baseada nos templates importados
   const iaCount = Object.keys(templates).length;
@@ -111,27 +112,53 @@ export default function Home() {
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
 
   useEffect(() => {
+    if (hasLoadedRef.current) {
+      return;
+    }
+
+    hasLoadedRef.current = true;
+    let isMounted = true;
+
     async function fetchData() {
       try {
-        const [dbData, licData, newsData] = await Promise.all([
+        const [dbResult, licResult, newsResult] = await Promise.allSettled([
           getDatabases(1, 1),
           listLicenses(),
           getLatestNews()
         ]);
-        
-        const totalDbs = dbData.meta?.totalItems || 0;
-        const totalLic = licData.length;
-        const activeLic = licData.filter((l: any) => l.is_active).length;
+
+        if (!isMounted) {
+          return;
+        }
+
+        const totalDbs =
+          dbResult.status === 'fulfilled' ? dbResult.value.meta?.totalItems || 0 : 0;
+        const licenses = licResult.status === 'fulfilled' ? licResult.value : [];
+        const totalLic = licenses.length;
+        const activeLic = licenses.filter((l: any) => l.is_active).length;
+        const latestNews = newsResult.status === 'fulfilled' ? newsResult.value : [];
 
         setStats({ databases: totalDbs, licenses: totalLic, activeLicenses: activeLic });
-        setNews(newsData);
+        setNews(latestNews);
       } catch (error) {
-        console.error("Erro ao carregar dados", error);
+        if (!isMounted) {
+          return;
+        }
+
+        setStats({ databases: 0, licenses: 0, activeLicenses: 0 });
+        setNews([]);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
-    fetchData();
+
+    void fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const formatMessage = (text: string) => {

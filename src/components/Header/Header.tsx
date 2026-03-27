@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GrIntegration } from 'react-icons/gr';
 import { AiOutlineHome } from 'react-icons/ai';
-import { Cpu, Database, Logs, Boxes} from 'lucide-react';
+import { Cpu, Database, Logs, Boxes, Book} from 'lucide-react';
 import { MdLogout } from 'react-icons/md';
 import ConfirmDialog from '../ConfirmDialog';
 import './Header.scss';
@@ -21,7 +21,10 @@ export default function Header() {
   }
 
   const location = useLocation();
-  console.log(location);
+
+  function isMenuItemActive(path: string) {
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  }
 
   const menuItems = [
     { path: '/main/home', icon: <AiOutlineHome />, description: 'Início' },
@@ -42,6 +45,7 @@ export default function Header() {
     },
     { path: '/main/extensions', icon: <BsPuzzle />, description: 'Extensões' },
     { path: '/main/iaPage', icon: <Cpu />, description: 'IAs' },
+    { path: '/main/docs', icon: <Book />, description: 'Documentação' },
     { path: '/main/logs', icon: <Logs />, description: 'Logs do sistema' },
   ];
 
@@ -56,7 +60,7 @@ export default function Header() {
                 <Link to={item.path} key={index} className="relative group">
                   <li
                     className={`p-3 bg-gray-950 text-white rounded-full text-xl cursor-pointer transition-colors duration-150 relative items-center justify-center flex ${
-                      item.path == location.pathname ? 'active' : ''
+                      isMenuItemActive(item.path) ? 'active' : ''
                     }`}
                     key={index}
                   >

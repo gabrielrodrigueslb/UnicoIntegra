@@ -229,9 +229,9 @@ export default function AiServicesManager() {
   const inputClass = "w-full rounded-xl border border-border bg-background p-3 text-sm outline-none transition-all focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-foreground/30";
 
   return (
-    <div className="flex h-full min-h-screen flex-col bg-gray-50/50 font-sans text-foreground overflow-x-hidden">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-gray-50/50 font-sans text-foreground">
       
-      <header className="sticky top-0 z-10 flex flex-wrap justify-between gap-4 border-b border-border bg-background px-6 py-5 sm:flex-row sm:items-center shadow-sm w-full">
+      <header className="sticky top-0 z-10 shrink-0 flex flex-wrap justify-between gap-4 border-b border-border bg-background px-6 py-5 shadow-sm w-full sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 items-center gap-4">
           <button
             onClick={() => navigate('/main/aplications')}
@@ -260,7 +260,7 @@ export default function AiServicesManager() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-6 p-6 lg:flex-row lg:items-start lg:gap-8 lg:p-8 min-w-0">
+      <main className="custom-scrollbar mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col gap-6 overflow-y-auto p-6 lg:flex-row lg:items-start lg:gap-8 lg:p-8 min-w-0">
         
         {/* SIDEBAR */}
         <aside className="w-full shrink-0 lg:sticky lg:top-28 lg:w-[320px] flex flex-col gap-6">

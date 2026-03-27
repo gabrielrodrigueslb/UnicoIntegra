@@ -32,9 +32,9 @@ export function PkgGenerator() {
   const labelClass = "mb-1 block text-sm font-medium text-foreground/80";
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 font-sans text-foreground">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-gray-50 font-sans text-foreground">
       
-      <header className="sticky top-0 z-10 flex flex-col justify-between gap-4 border-b border-border bg-background px-8 py-6 md:flex-row md:items-center">
+      <header className="sticky top-0 z-10 shrink-0 flex flex-col justify-between gap-4 border-b border-border bg-background px-8 py-6 md:flex-row md:items-center">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
             <HardDriveDownload className="h-7 w-7 text-primary" /> Gerador de Executável
@@ -53,7 +53,7 @@ export function PkgGenerator() {
         </button>
       </header>
 
-      <main className="scrollbar-clean flex-1 overflow-y-auto p-8 flex items-center justify-center">
+      <main className="scrollbar-clean min-h-0 flex flex-1 items-start justify-center overflow-y-auto p-8">
         <div className="w-full max-w-4xl">
           <div className="rounded-2xl border border-border bg-background p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4">
             

@@ -19,8 +19,7 @@ import ExtensionManager from '../ExtensionManager/ExtensionManager';
 import Home from '../Home/Home';
 import Logs from '../SystemLogs/Logs';
 import { getAuthSession } from '../../utils/authSession';
-
-
+import DocsRouter from '../Docs/DocsRouter';
 
 export default function App() {
   const session = getAuthSession();
@@ -33,7 +32,7 @@ export default function App() {
     <main className="main flex-row">
       <Header />
 
-      <section className="w-full relative">
+      <section className="w-full relative max-h-screen overflow-y-hidden">
         {/* O Provider envolve TUDO nessa seção */}
         <GenerationProvider>
           <Routes>
@@ -48,6 +47,7 @@ export default function App() {
             <Route path="iaPage/list" element={<AiVersionsPage />} />
             <Route path="extensions" element={<ExtensionManager />} />
             <Route path="databases" element={<Databases />} />
+            <Route path="docs/*" element={<DocsRouter />} />
             <Route path="logs" element={<Logs/>} />
             <Route path="*" element={<Navigate to="home" replace />} />
           </Routes>

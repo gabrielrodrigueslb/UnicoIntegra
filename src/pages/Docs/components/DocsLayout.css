@@ -1,0 +1,195 @@
+/* CSS Variables — override these to match your app's theme */
+:root {
+  --docs-sidebar-bg: #0f1117;
+  --docs-content-bg: #13161e;
+  --docs-border: rgba(255, 255, 255, 0.07);
+  --docs-text: #f1f5f9;
+  --docs-text-secondary: #94a3b8;
+  --docs-text-muted: #64748b;
+  --docs-accent: #3b82f6;
+  --docs-accent-hover: #2563eb;
+  --docs-code-bg: #1e2130;
+  --docs-code-border: rgba(255, 255, 255, 0.06);
+  --docs-tag-get: #10b981;
+  --docs-tag-post: #3b82f6;
+  --docs-tag-put: #f59e0b;
+  --docs-tag-delete: #ef4444;
+  --docs-tag-patch: #8b5cf6;
+}
+
+.docs-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--docs-content-bg);
+  font-family: 'DM Sans', 'Sora', sans-serif;
+}
+
+.docs-main {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.docs-content {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 48px 96px;
+}
+
+/* ── Typography ── */
+.docs-content h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--docs-text);
+  margin: 0 0 8px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.docs-content h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--docs-text);
+  margin: 40px 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--docs-border);
+  letter-spacing: -0.01em;
+}
+
+.docs-content h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--docs-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 28px 0 10px;
+}
+
+.docs-content p {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--docs-text-secondary);
+  margin: 0 0 16px;
+}
+
+.docs-content a {
+  color: var(--docs-accent);
+  text-decoration: none;
+}
+
+.docs-content a:hover {
+  text-decoration: underline;
+}
+
+.docs-content ul,
+.docs-content ol {
+  padding-left: 20px;
+  margin: 0 0 16px;
+}
+
+.docs-content li {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--docs-text-secondary);
+  margin-bottom: 4px;
+}
+
+/* ── Inline Code ── */
+.docs-content code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  background: var(--docs-code-bg);
+  border: 1px solid var(--docs-code-border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--docs-accent);
+}
+
+/* ── Code Blocks ── */
+.docs-content pre {
+  background: var(--docs-code-bg);
+  border: 1px solid var(--docs-code-border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  margin: 0 0 20px;
+}
+
+.docs-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: #e2e8f0;
+  line-height: 1.6;
+}
+
+/* ── Tables ── */
+.docs-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 24px;
+  font-size: 13px;
+}
+
+.docs-content thead tr {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.docs-content th {
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--docs-text-muted);
+  border-bottom: 1px solid var(--docs-border);
+}
+
+.docs-content td {
+  padding: 10px 14px;
+  color: var(--docs-text-secondary);
+  border-bottom: 1px solid var(--docs-border);
+  vertical-align: top;
+}
+
+.docs-content tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Callout / Blockquote ── */
+.docs-content blockquote {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--docs-accent);
+  background: rgba(59, 130, 246, 0.06);
+  border-radius: 0 6px 6px 0;
+}
+
+.docs-content blockquote p {
+  margin: 0;
+  color: var(--docs-text-secondary);
+}
+
+/* ── Scrollbar ── */
+.docs-main::-webkit-scrollbar {
+  width: 6px;
+}
+
+.docs-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.docs-main::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .docs-content {
+    padding: 24px 20px 64px;
+  }
+}
