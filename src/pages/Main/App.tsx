@@ -20,6 +20,7 @@ import Home from '../Home/Home';
 import Logs from '../SystemLogs/Logs';
 import { getAuthSession } from '../../utils/authSession';
 import DocsRouter from '../Docs/DocsRouter';
+import LinkAi from '../LinkAi/LinkAi';
 
 export default function App() {
   const session = getAuthSession();
@@ -38,6 +39,7 @@ export default function App() {
           <Routes>
             <Route index element={<Navigate to="home" replace />} />
             <Route path="home" element={<Home />} />
+            <Route path="link-ai" element={<LinkAi />} />
             <Route path="aplications" element={<ApplicationsHub />} />
             <Route path="aplications/pkg-generator" element={<PkgGenerator />} />
             <Route path="aplications/ia-services" element={<AiServicesManager />} />

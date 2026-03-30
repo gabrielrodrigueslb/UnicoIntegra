@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GrIntegration } from 'react-icons/gr';
 import { AiOutlineHome } from 'react-icons/ai';
-import { Cpu, Database, Logs, Boxes, Book} from 'lucide-react';
+import { Cpu, Database, Logs, Boxes, Book, Bot} from 'lucide-react';
 import { MdLogout } from 'react-icons/md';
 import ConfirmDialog from '../ConfirmDialog';
 import './Header.scss';
@@ -32,6 +32,11 @@ export default function Header() {
       path: '/main/databases',
       icon: <Database />,
       description: 'Bancos de Dados',
+    },
+    {
+      path: '/main/link-ai',
+      icon: <Bot />,
+      description: 'Link IA',
     },
     {
       path: '/main/aplications',
