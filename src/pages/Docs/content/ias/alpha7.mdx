@@ -14,7 +14,7 @@ export const serviceParams = [
   { field: 'db_name', type: 'string', required: true, description: 'Nome do banco de dados da loja.' },
   { field: 'db_user', type: 'string', required: true, description: 'Usuário com permissão de leitura.' },
   { field: 'db_password', type: 'string', required: true, description: 'Senha do usuário de leitura.' },
-  { field: 'openai_api_key', type: 'string', required: true, description: 'Chave da OpenAI usada pelo serviço da IA Alpha 7 API.' },
+  { field: 'openai_api_key', type: 'string', required: true, description: 'Chave da OpenAI gerada no passo 6 e usada pelo serviço da IA Alpha 7 API.' },
 ]
 
 export const installParams = [
@@ -46,9 +46,11 @@ O fluxo do Alpha 7 hoje é este:
 3. Aguardar assinatura, liberação de dados e retorno do cliente.
 4. Solicitar IP fixo ou DDNS e liberação da porta externa do banco.
 5. Testar a conexão no módulo de banco de dados e identificar a unidade de negócio.
-6. Criar a API do Alpha 7 no módulo de serviços.
-7. Instalar a IA no módulo de IAs.
-8. Validar fila, URAB e homologação inicial com o cliente.
+6. Gerar a API key da OpenAI.
+7. Criar a API do Alpha 7 no módulo de serviços.
+8. Instalar a IA no módulo de IAs.
+9. Validar fila, URAB e homologação inicial com o cliente.
+10. Finalizar a homologação antes de liberar o fluxo em produção.
 
 ## Passo 1: Coleta inicial
 
@@ -151,7 +153,35 @@ O teste deve confirmar:
   Esse valor não pode ser perdido.
 </Callout>
 
-## Passo 6: Criar o serviço IA Alpha 7 API
+## Passo 6: Gerar a API key da OpenAI
+
+Antes de criar o serviço **IA Alpha 7 API**, gere a chave da OpenAI que será usada no campo
+`openai_api_key` da instância do serviço.
+
+1. Acesse o site da OpenAI em `https://platform.openai.com/`.
+2. Faça login ou crie uma conta usando Google, Microsoft ou e-mail e senha.
+3. Depois de logado, acesse `https://platform.openai.com/api-keys` ou clique no perfil e depois em `View API keys`.
+4. Clique em `Create new secret key` e dê um nome para a chave.
+5. Copie o token gerado, no formato `sk-...`, e salve em local seguro.
+
+<Callout type="warning" title="Importante">
+  Essa chave aparece apenas uma vez. Salve a `OPENAI_API_KEY` em local seguro, como no arquivo
+  `.env`, antes de continuar para a criação do serviço.
+</Callout>
+
+Exemplo no `.env`:
+
+<CodeBlock language="dotenv">{`OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxx`}</CodeBlock>
+
+Exemplo no Node.js:
+
+<CodeBlock language="javascript">{`import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});`}</CodeBlock>
+
+## Passo 7: Criar o serviço IA Alpha 7 API
 
 Depois do teste, acesse a **terceira opção do sidebar**, no módulo de serviços,
 e abra o serviço **IA Alpha 7 API**.
@@ -160,10 +190,10 @@ Na lista de serviços, clique em **Nova instância** e preencha:
 
 <ParamsTable params={serviceParams} />
 
-Observação importante: hoje a utilização da IA depende de uma chave da OpenAI para o modelo
-funcionar nesse fluxo específico.
+Observação importante: a utilização da IA depende da chave gerada no passo anterior.
+Sem ela, o serviço não deve ser provisionado.
 
-## Passo 7: Instalar a IA na instância
+## Passo 8: Instalar a IA na instância
 
 Depois da API criada, vá para a **sexta opção do sidebar**, no módulo de IAs,
 e selecione o card do Alpha 7.
@@ -174,7 +204,7 @@ Preencha os campos da tela:
 
 Esses dados são os que efetivamente destravam a criação da IA na instância do cliente.
 
-## Passo 8: Validar fila e API key
+## Passo 9: Validar fila e API key
 
 Antes de vincular a IA a uma fila de atendimento, confira se a fila tem uma API key definida.
 
@@ -186,7 +216,7 @@ Se a fila estiver sem essa chave, a integração não vai funcionar.
   mesmo que a IA tenha sido criada com sucesso.
 </Callout>
 
-## Passo 9: Homologação inicial
+## Passo 10: Homologação inicial
 
 Após a instalação:
 

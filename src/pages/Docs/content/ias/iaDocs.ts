@@ -97,6 +97,7 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     payloadExample: '',
     checklist: [
       'Confirmar unidade de negócio.',
+      'Gerar e armazenar a OPENAI_API_KEY antes de criar o serviço.',
       'Criar o serviço Alpha 7 API.',
       'Validar API key da fila.',
     ],
@@ -127,6 +128,7 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     payloadExample: '',
     checklist: [
       'Receber o token da Trier.',
+      'Gerar e armazenar a OPENAI_API_KEY antes de criar o serviço.',
       'Criar o serviço IA Trier API.',
       'Conferir API key global e API key da fila.',
     ],
@@ -157,6 +159,7 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     payloadExample: '',
     checklist: [
       'Receber as credenciais da Vannon.',
+      'Gerar e armazenar a OPENAI_API_KEY antes de instalar a IA.',
       'Informar endpoint público e CEP real da loja.',
       'Conferir API key global e API key da fila.',
     ],
@@ -187,6 +190,7 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     payloadExample: '',
     checklist: [
       'Receber o token da Vetor.',
+      'Gerar e armazenar a OPENAI_API_KEY antes de instalar a IA.',
       'Validar internamente com Maicon ou Moara.',
       'Conferir API key global e API key da fila.',
     ],
@@ -216,6 +220,7 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     installedTemplates: [],
     payloadExample: '',
     checklist: [
+      'Gerar e armazenar a OPENAI_API_KEY antes de provisionar o ambiente.',
       'Revisar o contexto da IA.',
       'Validar API key da fila.',
       'Homologar antes da produção.',

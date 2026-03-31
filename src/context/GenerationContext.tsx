@@ -1,8 +1,12 @@
 import { createContext, useContext, useState } from 'react';
-// CORREÇÃO 1: Importação de tipo explícita
 import type { ReactNode } from 'react';
+import { getAuthSession } from '../utils/authSession';
 
-// Interfaces
+const API_BASE = (import.meta.env.VITE_URLBASE || 'https://unicocontato.tech').replace(
+  /\/+$/,
+  '',
+);
+
 export interface PkgFormData {
   nome_cliente: string;
   db_host: string;
@@ -12,94 +16,220 @@ export interface PkgFormData {
   access_key: string;
 }
 
+export interface TrierExtensionFormData {
+  instance_url: string;
+  client_token: string;
+}
+
 type ProcessStatus = 'idle' | 'generating' | 'success' | 'error';
+type GenerationOperation = 'pkg' | 'trierExtension' | null;
 
 interface GenerationContextData {
   status: ProcessStatus;
   feedback: string;
   isMinimized: boolean;
+  operation: GenerationOperation;
   generateApp: (data: PkgFormData) => Promise<void>;
+  generateTrierExtension: (data: TrierExtensionFormData) => Promise<void>;
   closePopup: () => void;
   toggleMinimize: () => void;
 }
 
-const GenerationContext = createContext<GenerationContextData>({} as GenerationContextData);
+interface DownloadRequestOptions {
+  operation: Exclude<GenerationOperation, null>;
+  endpoint: string;
+  payload: Record<string, unknown>;
+  startMessage: string;
+  downloadingMessage: string;
+  fallbackFileName: string;
+}
+
+const GenerationContext = createContext<GenerationContextData>(
+  {} as GenerationContextData,
+);
+
+function buildEndpointUrl(endpoint: string) {
+  return `${API_BASE}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+}
+
+function readMessage(value: unknown): string | null {
+  if (typeof value === 'string') {
+    const normalized = value.trim();
+    return normalized ? normalized : null;
+  }
+
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const data = value as Record<string, unknown>;
+
+  return (
+    readMessage(data.message) ??
+    readMessage(data.error) ??
+    (data.error && typeof data.error === 'object'
+      ? JSON.stringify(data.error)
+      : null)
+  );
+}
+
+function parseFileName(contentDisposition: string | null, fallback: string) {
+  if (!contentDisposition) {
+    return fallback;
+  }
+
+  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+
+  if (utf8Match?.[1]) {
+    return decodeURIComponent(utf8Match[1]);
+  }
+
+  const plainMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+
+  if (plainMatch?.[1]) {
+    return plainMatch[1];
+  }
+
+  return fallback;
+}
+
+async function extractResponseErrorMessage(response: Response) {
+  const contentType = response.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    try {
+      return readMessage(await response.json());
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    const text = await response.text();
+    return readMessage(text);
+  } catch {
+    return null;
+  }
+}
+
+function triggerBrowserDownload(blob: Blob, fileName: string) {
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.style.display = 'none';
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  window.URL.revokeObjectURL(url);
+  window.setTimeout(() => anchor.remove(), 100);
+}
 
 export function GenerationProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<ProcessStatus>('idle');
   const [feedback, setFeedback] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
+  const [operation, setOperation] = useState<GenerationOperation>(null);
 
   function closePopup() {
     setStatus('idle');
     setFeedback('');
     setIsMinimized(false);
+    setOperation(null);
   }
 
   function toggleMinimize() {
     setIsMinimized((prev) => !prev);
   }
 
-  async function generateApp(formData: PkgFormData) {
+  async function requestDownloadGeneration(options: DownloadRequestOptions) {
+    setOperation(options.operation);
     setStatus('generating');
-    setFeedback('Compilando e gerando executável...');
-    setIsMinimized(false); 
+    setFeedback(options.startMessage);
+    setIsMinimized(false);
 
     try {
-      const response = await fetch('https://unicocontato.tech/api/generate', {
+      const response = await fetch(buildEndpointUrl(options.endpoint), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(options.payload),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Falha no servidor.');
+        const message =
+          (await extractResponseErrorMessage(response)) || 'Falha no servidor.';
+        throw new Error(message);
       }
 
-      setFeedback('Baixando arquivo...');
-      
+      setFeedback(options.downloadingMessage);
+
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
+      const fileName = parseFileName(
+        response.headers.get('content-disposition'),
+        options.fallbackFileName,
+      );
 
-      const contentDisposition = response.headers.get('content-disposition');
-      let filename = `app-${formData.nome_cliente || 'cliente'}.zip`;
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-        if (filenameMatch && filenameMatch.length > 1) {
-          filename = filenameMatch[1];
-        }
-      }
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      
-      window.URL.revokeObjectURL(url);
-      setTimeout(() => a.remove(), 100);
+      triggerBrowserDownload(blob, fileName);
 
       setStatus('success');
-      setFeedback('Download concluído com sucesso!');
-
+      setFeedback(`Download concluído com sucesso: ${fileName}`);
     } catch (error) {
       console.error(error);
-      const msg = error instanceof Error ? error.message : 'Erro desconhecido';
+      const message =
+        error instanceof Error ? error.message : 'Erro desconhecido.';
       setStatus('error');
-      setFeedback(msg);
+      setFeedback(message);
     }
   }
 
+  async function generateApp(formData: PkgFormData) {
+    const session = getAuthSession();
+
+    await requestDownloadGeneration({
+      operation: 'pkg',
+      endpoint: '/api/generate',
+      payload: {
+        ...formData,
+        username: session?.username,
+      },
+      startMessage: 'Compilando e gerando executável...',
+      downloadingMessage: 'Baixando arquivo...',
+      fallbackFileName: `app-${formData.nome_cliente || 'cliente'}.zip`,
+    });
+  }
+
+  async function generateTrierExtension(formData: TrierExtensionFormData) {
+    const session = getAuthSession();
+
+    await requestDownloadGeneration({
+      operation: 'trierExtension',
+      endpoint: '/api/extensions/trier/generate',
+      payload: {
+        ...formData,
+        username: session?.username,
+      },
+      startMessage: 'Gerando extensão Trier...',
+      downloadingMessage: 'Baixando ZIP da extensão...',
+      fallbackFileName: 'Trier extensão - cliente.zip',
+    });
+  }
+
   return (
-    <GenerationContext.Provider 
-      value={{ status, feedback, isMinimized, generateApp, closePopup, toggleMinimize }}
+    <GenerationContext.Provider
+      value={{
+        status,
+        feedback,
+        isMinimized,
+        operation,
+        generateApp,
+        generateTrierExtension,
+        closePopup,
+        toggleMinimize,
+      }}
     >
       {children}
     </GenerationContext.Provider>
   );
 }
 
-// CORREÇÃO 2: Ignorar regra do fast-refresh para o hook exportado
 // eslint-disable-next-line react-refresh/only-export-components
 export const useGeneration = () => useContext(GenerationContext);

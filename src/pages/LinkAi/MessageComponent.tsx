@@ -9,6 +9,7 @@ type Props = {
   role: ChatRole;
   content?: string;
   action?: ChatAction | null;
+  actions?: ChatAction[];
   trace?: ChatTraceStep[];
   isThinking?: boolean;
   thinkingLabel?: string;
@@ -89,6 +90,7 @@ export default function MessageComponent({
   role,
   content = '',
   action = null,
+  actions = [],
   trace = [],
   isThinking = false,
   thinkingLabel = 'Pensando...',
@@ -97,6 +99,12 @@ export default function MessageComponent({
   onContentProgress,
 }: Props) {
   const isAi = role === 'assistant';
+  const availableActions =
+    actions.length > 0
+      ? actions
+      : action?.type === 'download' && action.url
+        ? [action]
+        : [];
   const [displayedContent, setDisplayedContent] = useState(content);
   const [isAnimating, setIsAnimating] = useState(false);
   const hasAnimatedRef = useRef(false);
@@ -214,15 +222,20 @@ export default function MessageComponent({
             </p>
           )}
 
-          {isAi && !isAnimating && action?.type === 'download' && action.url ? (
-            <a
-              href={action.url}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-flex items-center rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
-            >
-              {action.label || 'Baixar arquivo'}
-            </a>
+          {isAi && !isAnimating && availableActions.length ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {availableActions.map((downloadAction, index) => (
+                <a
+                  key={`${downloadAction.url}-${index}`}
+                  href={downloadAction.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+                >
+                  {downloadAction.label || `Baixar arquivo ${index + 1}`}
+                </a>
+              ))}
+            </div>
           ) : null}
 
           {isAi && !isAnimating && !!trace.length ? (

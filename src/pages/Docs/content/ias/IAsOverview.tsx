@@ -4,6 +4,7 @@ import {
   PageHeader,
   ParamsTable,
   Callout,
+  CodeBlock,
 } from '../../components/DocsComponents'
 import { commonIaRequestFields, iaDocOrder, iaDocs } from './iaDocs'
 
@@ -27,10 +28,40 @@ const IAsOverview: React.FC = () => {
       <ol>
         <li>Solicite ou valide com o cliente as credenciais, tokens e liberações necessárias.</li>
         <li>Confirme internamente se o processo está liberado para seguir.</li>
+        <li>Gere e armazene a <code>OPENAI_API_KEY</code> antes de criar o serviço ou instalar a IA.</li>
         <li>Acesse o card da IA correspondente e preencha os campos da instalação.</li>
         <li>Valide a API key global e confira se a fila possui a chave correta.</li>
         <li>Faça a homologação antes de liberar o fluxo em produção.</li>
       </ol>
+
+      <h2>Pré-requisito comum: OpenAI API Key</h2>
+      <p>
+        Todas as implantações de IA devem orientar a geração da chave da OpenAI antes da criação do serviço
+        ou da configuração final do assistente.
+      </p>
+      <ol>
+        <li>Acesse <code>https://platform.openai.com/</code>.</li>
+        <li>Faça login ou crie uma conta usando Google, Microsoft ou e-mail e senha.</li>
+        <li>Entre em <code>https://platform.openai.com/api-keys</code> ou clique no perfil e depois em <code>View API keys</code>.</li>
+        <li>Clique em <code>Create new secret key</code> e dê um nome para a chave.</li>
+        <li>Copie o token gerado, no formato <code>sk-...</code>, e salve em local seguro.</li>
+      </ol>
+
+      <Callout type="warning" title="Uso obrigatório com segurança">
+        <ul style={{ margin: 0, paddingLeft: '18px' }}>
+          <li>A chave aparece apenas uma vez.</li>
+          <li>Armazene a <code>OPENAI_API_KEY</code> em local seguro, como no arquivo <code>.env</code>.</li>
+          <li>Se houver campo <code>OpenAI API Key</code> na criação do serviço, use a chave gerada antes de prosseguir.</li>
+        </ul>
+      </Callout>
+
+      <CodeBlock language="dotenv">{`OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxx`}</CodeBlock>
+
+      <CodeBlock language="javascript">{`import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});`}</CodeBlock>
 
       <h2>Campos comuns da tela de instalação</h2>
       <ParamsTable params={commonIaRequestFields} />

@@ -28,6 +28,7 @@ export interface ChatTraceStep {
 export interface ChatResponse {
   reply: string;
   action: ChatAction | null;
+  actions?: ChatAction[];
   trace: ChatTraceStep[];
 }
 
@@ -58,6 +59,15 @@ export async function sendChatMessage(payload: {
 
   if (response.data.action?.url) {
     response.data.action.url = resolveApiUrl(response.data.action.url);
+  }
+
+  if (Array.isArray(response.data.actions)) {
+    response.data.actions = response.data.actions
+      .filter((action) => action && typeof action.url === 'string')
+      .map((action) => ({
+        ...action,
+        url: resolveApiUrl(action.url),
+      }));
   }
 
   return response.data;

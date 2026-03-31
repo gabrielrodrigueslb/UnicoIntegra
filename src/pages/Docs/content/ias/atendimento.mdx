@@ -33,6 +33,34 @@ No fluxo do painel, esses campos saem da sessão atual.
 
 Veja também: <Link to="/main/docs/getting-started/autenticacao">Autenticação</Link>
 
+## Pré-requisito operacional: gerar a API key da OpenAI
+
+Antes de instalar a **IA de Atendimento** ou preparar o ambiente operacional que sustentará a IA,
+gere e salve a chave da OpenAI.
+
+1. Acesse o site da OpenAI em `https://platform.openai.com/`.
+2. Faça login ou crie uma conta usando Google, Microsoft ou e-mail e senha.
+3. Depois de logado, acesse `https://platform.openai.com/api-keys` ou clique no perfil e depois em `View API keys`.
+4. Clique em `Create new secret key` e dê um nome para a chave.
+5. Copie o token gerado, no formato `sk-...`, e salve em local seguro.
+
+<Callout type="warning" title="Importante">
+  Essa chave aparece apenas uma vez. Salve a `OPENAI_API_KEY` em local seguro, como no arquivo
+  `.env`, antes de seguir para a criação da IA ou para o provisionamento do ambiente.
+</Callout>
+
+Exemplo no `.env`:
+
+<CodeBlock language="dotenv">{`OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxx`}</CodeBlock>
+
+Exemplo no Node.js:
+
+<CodeBlock language="javascript">{`import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});`}</CodeBlock>
+
 ## Headers
 
 | Header | Valor |

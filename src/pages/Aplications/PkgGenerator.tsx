@@ -1,15 +1,23 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HardDriveDownload, Zap, Server, Key, Database, User, Lock, ArrowLeft } from 'lucide-react';
-
 import {
-  useGeneration,
+  ArrowLeft,
+  Database,
+  HardDriveDownload,
+  Key,
+  Lock,
+  Server,
+  User,
+  Zap,
+} from 'lucide-react';
+import {
   type PkgFormData,
+  useGeneration,
 } from '../../context/GenerationContext';
 
 export function PkgGenerator() {
   const navigate = useNavigate();
-  const { generateApp, status } = useGeneration();
+  const { generateApp, status, operation } = useGeneration();
 
   const [formData, setFormData] = useState<PkgFormData>({
     nome_cliente: '',
@@ -20,24 +28,26 @@ export function PkgGenerator() {
     access_key: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  const labelClass = 'mb-1 block text-sm font-medium text-foreground/80';
+  const isBusy = status === 'generating';
+  const isGeneratingPkg = isBusy && operation === 'pkg';
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setFormData((prev) => ({ ...prev, [event.target.name]: event.target.value }));
+  }
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     generateApp(formData);
-  };
-
-  const labelClass = "mb-1 block text-sm font-medium text-foreground/80";
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-gray-50 font-sans text-foreground">
-      
-      <header className="sticky top-0 z-10 shrink-0 flex flex-col justify-between gap-4 border-b border-border bg-background px-8 py-6 md:flex-row md:items-center">
+      <header className="sticky top-0 z-10 flex shrink-0 flex-col justify-between gap-4 border-b border-border bg-background px-8 py-6 md:flex-row md:items-center">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-            <HardDriveDownload className="h-7 w-7 text-primary" /> Gerador de Executável
+            <HardDriveDownload className="h-7 w-7 text-primary" /> Gerador de
+            Executável
           </h1>
           <p className="mt-1 text-sm text-foreground/60">
             Geração de pacotes de instalação (.exe) para o Alpha 7.
@@ -53,30 +63,30 @@ export function PkgGenerator() {
         </button>
       </header>
 
-      <main className="scrollbar-clean min-h-0 flex flex-1 items-start justify-center overflow-y-auto p-8">
+      <main className="scrollbar-clean flex min-h-0 flex-1 items-start justify-center overflow-y-auto p-8">
         <div className="w-full max-w-4xl">
-          <div className="rounded-2xl border border-border bg-background p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4">
-            
+          <div className="animate-in slide-in-from-bottom-4 fade-in rounded-2xl border border-border bg-background p-8 shadow-sm">
             <div className="mb-6 flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
-               <div className="mt-0.5 shrink-0 rounded-lg bg-blue-100 p-1.5 text-blue-600">
-                 <Zap className="h-4 w-4" />
-               </div>
-               <p className="text-sm text-blue-800">
-                 O sistema irá compilar e gerar um instalador Windows automaticamente baseado nas credenciais abaixo. Certifique-se de que as informações do banco estão corretas.
-               </p>
+              <div className="mt-0.5 shrink-0 rounded-lg bg-blue-100 p-1.5 text-blue-600">
+                <Zap className="h-4 w-4" />
+              </div>
+              <p className="text-sm text-blue-800">
+                O sistema vai compilar e gerar um instalador Windows
+                automaticamente com base nas credenciais abaixo. Confirme antes
+                que os dados do banco estão corretos.
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
                   <label className={labelClass}>Nome do Cliente</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       name="nome_cliente"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-primary"
                       value={formData.nome_cliente}
                       onChange={handleChange}
                       placeholder="Ex: Farmácia Central"
@@ -88,11 +98,11 @@ export function PkgGenerator() {
                 <div>
                   <label className={labelClass}>Host (IP)</label>
                   <div className="relative">
-                    <Server className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <Server className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       name="db_host"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-primary"
                       value={formData.db_host}
                       onChange={handleChange}
                       placeholder="192.168.x.x"
@@ -104,11 +114,11 @@ export function PkgGenerator() {
                 <div>
                   <label className={labelClass}>Database Name</label>
                   <div className="relative">
-                    <Database className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <Database className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       name="db_database"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-primary"
                       value={formData.db_database}
                       onChange={handleChange}
                       placeholder="db_cliente"
@@ -120,11 +130,11 @@ export function PkgGenerator() {
                 <div>
                   <label className={labelClass}>Usuário do Banco</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       name="db_user"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-primary"
                       value={formData.db_user}
                       onChange={handleChange}
                       placeholder="postgres"
@@ -136,11 +146,11 @@ export function PkgGenerator() {
                 <div>
                   <label className={labelClass}>Senha do Banco</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                       type="password"
                       name="db_password"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-primary"
                       value={formData.db_password}
                       placeholder="********"
                       onChange={handleChange}
@@ -151,11 +161,11 @@ export function PkgGenerator() {
                 <div>
                   <label className={labelClass}>Chave de Acesso</label>
                   <div className="relative">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <Key className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       name="access_key"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm font-mono outline-none transition-all focus:ring-2 focus:ring-primary placeholder:text-gray-400"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 pl-10 text-sm outline-none transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-primary"
                       value={formData.access_key}
                       onChange={handleChange}
                       placeholder="Auth Key"
@@ -163,24 +173,25 @@ export function PkgGenerator() {
                     />
                   </div>
                 </div>
-
               </div>
 
               <div className="mt-4 border-t border-border pt-6">
                 <button
                   type="submit"
-                  disabled={status === 'generating'}
+                  disabled={isBusy}
                   className={`
-                    flex w-full md:w-auto md:min-w-[200px] ml-auto items-center justify-center gap-2 rounded-xl py-3 px-6 font-bold transition-colors text-primary-foreground
+                    ml-auto flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 font-bold text-primary-foreground transition-colors md:min-w-[200px] md:w-auto
                     ${
-                      status === 'generating'
-                        ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                      isBusy
+                        ? 'cursor-not-allowed bg-gray-300 text-gray-500'
                         : 'bg-primary hover:opacity-90'
                     }
                   `}
                 >
-                  {status === 'generating' ? (
+                  {isGeneratingPkg ? (
                     'Gerando pacote...'
+                  ) : isBusy ? (
+                    'Aguardando processo atual...'
                   ) : (
                     <>
                       <HardDriveDownload className="h-5 w-5" /> Iniciar Geração
