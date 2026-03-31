@@ -202,14 +202,14 @@ export default function MessageComponent({
       >
         <div>
           {isAi && !isAnimating ? (
-            <div className="break-words text-[18px] font-normal leading-8">
+            <div className="break-words text-base font-normal leading-normal">
               {renderContentWithLinks(displayedContent)}
             </div>
           ) : (
-            <p className="whitespace-pre-wrap break-words text-[18px] font-normal leading-8">
+            <p className="whitespace-pre-wrap break-words text-base font-normal leading-normal">
               {displayedContent}
               {isAi && isAnimating ? (
-                <span className="ml-1 inline-block h-5 w-[2px] animate-pulse rounded-full bg-primary align-middle" />
+                <span className="ml-1 inline-block h-5 w-[2px] animate-pulse rounded-full bg-primary align-middle " />
               ) : null}
             </p>
           )}
@@ -219,7 +219,7 @@ export default function MessageComponent({
               href={action.url}
               target="_blank"
               rel="noreferrer"
-              className="mt-4 inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              className="mt-4 inline-flex items-center rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
             >
               {action.label || 'Baixar arquivo'}
             </a>
@@ -236,7 +236,7 @@ export default function MessageComponent({
                   {trace.map((step) => (
                     <div
                       key={step.id}
-                      className="flex items-start gap-3 text-sm font-normal text-foreground/80"
+                      className="flex items-start gap-3 text-xs font-normal text-foreground/80"
                     >
                       <span
                         className={`mt-1 size-2.5 rounded-full ${getTraceDotColor(step.status)}`}

@@ -94,17 +94,17 @@ export default function MessageInput({
   return (
     <div
       ref={containerRef}
-      className="fixed bottom-6 left-1/2 z-20 flex w-[90%] max-w-3xl -translate-x-1/2 items-end gap-3 rounded-lg border-2 border-border bg-primary-foreground px-5 py-3 shadow-2xl"
+      className="fixed bottom-6 left-1/2 z-20 flex w-[90%] max-w-3xl -translate-x-1/2 items-center gap-3 rounded-lg border-2 border-border bg-primary-foreground px-4 py-3 shadow-2xl"
     >
       <div
-        className="flex min-h-[58px] flex-1 cursor-text items-start rounded-md px-2 py-2.5"
+        className="flex min-h-[48px] flex-1 cursor-text items-start rounded-md px-1.5 py-2"
         onClick={focusTextarea}
       >
         <textarea
           ref={assignTextareaRef}
           rows={1}
           wrap="soft"
-          className="scrollbar-minimal block max-h-[168px] min-h-[28px] w-full resize-none overflow-x-hidden border-0 bg-transparent p-0 text-[18px] font-normal leading-7 whitespace-pre-wrap text-foreground outline-0 [overflow-wrap:anywhere] disabled:cursor-not-allowed disabled:opacity-60"
+          className="scrollbar-minimal block max-h-[168px] min-h-[28px] w-full resize-none overflow-x-hidden border-0 bg-transparent p-0 text-base font-normal leading-7 whitespace-pre-wrap text-foreground outline-0 [overflow-wrap:anywhere] disabled:cursor-not-allowed disabled:opacity-60"
           value={value}
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
@@ -123,7 +123,7 @@ export default function MessageInput({
         type="button"
         disabled={isSubmitDisabled}
         onClick={onSubmit}
-        className="flex size-[50px] shrink-0 items-center justify-center self-end rounded-full bg-primary text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex size-[40px] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
         aria-label="Enviar mensagem"
       >
         {disabled ? <LoaderCircle className="animate-spin" size={22} /> : <ArrowUp size={22} />}
