@@ -53,7 +53,7 @@ const DocsSidebar: React.FC = () => {
       <div className="docs-sidebar-header">
         <span className="docs-sidebar-badge">DOCS</span>
         <h2 className="docs-sidebar-title">Unico Contato</h2>
-        <p className="docs-sidebar-subtitle">API + IAs</p>
+        <p className="docs-sidebar-subtitle">API + IAs + Extensões</p>
       </div>
 
       <div className="docs-sidebar-search">

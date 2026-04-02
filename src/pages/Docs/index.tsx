@@ -13,6 +13,12 @@ const DocsIntro: React.FC = () => {
       path: '/main/docs/ias',
     },
     {
+      icon: 'EXT',
+      title: 'Extensões',
+      description: 'Veja os processos de geração, instalação no navegador e homologação das extensões.',
+      path: '/main/docs/extensoes',
+    },
+    {
       icon: 'LOG',
       title: 'Changelog',
       description: 'Acompanhe mudanças recentes e versões publicadas.',
@@ -25,7 +31,7 @@ const DocsIntro: React.FC = () => {
       <PageHeader
         badge="Documentação"
         title="API Unico Contato"
-        description="Bem-vindo à documentação oficial da API Unico Contato. Aqui você encontra changelog e fluxos operacionais das IAs."
+        description="Bem-vindo à documentação oficial da Unico Contato. Aqui você encontra changelog e fluxos operacionais de IAs e extensões."
       />
 
       <Callout type="info" title="Versão atual: v1">
@@ -80,8 +86,8 @@ const DocsIntro: React.FC = () => {
 
       <h2>Visão geral</h2>
       <p>
-        A documentação concentra os fluxos internos de provisionamento e operação dos assistentes.
-        Todas as requisições usam JSON e autenticação operacional conforme o fluxo de cada módulo.
+        A documentação concentra os fluxos internos de provisionamento, operação e implantação dos módulos
+        internos. As páginas estão separadas por categoria para evitar confusão entre IAs e extensões.
       </p>
 
       <h3>URLs Base</h3>

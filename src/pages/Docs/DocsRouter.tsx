@@ -10,6 +10,8 @@ import TrierDocs from './content/ias/trier.mdx'
 import VannonDocs from './content/ias/vannon.mdx'
 import VetorDocs from './content/ias/vetor.mdx'
 import AtendimentoDocs from './content/ias/atendimento.mdx'
+import ExtensionsOverview from './content/extensions/ExtensionsOverview'
+import TrierExtensionDocs from './content/extensions/trier.mdx'
 import Erros from './Erros'
 import Changelog from './Changelog'
 
@@ -93,6 +95,9 @@ const DocsRouter: React.FC = () => {
         <Route path="ias/vannon" element={<VannonDocs />} />
         <Route path="ias/vetor" element={<VetorDocs />} />
         <Route path="ias/atendimento" element={<AtendimentoDocs />} />
+
+        <Route path="extensoes" element={<ExtensionsOverview />} />
+        <Route path="extensoes/trier" element={<TrierExtensionDocs />} />
 
         <Route path="erros" element={<Erros />} />
         <Route path="changelog" element={<Changelog />} />

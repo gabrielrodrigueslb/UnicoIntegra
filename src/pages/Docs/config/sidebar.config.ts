@@ -23,6 +23,13 @@ export const sidebarConfig: SidebarItem[] = [
     ],
   },
   {
+    label: 'Extensões',
+    items: [
+      { label: 'Visão Geral', path: `${DOCS_BASE}/extensoes` },
+      { label: 'Extensão Trier', path: `${DOCS_BASE}/extensoes/trier` },
+    ],
+  },
+  {
     label: 'Changelog',
     path: `${DOCS_BASE}/changelog`,
   },

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -87,9 +87,9 @@ export default function AiServicesManager() {
   const [loadingList, setLoadingList] = useState(true);
   const [refreshingList, setRefreshingList] = useState(false);
   
-  // Modais e Estados de Confirmação
+  // Modais e Estados de ConfirmaÃ§Ã£o
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [confirmingCreate, setConfirmingCreate] = useState(false); // Novo estado para o ConfirmDialog de criação
+  const [confirmingCreate, setConfirmingCreate] = useState(false); // Novo estado para o ConfirmDialog de criaÃ§Ã£o
   const [creating, setCreating] = useState(false);
   
   const [selectedStatus, setSelectedStatus] = useState<AiServiceInstanceStatus | null>(null);
@@ -114,7 +114,7 @@ export default function AiServicesManager() {
       const data = await listAiServiceInstances();
       setInstances(data);
     } catch (error) {
-      setFlashMessage({ tone: 'error', text: extractErrorMessage(error, 'Erro ao carregar instâncias.') });
+      setFlashMessage({ tone: 'error', text: extractErrorMessage(error, 'Erro ao carregar instÃ¢ncias.') });
     } finally {
       setLoadingList(false);
       setRefreshingList(false);
@@ -149,13 +149,13 @@ export default function AiServicesManager() {
     setFormData((curr) => ({ ...curr, [name]: value }));
   }
 
-  // Abre o ConfirmDialog ao invés de chamar a API direto
+  // Abre o ConfirmDialog ao invÃ©s de chamar a API direto
   function handleFormSubmit(event: React.FormEvent) {
     event.preventDefault();
     setConfirmingCreate(true);
   }
 
-  // Execução real da criação, chamada pelo ConfirmDialog
+  // ExecuÃ§Ã£o real da criaÃ§Ã£o, chamada pelo ConfirmDialog
   async function executeCreateInstance() {
     if (creating) return;
 
@@ -172,12 +172,12 @@ export default function AiServicesManager() {
       setFormData(INITIAL_FORM_DATA);
       setConfirmingCreate(false);
       setIsCreateModalOpen(false);
-      setFlashMessage({ tone: 'success', text: `Instância "${payload.nome}" criada com sucesso.` });
-      
+      setFlashMessage({ tone: 'success', text: `InstÃ¢ncia "${payload.nome}" criada com sucesso.` });
+
       await loadInstances({ silent: true });
     } catch (error) {
-      setConfirmingCreate(false); // Fecha o dialog de confirmação para poder corrigir
-      setFlashMessage({ tone: 'error', text: extractErrorMessage(error, 'Erro ao criar instância.') });
+      setConfirmingCreate(false); // Fecha o dialog de confirmaÃ§Ã£o para poder corrigir
+      setFlashMessage({ tone: 'error', text: extractErrorMessage(error, 'Erro ao criar instÃ¢ncia.') });
     } finally {
       setCreating(false);
     }
@@ -210,21 +210,21 @@ export default function AiServicesManager() {
     try {
       if (type === 'restart') {
         await restartAiServiceInstance(instance.nome);
-        setFlashMessage({ tone: 'success', text: `Instância "${instance.nome}" reiniciada.` });
+        setFlashMessage({ tone: 'success', text: `InstÃ¢ncia "${instance.nome}" reiniciada.` });
       } else {
         await stopAiServiceInstance(instance.nome);
-        setFlashMessage({ tone: 'success', text: `Instância "${instance.nome}" parada.` });
+        setFlashMessage({ tone: 'success', text: `InstÃ¢ncia "${instance.nome}" parada.` });
       }
       setPendingAction(null);
       await loadInstances({ silent: true });
     } catch (error) {
-      setFlashMessage({ tone: 'error', text: extractErrorMessage(error, 'Erro ao executar ação.') });
+      setFlashMessage({ tone: 'error', text: extractErrorMessage(error, 'Erro ao executar aÃ§Ã£o.') });
     } finally {
       setActionLoadingName(null);
     }
   }
 
-  // Helpers CSS para formulário
+  // Helpers CSS para formulÃ¡rio
   const labelClass = "mb-2 block text-[10px] font-bold uppercase tracking-wider text-foreground/50";
   const inputClass = "w-full rounded-xl border border-border bg-background p-3 text-sm outline-none transition-all focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-foreground/30";
 
@@ -236,16 +236,16 @@ export default function AiServicesManager() {
           <button
             onClick={() => navigate('/main/aplications')}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-foreground/60 transition-colors hover:bg-gray-50 hover:text-foreground"
-            title="Voltar para Aplicações"
+            title="Voltar para AplicaÃ§Ãµes"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0">
             <h1 className="flex items-center gap-2 text-xl font-bold text-foreground truncate">
-              <ServerCog className="h-6 w-6 text-primary shrink-0" /> <span className="truncate">Serviços IA</span>
+              <ServerCog className="h-6 w-6 text-primary shrink-0" /> <span className="truncate">ServiÃ§os IA</span>
             </h1>
             <p className="mt-0.5 text-sm text-foreground/60 truncate hidden sm:block">
-              Provisionamento e monitoramento de instâncias operacionais.
+              Provisionamento e monitoramento de instÃ¢ncias operacionais.
             </p>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function AiServicesManager() {
             onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:opacity-90"
           >
-            <Plus className="h-4 w-4" /> Nova Instância
+            <Plus className="h-4 w-4" /> Nova InstÃ¢ncia
           </button>
         </div>
       </header>
@@ -287,7 +287,7 @@ export default function AiServicesManager() {
               </label>
               <div className="flex flex-col gap-2">
                 {[
-                  { id: 'all', label: 'Todas as instâncias' },
+                  { id: 'all', label: 'Todas as instÃ¢ncias' },
                   { id: 'online', label: 'Apenas Online', dot: 'bg-emerald-500' },
                   { id: 'stopped', label: 'Apenas Paradas', dot: 'bg-amber-500' },
                 ].map((filter) => (
@@ -351,14 +351,14 @@ export default function AiServicesManager() {
             <div className="flex h-64 items-center justify-center rounded-2xl border border-border bg-background border-dashed text-foreground/50">
               <div className="flex flex-col items-center gap-2">
                   <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
-                  <span>Carregando instâncias...</span>
+                  <span>Carregando instÃ¢ncias...</span>
               </div>
             </div>
           ) : filteredInstances.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-border bg-background border-dashed text-foreground/50">
               <Bot className="mb-3 h-10 w-10 text-gray-300" />
-              <span className="font-medium text-foreground/80">Nenhuma instância encontrada</span>
-              <span className="text-sm mt-1 text-center px-4">Ajuste os filtros ou crie uma nova instância.</span>
+              <span className="font-medium text-foreground/80">Nenhuma instÃ¢ncia encontrada</span>
+              <span className="text-sm mt-1 text-center px-4">Ajuste os filtros ou crie uma nova instÃ¢ncia.</span>
             </div>
           ) : (
             <div className="flex flex-col gap-3 pb-8 min-w-0">
@@ -408,7 +408,7 @@ export default function AiServicesManager() {
         </section>
       </main>
 
-      {/* MODAL DE CRIAÇÃO (Fomulário) */}
+      {/* MODAL DE CRIAÃ‡ÃƒO (FomulÃ¡rio) */}
       {isCreateModalOpen ? (
         <ModalFrame
           onClose={() => setIsCreateModalOpen(false)}
@@ -416,8 +416,8 @@ export default function AiServicesManager() {
           bodyClassName="p-0"
           header={
             <div className="flex items-center justify-between border-b border-border bg-background px-6 py-5">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2"><ServerCog className="h-6 w-6 text-primary"/> Nova Instância</h2>
-              <button onClick={() => setIsCreateModalOpen(false)} className="text-foreground/50 hover:text-foreground transition-colors p-2">✕</button>
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2"><ServerCog className="h-6 w-6 text-primary"/> Nova InstÃ¢ncia</h2>
+              <button onClick={() => setIsCreateModalOpen(false)} className="text-foreground/50 hover:text-foreground transition-colors p-2">âœ•</button>
             </div>
           }
         >
@@ -427,7 +427,7 @@ export default function AiServicesManager() {
                 
                 <section>
                   <label className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-                    <ServerCog className="h-4 w-4" /> Informações Básicas
+                    <ServerCog className="h-4 w-4" /> InformaÃ§Ãµes BÃ¡sicas
                   </label>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2">
@@ -435,7 +435,7 @@ export default function AiServicesManager() {
                       <input name="nome" required placeholder="Ex: alpha7-loja-centro" value={formData.nome} onChange={handleInputChange} className={inputClass} />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={labelClass}>Unidade de Negócio (ID)</label>
+                      <label className={labelClass}>Unidade de NegÃ³cio (ID)</label>
                       <input name="unidade_negocio_id" required placeholder="Ex: 65984" value={formData.unidade_negocio_id} onChange={handleInputChange} className={inputClass} />
                     </div>
                   </div>
@@ -466,7 +466,7 @@ export default function AiServicesManager() {
                     </div>
                     <div className="sm:col-span-2">
                       <label className={labelClass}>DB Password</label>
-                      <input name="db_password" type="password" required placeholder="••••••••" value={formData.db_password} onChange={handleInputChange} className={inputClass} />
+                      <input name="db_password" type="password" required placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" value={formData.db_password} onChange={handleInputChange} className={inputClass} />
                     </div>
                   </div>
                 </section>
@@ -475,7 +475,7 @@ export default function AiServicesManager() {
 
                 <section>
                   <label className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-                    <Lock className="h-4 w-4" /> Segurança
+                    <Lock className="h-4 w-4" /> SeguranÃ§a
                   </label>
                   <div>
                     <label className={labelClass}>OpenAI API Key</label>
@@ -490,20 +490,20 @@ export default function AiServicesManager() {
                   Cancelar
                 </button>
                 <button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:opacity-90">
-                  <Plus className="h-4 w-4" /> Configurar Instância
+                  <Plus className="h-4 w-4" /> Configurar InstÃ¢ncia
                 </button>
              </div>
           </form>
         </ModalFrame>
       ) : null}
 
-      {/* CONFIRMAÇÃO DE CRIAÇÃO DA INSTÂNCIA (Usa o ConfirmDialog padrão) */}
+      {/* CONFIRMAÃ‡ÃƒO DE CRIAÃ‡ÃƒO DA INSTÃ‚NCIA (Usa o ConfirmDialog padrÃ£o) */}
       {confirmingCreate ? (
         <ConfirmDialog
-          title="Criar Instância"
+          title="Criar InstÃ¢ncia"
           description={
             <span>
-              Você está prestes a provisionar a instância <strong>{formData.nome}</strong> vinculada a unidade de negócio <strong>{formData.unidade_negocio_id}</strong>. Deseja prosseguir?
+              VocÃª estÃ¡ prestes a provisionar a instÃ¢ncia <strong>{formData.nome}</strong> vinculada a unidade de negÃ³cio <strong>{formData.unidade_negocio_id}</strong>. Deseja prosseguir?
             </span>
           }
           confirmText="Provisionar"
@@ -532,7 +532,7 @@ export default function AiServicesManager() {
           <div className="grid grid-cols-2 gap-4 p-6 bg-gray-50/50">
             <div className="rounded-xl bg-background p-4 border border-border shadow-sm min-w-0"><span className="block text-xs uppercase tracking-wider font-bold text-foreground/50 mb-1">Status</span><span className={`truncate block font-semibold text-base ${statusPresentation(selectedStatus.status).textClassName}`}>{statusPresentation(selectedStatus.status).label}</span></div>
             <div className="rounded-xl bg-background p-4 border border-border shadow-sm min-w-0"><span className="block text-xs uppercase tracking-wider font-bold text-foreground/50 mb-1">Porta</span><span className="truncate block font-bold text-base text-foreground">{selectedStatus.porta || '-'}</span></div>
-            <div className="rounded-xl bg-background p-4 border border-border shadow-sm min-w-0"><span className="block text-xs uppercase tracking-wider font-bold text-foreground/50 mb-1">Memória</span><span className="truncate block font-bold text-base text-foreground">{selectedStatus.memoria_mb} MB</span></div>
+            <div className="rounded-xl bg-background p-4 border border-border shadow-sm min-w-0"><span className="block text-xs uppercase tracking-wider font-bold text-foreground/50 mb-1">MemÃ³ria</span><span className="truncate block font-bold text-base text-foreground">{selectedStatus.memoria_mb} MB</span></div>
             <div className="rounded-xl bg-background p-4 border border-border shadow-sm min-w-0"><span className="block text-xs uppercase tracking-wider font-bold text-foreground/50 mb-1">CPU</span><span className="truncate block font-bold text-base text-foreground">{selectedStatus.cpu_percent}%</span></div>
           </div>
         </ModalFrame>
@@ -570,11 +570,11 @@ export default function AiServicesManager() {
         </ModalFrame>
       ) : null}
 
-      {/* CONFIRMAÇÃO DE AÇÃO (Restart / Stop) */}
+      {/* CONFIRMAÃ‡ÃƒO DE AÃ‡ÃƒO (Restart / Stop) */}
       {pendingAction ? (
         <ConfirmDialog
-          title={pendingAction.type === 'restart' ? 'Reiniciar instância?' : 'Parar instância?'}
-          description={`Deseja realmente ${pendingAction.type === 'restart' ? 'reiniciar' : 'parar'} a instância "${pendingAction.instance.nome}"?`}
+          title={pendingAction.type === 'restart' ? 'Reiniciar instÃ¢ncia?' : 'Parar instÃ¢ncia?'}
+          description={`Deseja realmente ${pendingAction.type === 'restart' ? 'reiniciar' : 'parar'} a instÃ¢ncia "${pendingAction.instance.nome}"?`}
           confirmText={pendingAction.type === 'restart' ? 'Reiniciar' : 'Parar'}
           tone={pendingAction.type === 'restart' ? 'primary' : 'danger'}
           loading={actionLoadingName === pendingAction.instance.nome}
