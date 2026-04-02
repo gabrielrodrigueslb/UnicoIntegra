@@ -10,7 +10,7 @@ export const serviceParams = [
   { field: 'nome_da_loja', type: 'string', required: true, description: 'Nome da loja que será atendida pelo serviço.' },
   { field: 'unidade_negocio', type: 'string', required: true, description: 'Unidade de negócio descoberta no teste do banco.' },
   { field: 'db_host', type: 'string', required: true, description: 'IP externo ou DDNS liberado pelo cliente.' },
-  { field: 'db_port', type: 'string', required: true, description: 'Porta do banco PostgreSQL (DB_PORT). A porta da API ? gerada automaticamente pelo m?dulo de servi?os.' },
+  { field: 'db_port', type: 'string', required: true, description: 'Porta do banco PostgreSQL (DB_PORT). A porta da API é gerada automaticamente pelo módulo de serviços.' },
   { field: 'db_name', type: 'string', required: true, description: 'Nome do banco de dados da loja.' },
   { field: 'db_user', type: 'string', required: true, description: 'Usuário com permissão de leitura.' },
   { field: 'db_password', type: 'string', required: true, description: 'Senha do usuário de leitura.' },
@@ -22,7 +22,7 @@ export const installParams = [
   { field: 'instance', type: 'string', required: true, description: 'URL da instância onde a IA será instalada.' },
   { field: 'nome_cliente', type: 'string', required: true, description: 'Nome da loja ou cliente atendido.' },
   { field: 'apiKey', type: 'string', required: true, description: 'API key global usada pelo sistema e pela fila.' },
-  { field: 'porta_cliente', type: 'string', required: true, description: 'Porta da API criada automaticamente no m?dulo de servi?os. Use a porta retornada na inst?ncia provisionada.' },
+  { field: 'porta_cliente', type: 'string', required: true, description: 'Porta da API criada automaticamente no módulo de serviços. Use a porta retornada na instância provisionada.' },
   { field: 'unidade_negocio', type: 'string', required: true, description: 'Unidade de negócio validada no teste de banco.' },
   { field: 'code', type: 'string', required: true, description: 'Código 2FA para autorizar a criação da IA.' },
 ]
@@ -193,9 +193,9 @@ Na lista de serviços, clique em **Nova instância** e preencha:
 Observação importante: a utilização da IA depende da chave gerada no passo anterior.
 Sem ela, o serviço não deve ser provisionado.
 
-<Callout type="info" title="Diferen?a entre DB_PORT e porta da API">
-  No formul?rio de cria??o do servi?o, `db_port` ? a porta do PostgreSQL do cliente, normalmente `5432`.
-  J? a porta da API ? outra: ela ? criada automaticamente pelo m?dulo de servi?os e ? o valor que depois entra em `porta_cliente` na instala??o da IA.
+<Callout type="info" title="Diferença entre DB_PORT e porta da API">
+  No formulário de criação do serviço, `db_port` é a porta do PostgreSQL do cliente, normalmente `5432`.
+  Já a porta da API é outra: ela é criada automaticamente pelo módulo de serviços e é o valor que depois entra em `porta_cliente` na instalação da IA.
 </Callout>
 
 ## Passo 8: Instalar a IA na instância
