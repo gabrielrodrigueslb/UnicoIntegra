@@ -41,7 +41,7 @@ export default function ApplicationsHub() {
             />
 
             <ApplicationModuleCard
-              title="IA Alpha7 API"
+              title="APIs para IAs"
               description="Gerencie as APIs que alimentam as IAs, com criação de instâncias, status operacional, logs e reinício."
               badge="Novo módulo"
               icon={ServerCog}
