@@ -48,8 +48,9 @@ export interface CreateTrierAiServiceInstancePayload {
   tipo: 'trier';
   nome: string;
   env: {
-    TOKEN: string;
-    OPENAI_API_KEY: string;
+    TRIER_TOKEN: string;
+    TRIER_BASE_URL?: string;
+    OPENAI_API_KEY?: string;
   };
 }
 
