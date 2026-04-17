@@ -177,7 +177,7 @@ export default function AiPage() {
           className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-700 transition-colors hover:bg-violet-100"
         >
           <Brain className="h-4 w-4" />
-          Ver IAs criadas
+          Ver IAs instaladas
         </button>
       }
       isEmpty={filteredIAs.length === 0}
