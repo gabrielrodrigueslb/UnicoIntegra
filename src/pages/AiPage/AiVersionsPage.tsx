@@ -82,6 +82,10 @@ function isProviderUpdateBlocked(provider: string) {
   return provider.trim().toLowerCase() === 'atendimento';
 }
 
+function isReadyForUpdate(item: AiInstallationItem) {
+  return item.updateAvailable && item.canUpdate;
+}
+
 function formatVersion(version: number | null) {
   return version === null ? '-' : `v${version}`;
 }
@@ -262,7 +266,7 @@ export default function AiVersionsPage() {
   }
 
   function handleSingleUpdate(item: AiInstallationItem) {
-    if (!item.canUpdate || updatingId !== null || bulkUpdating) {
+    if (!isReadyForUpdate(item) || updatingId !== null || bulkUpdating) {
       return;
     }
 
@@ -475,7 +479,14 @@ export default function AiVersionsPage() {
                       </tr>
                     ) : null}
 
-                    {filteredItems.map((item) => (
+                    {filteredItems.map((item) => {
+                      const readyForUpdate = isReadyForUpdate(item);
+                      const showSecondaryStatus =
+                        readyForUpdate ||
+                        isProviderUpdateBlocked(item.provider) ||
+                        !item.canUpdate;
+
+                      return (
                       <tr
                         key={item.id}
                         className={`transition-colors hover:bg-slate-50 ${
@@ -515,21 +526,23 @@ export default function AiVersionsPage() {
                               )}
                               {item.updateAvailable ? 'Desatualizada' : 'Atualizada'}
                             </span>
-                            <span
-                              className={`inline-flex w-fit rounded-md px-2 py-1 text-xs font-semibold ${
-                                item.canUpdate
-                                  ? 'bg-blue-50 text-blue-700'
+                            {showSecondaryStatus ? (
+                              <span
+                                className={`inline-flex w-fit rounded-md px-2 py-1 text-xs font-semibold ${
+                                  readyForUpdate
+                                    ? 'bg-blue-50 text-blue-700'
+                                    : isProviderUpdateBlocked(item.provider)
+                                      ? 'bg-amber-50 text-amber-700'
+                                      : 'bg-slate-100 text-slate-600'
+                                }`}
+                              >
+                                {readyForUpdate
+                                  ? 'Pronta para update'
                                   : isProviderUpdateBlocked(item.provider)
-                                    ? 'bg-amber-50 text-amber-700'
-                                  : 'bg-slate-100 text-slate-600'
-                              }`}
-                            >
-                              {item.canUpdate
-                                ? 'Pronta para update'
-                                : isProviderUpdateBlocked(item.provider)
-                                  ? 'Update bloqueado'
-                                  : 'Cadastro incompleto'}
-                            </span>
+                                    ? 'Update bloqueado'
+                                    : 'Cadastro incompleto'}
+                              </span>
+                            ) : null}
                           </div>
                         </td>
                         <td className="px-4 py-3 align-top text-right">
@@ -543,7 +556,7 @@ export default function AiVersionsPage() {
                             </button>
                             <button
                               onClick={() => void handleSingleUpdate(item)}
-                              disabled={!item.canUpdate || updatingId === item.id || bulkUpdating}
+                              disabled={!readyForUpdate || updatingId === item.id || bulkUpdating}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               <RefreshCw
@@ -556,7 +569,8 @@ export default function AiVersionsPage() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
