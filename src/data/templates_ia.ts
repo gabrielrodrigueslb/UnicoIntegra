@@ -22,7 +22,7 @@ export const templates = {
       },
       { 
         key: 'apiKey', 
-        label: 'API Key', 
+        label: 'API Key Global do Sistema', 
         type: 'password', 
         placeholder: 'Sua chave de API', 
         width: 'half' as const 
