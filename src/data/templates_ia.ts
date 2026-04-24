@@ -152,6 +152,13 @@ export const templates = {
         type: 'text', 
         placeholder: 'AgAAAGmNu9AtfU9...', 
         width: 'full' as const 
+      },
+      {
+        key: 'unidade_negocio_vetor',
+        label: 'Unidade de negocio Vetor',
+        type: 'text',
+        placeholder: 'Ex: 12345',
+        width: 'half' as const
       }
     ]
   },

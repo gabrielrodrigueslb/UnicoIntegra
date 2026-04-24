@@ -24,14 +24,12 @@ export function CreateConfigForm({
     config_name: '',
     instance_url: '',
     dbName: '',
-    clientToken: '',
   });
 
   const canSubmit = Boolean(
     formData.config_name &&
       formData.instance_url &&
-      formData.dbName &&
-      formData.clientToken,
+      formData.dbName,
   );
   const { confirm, close, isOpen, loading, open } = useConfirmableSubmit({
     onSubmit: async () => {
@@ -39,13 +37,11 @@ export function CreateConfigForm({
         formData.config_name,
         formData.instance_url,
         formData.dbName,
-        formData.clientToken,
       );
       setFormData({
         config_name: '',
         instance_url: '',
         dbName: '',
-        clientToken: '',
       });
       onSuccess();
     },
@@ -133,7 +129,7 @@ export function CreateConfigForm({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="col-span-2">
           <label className="mb-1 block text-sm font-medium text-gray-700">
             Nome do Banco
           </label>
@@ -142,22 +138,6 @@ export function CreateConfigForm({
             value={formData.dbName}
             onChange={(value) => setFormData({ ...formData, dbName: value })}
             placeholder="Selecione ou digite..."
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Client Token
-          </label>
-          <input
-            type="password"
-            required
-            placeholder="Token Z-API"
-            className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 outline-none focus:ring-2 focus:ring-violet-500"
-            value={formData.clientToken}
-            onChange={(event) =>
-              setFormData({ ...formData, clientToken: event.target.value })
-            }
           />
         </div>
       </div>

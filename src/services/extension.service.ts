@@ -63,14 +63,13 @@ export async function createConfig(
   config_name: string,
   instance_url: string,
   dbName: string,
-  clientToken: string
 ) {
   const response = await apiExtensions.post('/v1/config/create', {
     config_name,
     instance_url,
     config_data: {
       dbName,
-      clientToken,
+      clientToken: 'unicoxalpha7',
     },
   });
   return response.data;
