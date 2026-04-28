@@ -28,10 +28,6 @@ interface Props {
   showManualAuthFields?: boolean;
   manualAuthMessage?: string;
   onPressEnter?: () => void;
-  repeatInstallMode?: boolean;
-  onRepeatInstallModeChange?: (enabled: boolean) => void;
-  customIntegrationName?: string;
-  onCustomIntegrationNameChange?: (value: string) => void;
 }
 
 export function TemplateForm({
@@ -42,10 +38,6 @@ export function TemplateForm({
   showManualAuthFields = false,
   manualAuthMessage = '',
   onPressEnter,
-  repeatInstallMode = false,
-  onRepeatInstallModeChange,
-  customIntegrationName = '',
-  onCustomIntegrationNameChange,
 }: Props) {
   const handleChange = (key: string, value: string) => {
     setFormData({ ...formData, [key]: value });
