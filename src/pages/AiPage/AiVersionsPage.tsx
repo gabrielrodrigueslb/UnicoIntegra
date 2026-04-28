@@ -60,6 +60,12 @@ const COMPONENT_ORDER: AiComponentKey[] = [
   'uraAb',
 ];
 
+const MANUAL_UPDATE_ONLY_COMPONENT_KEYS: AiComponentKey[] = ['uraAb'];
+
+const BULK_COMPONENT_ORDER = COMPONENT_ORDER.filter(
+  (componentKey) => !MANUAL_UPDATE_ONLY_COMPONENT_KEYS.includes(componentKey),
+);
+
 function buildInstancesSummary(rows: AiInstallationItem[]) {
   const map = new Map<string, InstanceSummary>();
 
@@ -113,16 +119,34 @@ function formatVersion(version: number | null) {
 }
 
 function getAvailableComponentOptions(item: AiInstallationItem | null) {
-  const pending = item?.componentsNeedingUpdate ?? [];
-  if (pending.length > 0) {
-    return pending;
-  }
+  const pending = (item?.componentsNeedingUpdate ?? []).filter(
+    (componentKey) => !MANUAL_UPDATE_ONLY_COMPONENT_KEYS.includes(componentKey),
+  );
+  const manualOnlyOptions = COMPONENT_ORDER.filter((componentKey) => {
+    if (!MANUAL_UPDATE_ONLY_COMPONENT_KEYS.includes(componentKey)) {
+      return false;
+    }
 
-  return COMPONENT_ORDER.filter((componentKey) => {
     const installedVersion = item?.installedComponentVersions?.[componentKey] ?? null;
     const currentVersion = item?.currentComponentVersions?.[componentKey] ?? null;
     return installedVersion !== null || currentVersion !== null;
   });
+
+  if (pending.length > 0) {
+    return [...pending, ...manualOnlyOptions];
+  }
+
+  const automaticOptions = COMPONENT_ORDER.filter((componentKey) => {
+    if (MANUAL_UPDATE_ONLY_COMPONENT_KEYS.includes(componentKey)) {
+      return false;
+    }
+
+    const installedVersion = item?.installedComponentVersions?.[componentKey] ?? null;
+    const currentVersion = item?.currentComponentVersions?.[componentKey] ?? null;
+    return installedVersion !== null || currentVersion !== null;
+  });
+
+  return [...automaticOptions, ...manualOnlyOptions];
 }
 
 export default function AiVersionsPage() {
@@ -252,9 +276,8 @@ export default function AiVersionsPage() {
     try {
       const result = await updateAiInstallation({
         id: item.id,
-        username: session.authUsername,
-        password: session.authPassword,
-        code,
+        requestedBy: session.authUsername || 'Sistema',
+        code: code || undefined,
         componentKey: selectedComponentKey || undefined,
       });
 
@@ -282,9 +305,8 @@ export default function AiVersionsPage() {
 
     try {
       const result = await updateAllAiInstallations({
-        username: session.authUsername,
-        password: session.authPassword,
-        code,
+        requestedBy: session.authUsername || 'Sistema',
+        code: code || undefined,
         instance: selectedInstance || undefined,
         provider: selectedBulkProvider || undefined,
         componentKey: selectedComponentKey || undefined,
@@ -337,7 +359,7 @@ export default function AiVersionsPage() {
 
   async function handleConfirmUpdateModal() {
     const code = twoFactorCode.trim();
-    if (!code || !updateModal) {
+    if (!updateModal) {
       return;
     }
 
@@ -355,7 +377,7 @@ export default function AiVersionsPage() {
 
   const updateModalComponentOptions = useMemo(() => {
     if (!updateModal || updateModal.mode !== 'single') {
-      return COMPONENT_ORDER;
+      return BULK_COMPONENT_ORDER;
     }
 
     return getAvailableComponentOptions(updateModal.item);
@@ -854,7 +876,7 @@ export default function AiVersionsPage() {
                   {updateModal.mode === 'single' ? 'Confirmar Atualização' : 'Atualização em Lote'}
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Validação de segurança necessária para prosseguir.
+                  O backend pode autenticar automaticamente com a conta técnica configurada.
                 </p>
               </div>
               <button
@@ -934,7 +956,7 @@ export default function AiVersionsPage() {
 
             <div className="space-y-2">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
-                Código de Autenticação (2FA)
+                Código de Autenticação (2FA opcional)
               </label>
               <input
                 type="text"
@@ -942,13 +964,13 @@ export default function AiVersionsPage() {
                 value={twoFactorCode}
                 onChange={(event) => setTwoFactorCode(event.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter' && twoFactorCode.trim()) {
+                  if (event.key === 'Enter') {
                     event.preventDefault();
                     void handleConfirmUpdateModal();
                   }
                 }}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-all focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
-                placeholder="Ex: 123456"
+                placeholder="Usado apenas como fallback manual"
               />
             </div>
 
@@ -971,7 +993,7 @@ export default function AiVersionsPage() {
               <button
                 type="button"
                 onClick={() => void handleConfirmUpdateModal()}
-                disabled={!twoFactorCode.trim() || updatingId !== null || bulkUpdating}
+                disabled={updatingId !== null || bulkUpdating}
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 active:scale-95 disabled:opacity-50"
               >
                 <RefreshCw className={`h-4 w-4 ${updatingId !== null || bulkUpdating ? 'animate-spin' : ''}`} />

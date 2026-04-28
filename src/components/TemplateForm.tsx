@@ -25,6 +25,8 @@ interface Props {
   formData: Record<string, string>;
   setFormData: (data: Record<string, string>) => void;
   isIaSetup?: boolean;
+  showManualAuthFields?: boolean;
+  manualAuthMessage?: string;
   onPressEnter?: () => void;
   repeatInstallMode?: boolean;
   onRepeatInstallModeChange?: (enabled: boolean) => void;
@@ -37,6 +39,8 @@ export function TemplateForm({
   formData,
   setFormData,
   isIaSetup = false,
+  showManualAuthFields = false,
+  manualAuthMessage = '',
   onPressEnter,
   repeatInstallMode = false,
   onRepeatInstallModeChange,
@@ -150,23 +154,30 @@ export function TemplateForm({
               </div>
             ) : null}
 
-            <div className="px-1 pb-1">
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Seguranca
-              </label>
-              <div className={showIaContextField ? '' : 'grid gap-3 sm:grid-cols-2'}>
-                <input
-                  type="text"
-                  className={`${iaInputClassName} ${
-                    showIaContextField ? '' : 'sm:col-span-2'
-                  }`}
-                  placeholder="Codigo 2FA / Validacao"
-                  value={formData['code'] || ''}
-                  onChange={(e) => handleChange('code', e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
+            {showManualAuthFields ? (
+              <div className="px-1 pb-1">
+                {manualAuthMessage ? (
+                  <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    {manualAuthMessage}
+                  </div>
+                ) : null}
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Código de autenticação
+                </label>
+                <div className={showIaContextField ? '' : 'grid gap-3 sm:grid-cols-2'}>
+                  <input
+                    type="text"
+                    className={`${iaInputClassName} ${
+                      showIaContextField ? '' : 'sm:col-span-2'
+                    }`}
+                    placeholder="Informe o código de autenticação do seu usuário"
+                    value={formData['code'] || ''}
+                    onChange={(e) => handleChange('code', e.target.value)}
+                    onKeyDown={handleKeyDown}
+                  />
+                </div>
               </div>
-            </div>
+            ) : null}
           </div>
 
           {showIaContextField ? (
@@ -220,57 +231,28 @@ export function TemplateForm({
         </div>
       ))}
 
-      <div className="rounded-xl border border-blue-100 bg-blue-50/80 p-4">
-        <label className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            className="mt-1 h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
-            checked={repeatInstallMode}
-            onChange={(e) => onRepeatInstallModeChange?.(e.target.checked)}
-          />
-          <span>
-            <span className="block text-sm font-semibold text-blue-900">
-              Vou instalar mais de uma desta integracao
-            </span>
-            <span className="mt-1 block text-xs leading-5 text-blue-800">
-              Ative para dar um nome unico a cada copia e continuar a
-              instalacao sem fechar esta janela.
-            </span>
-          </span>
-        </label>
-
-        {repeatInstallMode ? (
-          <div className="mt-4">
+      {showManualAuthFields ? (
+        <div className="space-y-2">
+          {manualAuthMessage ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              {manualAuthMessage}
+            </div>
+          ) : null}
+          <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Nome desta instalacao
+              Código de autenticação
             </label>
             <input
               type="text"
-              className="w-full rounded-lg border border-gray-300 bg-white p-2 outline-none transition-colors focus:ring-2 focus:ring-blue-500"
-              placeholder="Ex.: Ifood - Loja Centro"
-              value={customIntegrationName}
-              onChange={(e) =>
-                onCustomIntegrationNameChange?.(e.target.value)
-              }
+              className="w-full rounded-lg border border-gray-300 bg-gray-100 p-2 outline-none transition-colors focus:ring-2 focus:ring-blue-500"
+              placeholder="Informe o código de autenticação do seu usuário"
+              value={formData['code'] || ''}
+              onChange={(e) => handleChange('code', e.target.value)}
               onKeyDown={handleKeyDown}
             />
           </div>
-        ) : null}
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">
-          Codigo de 2FA
-        </label>
-        <input
-          type="text"
-          className="w-full rounded-lg border border-gray-300 bg-gray-100 p-2 outline-none transition-colors focus:ring-2 focus:ring-blue-500"
-          placeholder="959752"
-          value={formData['code'] || ''}
-          onChange={(e) => handleChange('code', e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-      </div>
+        </div>
+      ) : null}
     </form>
   );
 }

@@ -38,9 +38,8 @@ export interface AiInstallationItem {
 
 export interface UpdateAiInstallationInput {
   id: number;
-  username: string;
-  password: string;
-  code: string;
+  requestedBy?: string;
+  code?: string;
   componentKey?: AiComponentKey;
   force?: boolean;
 }
@@ -53,9 +52,8 @@ export interface UpdateAiInstallationResult {
 }
 
 export interface UpdateAllAiInstallationsInput {
-  username: string;
-  password: string;
-  code: string;
+  requestedBy?: string;
+  code?: string;
   instance?: string;
   provider?: string;
   componentKey?: AiComponentKey;
@@ -98,8 +96,7 @@ export async function updateAiInstallation(
   const response = await axios.post(
     `${API_BASE}/api/ia/installations/${input.id}/update`,
     {
-      username: input.username,
-      password: input.password,
+      requestedBy: input.requestedBy,
       code: input.code,
       componentKey: input.componentKey,
       force: input.force ?? false,
@@ -115,8 +112,7 @@ export async function updateAllAiInstallations(
   const response = await axios.post(
     `${API_BASE}/api/ia/installations/update-all`,
     {
-      username: input.username,
-      password: input.password,
+      requestedBy: input.requestedBy,
       code: input.code,
       instance: input.instance,
       provider: input.provider,

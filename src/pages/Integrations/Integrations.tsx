@@ -47,6 +47,8 @@ export default function Integrations() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [modalStep, setModalStep] = useState<ModalStep>('none');
   const [searchTerm, setSearchTerm] = useState('');
+  const [manualAuthRequired, setManualAuthRequired] = useState(false);
+  const [manualAuthMessage, setManualAuthMessage] = useState('');
   const submitButtonRef = useRef<HTMLButtonElement>(null);
 
   useRequireAuth();
@@ -65,6 +67,8 @@ export default function Integrations() {
 
   function handleOpenPreview(key: string) {
     setSelectedTemplate(key);
+    setManualAuthRequired(false);
+    setManualAuthMessage('');
     setModalStep('preview');
   }
 
@@ -77,6 +81,8 @@ export default function Integrations() {
     window.setTimeout(() => {
       setSelectedTemplate('');
       setFormData({});
+      setManualAuthRequired(false);
+      setManualAuthMessage('');
     }, 200);
   }
 
@@ -179,6 +185,8 @@ export default function Integrations() {
                 template={template}
                 formData={formData}
                 setFormData={setFormData}
+                showManualAuthFields={manualAuthRequired}
+                manualAuthMessage={manualAuthMessage}
                 onPressEnter={handleEnterPress}
               />
             </div>
@@ -189,6 +197,10 @@ export default function Integrations() {
                 formData={formData}
                 closeModal={handleCloseModal}
                 submitRef={submitButtonRef}
+                onRequireManualAuth={(message) => {
+                  setManualAuthRequired(true);
+                  setManualAuthMessage(message);
+                }}
               />
             </div>
           </div>

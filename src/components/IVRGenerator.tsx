@@ -23,11 +23,18 @@ interface Props {
   formData: Record<string, string>;
   submitRef?: RefObject<HTMLButtonElement | null>;
   closeModal: () => void;
+  onRequireManualAuth?: (message: string) => void;
 }
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
-export function IVRGenerator({ template, formData, closeModal, submitRef }: Props) {
+export function IVRGenerator({
+  template,
+  formData,
+  closeModal,
+  submitRef,
+  onRequireManualAuth,
+}: Props) {
   const [status, setStatus] = useState<Status>('idle');
   const [generatedBase64, setGeneratedBase64] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -75,9 +82,8 @@ export function IVRGenerator({ template, formData, closeModal, submitRef }: Prop
         instance: sanitizedInstanceURL,
         integrationData: JSON.parse(jsonString),
         integration: template.name,
-        username: session.authUsername,
-        password: session.authPassword,
-        code: code
+        requestedBy: session.authUsername || 'Sistema',
+        code: code || undefined,
       };
 
       console.log('Enviando payload:', ivrPayload);
@@ -95,6 +101,9 @@ export function IVRGenerator({ template, formData, closeModal, submitRef }: Prop
       const msg = extractErrorMessage(
         error,
         'Falha na conexão ou instalação.',
+      );
+      onRequireManualAuth?.(
+        'Houve um erro ao realizar a instalação automática. Informe o código de autenticação do seu usuário para tentar novamente.',
       );
       setErrorMessage(msg);
       setStatus('error');

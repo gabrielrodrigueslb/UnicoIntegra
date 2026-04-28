@@ -31,6 +31,8 @@ export default function AiPage() {
     'idle' | 'loading' | 'success' | 'error'
   >('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [manualAuthRequired, setManualAuthRequired] = useState(false);
+  const [manualAuthMessage, setManualAuthMessage] = useState('');
   const submitButtonRef = useRef<HTMLButtonElement>(null);
 
   const navigate = useNavigate();
@@ -91,6 +93,8 @@ export default function AiPage() {
     setFormData(nextFormData);
     setProcessStatus('idle');
     setErrorMessage('');
+    setManualAuthRequired(false);
+    setManualAuthMessage('');
     setOpenModal(true);
   }
 
@@ -101,6 +105,8 @@ export default function AiPage() {
       setFormData({});
       setProcessStatus('idle');
       setErrorMessage('');
+      setManualAuthRequired(false);
+      setManualAuthMessage('');
     }, 200);
   }
 
@@ -136,9 +142,8 @@ export default function AiPage() {
         ...formData,
         instance: normalizeInstanceUrl(formData.instance),
         name: formData.name,
-        username: session.authUsername,
-        password: session.authPassword,
-        code: formData.code,
+        requestedBy: session.authUsername || 'Sistema',
+        code: formData.code || undefined,
       };
 
       if (template?.contextMode !== 'hidden') {
@@ -155,10 +160,16 @@ export default function AiPage() {
 
       await axios.post(apiUrl, apiBody);
       setProcessStatus('success');
+      setManualAuthRequired(false);
+      setManualAuthMessage('');
     } catch (error) {
       console.error(error);
       setErrorMessage(extractErrorMessage(error, 'Erro desconhecido ao criar IA.'));
-      setProcessStatus('error');
+      setManualAuthRequired(true);
+      setManualAuthMessage(
+        'Houve um erro ao realizar a instalação automática. Informe o código de autenticação do seu usuário para tentar novamente.',
+      );
+      setProcessStatus('idle');
     }
   };
 
@@ -271,8 +282,16 @@ export default function AiPage() {
                 formData={formData}
                 setFormData={setFormData}
                 isIaSetup={true}
+                showManualAuthFields={manualAuthRequired}
+                manualAuthMessage={manualAuthMessage}
                 onPressEnter={handleEnterPress}
               />
+
+              {errorMessage ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  {errorMessage}
+                </div>
+              ) : null}
 
               <div className="border-t border-gray-100 pt-4">
                 <button

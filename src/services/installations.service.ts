@@ -3,9 +3,8 @@ import { api } from './api';
 export interface InstallIntegrationPayload {
   instance: string;
   integration: string;
-  username: string | null;
-  password: string | null;
-  code: string;
+  requestedBy?: string | null;
+  code?: string;
   integrationData: unknown;
 }
 

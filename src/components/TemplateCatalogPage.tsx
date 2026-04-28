@@ -33,6 +33,8 @@ export function TemplateCatalogPage({
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [openModal, setOpenModal] = useState(false);
+  const [manualAuthRequired, setManualAuthRequired] = useState(false);
+  const [manualAuthMessage, setManualAuthMessage] = useState('');
   useBodyScrollLock(openModal);
 
   const template = selectedTemplate
@@ -41,6 +43,8 @@ export function TemplateCatalogPage({
 
   function handleOpenModal(key: string) {
     setSelectedTemplate(key);
+    setManualAuthRequired(false);
+    setManualAuthMessage('');
     setOpenModal(true);
   }
 
@@ -48,6 +52,8 @@ export function TemplateCatalogPage({
     setOpenModal(false);
     setSelectedTemplate('');
     setFormData({});
+    setManualAuthRequired(false);
+    setManualAuthMessage('');
   }
 
   return (
@@ -86,11 +92,17 @@ export function TemplateCatalogPage({
                 template={template}
                 formData={formData}
                 setFormData={setFormData}
+                showManualAuthFields={manualAuthRequired}
+                manualAuthMessage={manualAuthMessage}
               />
               <IVRGenerator
                 template={template}
                 formData={formData}
                 closeModal={handleCloseModal}
+                onRequireManualAuth={(message) => {
+                  setManualAuthRequired(true);
+                  setManualAuthMessage(message);
+                }}
               />
             </div>
           </div>
