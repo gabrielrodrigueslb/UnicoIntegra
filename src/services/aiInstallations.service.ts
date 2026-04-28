@@ -2,6 +2,14 @@ import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_URLBASE || 'https://unicocontato.tech';
 
+export type AiComponentKey =
+  | 'assistant'
+  | 'downloadImagem'
+  | 'buscaProdutos'
+  | 'ura'
+  | 'uraAb'
+  | 'preProcess';
+
 export interface AiInstallationItem {
   id: number;
   instance: string;
@@ -21,6 +29,9 @@ export interface AiInstallationItem {
   uraAbId: string | null;
   lastSyncStatus: string;
   lastSyncError: string | null;
+  installedComponentVersions: Partial<Record<AiComponentKey, number>> | null;
+  currentComponentVersions: Partial<Record<AiComponentKey, number>> | null;
+  componentsNeedingUpdate: AiComponentKey[];
   createdAt: string;
   updatedAt: string;
 }
@@ -30,6 +41,7 @@ export interface UpdateAiInstallationInput {
   username: string;
   password: string;
   code: string;
+  componentKey?: AiComponentKey;
   force?: boolean;
 }
 
@@ -37,6 +49,7 @@ export interface UpdateAiInstallationResult {
   updated: boolean;
   message: string;
   installation?: AiInstallationItem;
+  updatedComponents?: AiComponentKey[];
 }
 
 export interface UpdateAllAiInstallationsInput {
@@ -45,6 +58,7 @@ export interface UpdateAllAiInstallationsInput {
   code: string;
   instance?: string;
   provider?: string;
+  componentKey?: AiComponentKey;
   force?: boolean;
 }
 
@@ -56,6 +70,7 @@ export interface UpdateAllAiInstallationsResultItem {
   updated: boolean;
   success: boolean;
   message: string;
+  updatedComponents?: AiComponentKey[];
 }
 
 export interface UpdateAllAiInstallationsResult {
@@ -86,6 +101,7 @@ export async function updateAiInstallation(
       username: input.username,
       password: input.password,
       code: input.code,
+      componentKey: input.componentKey,
       force: input.force ?? false,
     },
   );
@@ -104,6 +120,7 @@ export async function updateAllAiInstallations(
       code: input.code,
       instance: input.instance,
       provider: input.provider,
+      componentKey: input.componentKey,
       force: input.force ?? false,
     },
   );

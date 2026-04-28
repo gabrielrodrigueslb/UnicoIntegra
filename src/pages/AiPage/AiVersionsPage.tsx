@@ -13,11 +13,15 @@ import {
   Search,
   Server,
   Wrench,
+  X,
+  Code2,
+  Bot
 } from 'lucide-react';
 import { ModalFrame } from '../../components/ModalFrame';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import {
   fetchAiInstallations,
+  type AiComponentKey,
   type AiInstallationItem,
   updateAiInstallation,
   updateAllAiInstallations,
@@ -37,6 +41,24 @@ type UpdateModalState =
   | { mode: 'single'; item: AiInstallationItem }
   | { mode: 'bulk'; instance: string | null }
   | null;
+
+const COMPONENT_LABELS: Record<AiComponentKey, string> = {
+  assistant: 'Assistente',
+  downloadImagem: 'Download imagem',
+  buscaProdutos: 'Busca produtos',
+  ura: 'URA IA',
+  uraAb: 'URA AB',
+  preProcess: 'Pré-processamento',
+};
+
+const COMPONENT_ORDER: AiComponentKey[] = [
+  'assistant',
+  'preProcess',
+  'buscaProdutos',
+  'downloadImagem',
+  'ura',
+  'uraAb',
+];
 
 function buildInstancesSummary(rows: AiInstallationItem[]) {
   const map = new Map<string, InstanceSummary>();
@@ -90,10 +112,24 @@ function formatVersion(version: number | null) {
   return version === null ? '-' : `v${version}`;
 }
 
+function getAvailableComponentOptions(item: AiInstallationItem | null) {
+  const pending = item?.componentsNeedingUpdate ?? [];
+  if (pending.length > 0) {
+    return pending;
+  }
+
+  return COMPONENT_ORDER.filter((componentKey) => {
+    const installedVersion = item?.installedComponentVersions?.[componentKey] ?? null;
+    const currentVersion = item?.currentComponentVersions?.[componentKey] ?? null;
+    return installedVersion !== null || currentVersion !== null;
+  });
+}
+
 export default function AiVersionsPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState<AiInstallationItem[]>([]);
   const [instances, setInstances] = useState<InstanceSummary[]>([]);
+  const [availableProviders, setAvailableProviders] = useState<string[]>([]);
   const [selectedInstance, setSelectedInstance] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -104,6 +140,8 @@ export default function AiVersionsPage() {
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [updateModal, setUpdateModal] = useState<UpdateModalState>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [selectedComponentKey, setSelectedComponentKey] = useState<AiComponentKey | ''>('');
+  const [selectedBulkProvider, setSelectedBulkProvider] = useState('');
 
   useRequireAuth();
   useBodyScrollLock(Boolean(updateModal));
@@ -117,11 +155,16 @@ export default function AiVersionsPage() {
       const data = await fetchAiInstallations({ limit: 5000 });
       setItems([]);
       setInstances(buildInstancesSummary(data));
+      setAvailableProviders(
+        Array.from(new Set(data.map((item) => item.provider).filter(Boolean))).sort((a, b) =>
+          providerLabel(a).localeCompare(providerLabel(b)),
+        ),
+      );
       setSelectedInstance('');
     } catch (requestError) {
       console.error(requestError);
       setError(
-        extractErrorMessage(requestError, 'Falha ao carregar as instalacoes de IA.'),
+        extractErrorMessage(requestError, 'Falha ao carregar as instalações de IA.'),
       );
     } finally {
       setLoading(false);
@@ -139,13 +182,18 @@ export default function AiVersionsPage() {
         instance,
       });
       setItems(data);
+      setAvailableProviders(
+        Array.from(new Set(data.map((item) => item.provider).filter(Boolean))).sort((a, b) =>
+          providerLabel(a).localeCompare(providerLabel(b)),
+        ),
+      );
       setSelectedInstance(instance);
     } catch (requestError) {
       console.error(requestError);
       setError(
         extractErrorMessage(
           requestError,
-          'Falha ao carregar as instalacoes da instancia selecionada.',
+          'Falha ao carregar as instalações da instância selecionada.',
         ),
       );
     } finally {
@@ -207,9 +255,10 @@ export default function AiVersionsPage() {
         username: session.authUsername,
         password: session.authPassword,
         code,
+        componentKey: selectedComponentKey || undefined,
       });
 
-      setFlashMessage(result.message || 'Atualizacao concluida.');
+      setFlashMessage(result.message || 'Atualização concluída com sucesso.');
 
       if (selectedInstance) {
         await loadInstanceInstallations(selectedInstance);
@@ -219,7 +268,7 @@ export default function AiVersionsPage() {
     } catch (requestError) {
       console.error(requestError);
       setError(
-        extractErrorMessage(requestError, 'Falha ao atualizar a instalacao.'),
+        extractErrorMessage(requestError, 'Falha ao atualizar a instalação.'),
       );
     } finally {
       setUpdatingId(null);
@@ -237,14 +286,16 @@ export default function AiVersionsPage() {
         password: session.authPassword,
         code,
         instance: selectedInstance || undefined,
+        provider: selectedBulkProvider || undefined,
+        componentKey: selectedComponentKey || undefined,
       });
 
       setFlashMessage(
         result.failed > 0
-          ? `Atualizacao concluida com ${result.failed} falha(s).`
+          ? `Atualização concluída com ${result.failed} falha(s).`
           : result.updated > 0
-            ? `${result.updated} instalacao(oes) atualizada(s) com sucesso.`
-            : 'Nenhuma instalacao precisava de atualizacao.',
+            ? `${result.updated} instalação(ões) atualizada(s) com sucesso.`
+            : 'Nenhuma instalação precisava de atualização.',
       );
 
       if (selectedInstance) {
@@ -257,7 +308,7 @@ export default function AiVersionsPage() {
       setError(
         extractErrorMessage(
           requestError,
-          'Falha ao atualizar as instalacoes em lote.',
+          'Falha ao atualizar as instalações em lote.',
         ),
       );
     } finally {
@@ -271,6 +322,7 @@ export default function AiVersionsPage() {
     }
 
     setTwoFactorCode('');
+    setSelectedComponentKey('');
     setUpdateModal({ mode: 'single', item });
   }
 
@@ -278,6 +330,8 @@ export default function AiVersionsPage() {
     if (bulkUpdating) return;
 
     setTwoFactorCode('');
+    setSelectedComponentKey('');
+    setSelectedBulkProvider('');
     setUpdateModal({ mode: 'bulk', instance: selectedInstance || null });
   }
 
@@ -289,6 +343,7 @@ export default function AiVersionsPage() {
 
     const currentModal = updateModal;
     setUpdateModal(null);
+    setSelectedBulkProvider('');
 
     if (currentModal.mode === 'single') {
       await executeSingleUpdate(currentModal.item, code);
@@ -298,151 +353,217 @@ export default function AiVersionsPage() {
     await executeBulkUpdate(code);
   }
 
+  const updateModalComponentOptions = useMemo(() => {
+    if (!updateModal || updateModal.mode !== 'single') {
+      return COMPONENT_ORDER;
+    }
+
+    return getAvailableComponentOptions(updateModal.item);
+  }, [updateModal]);
+
+  const bulkProviderOptions = useMemo(() => {
+    if (!updateModal || updateModal.mode !== 'bulk') {
+      return [];
+    }
+
+    if (selectedInstance) {
+      return Array.from(new Set(items.map((item) => item.provider).filter(Boolean))).sort((a, b) =>
+        providerLabel(a).localeCompare(providerLabel(b)),
+      );
+    }
+
+    return availableProviders;
+  }, [availableProviders, items, selectedInstance, updateModal]);
+
   return (
-    <div className="h-screen overflow-y-auto bg-slate-50 p-6 md:p-8">
-      <div className="mx-auto max-w-screen space-y-6">
-        <header className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <button
-                onClick={() => navigate('/main/iaPage')}
-                className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Voltar para criacao de IAs
-              </button>
+    <div className="flex h-screen flex-col overflow-hidden bg-slate-50 font-sans">
+      
+      {/* HEADER FIXO */}
+      <header className="sticky top-0 z-30 flex-shrink-0 border-b border-slate-200 bg-white px-6 py-5 shadow-sm">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <button
+              onClick={() => navigate('/main/iaPage')}
+              className="mb-3 inline-flex items-center gap-2 rounded-md px-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar para criação de IAs
+            </button>
 
-              <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-                <Brain className="h-7 w-7 text-violet-600" />
-                IAs Instaladas por Cliente
-              </h1>
+            <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
+              <Brain className="h-7 w-7 text-violet-600" />
+              Monitoramento e Versões
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Gerencie a versão instalada de cada IA nos clientes e aplique atualizações.
+            </p>
+          </div>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Visualize versao instalada, versao atual do provider, IDs salvos e execute atualizacao por instalacao ou em lote.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {selectedInstance ? (
+          <div className="flex items-center gap-2.5">
+            {selectedInstance && (
+              <div className="group relative flex items-center justify-center">
                 <button
                   onClick={() => loadInstances()}
                   disabled={loading || bulkUpdating}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-200 active:scale-95 disabled:opacity-50"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Voltar para clientes
                 </button>
-              ) : null}
+                <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1">
+                  Listar todos os clientes
+                  <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-800"></div>
+                </div>
+              </div>
+            )}
 
+            <div className="group relative flex items-center justify-center">
               <button
-                onClick={handleUpdateAll}
+                onClick={() => navigate('/main/iaPage/templates')}
                 disabled={loading || bulkUpdating}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95 disabled:opacity-50"
               >
-                <Wrench className={`h-4 w-4 ${bulkUpdating ? 'animate-spin' : ''}`} />
-                {selectedInstance ? 'Atualizar instancia' : 'Atualizar todas'}
+                <Database className="h-4 w-4" />
               </button>
+              <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1">
+                Gerenciar templates
+                <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-800"></div>
+              </div>
+            </div>
 
+            <div className="group relative flex items-center justify-center">
               <button
                 onClick={() => (selectedInstance ? loadInstanceInstallations(selectedInstance) : loadInstances())}
                 disabled={loading || bulkUpdating}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-200 active:scale-95 disabled:opacity-50"
               >
-                <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                Atualizar
+                <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin text-violet-600' : ''}`} />
               </button>
+              <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1">
+                Sincronizar dados
+                <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-800"></div>
+              </div>
+            </div>
+
+            {/* Divisor Visual */}
+            <div className="mx-1 h-6 w-px bg-slate-200"></div>
+
+            <div className="group relative flex items-center justify-center">
+              <button
+                onClick={handleUpdateAll}
+                disabled={loading || bulkUpdating}
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition-all hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 active:scale-95 disabled:opacity-50"
+              >
+                <Wrench className={`h-4 w-4 ${bulkUpdating ? 'animate-spin' : ''}`} />
+              </button>
+              <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2">
+                {selectedInstance ? 'Atualizar esta instância' : 'Atualizar todos os clientes'}
+                <div className="absolute -top-1 right-3 sm:right-auto sm:left-1/2 h-2 w-2 sm:-translate-x-1/2 rotate-45 bg-slate-800"></div>
+              </div>
             </div>
           </div>
+        </div>
 
+        {/* FEEDBACKS (Sticky Header) */}
+        <div className="mt-4 empty:hidden">
+          {flashMessage && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-800 shadow-sm animate-in fade-in slide-in-from-top-2">
+              {flashMessage}
+            </div>
+          )}
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800 shadow-sm animate-in fade-in slide-in-from-top-2">
+              {error}
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* ÁREA DE CONTEÚDO PRINCIPAL (Scrollable) */}
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden p-6">
+        
+        {/* BARRA DE PESQUISA GERAL */}
+        <div className="mb-6 w-full max-w-md flex-shrink-0">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={
                 selectedInstance
-                  ? 'Buscar por IA, provider ou ID...'
-                  : 'Buscar cliente por instancia...'
+                  ? `Buscar IA em ${selectedInstance}...`
+                  : 'Buscar cliente por instância...'
               }
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-violet-300 focus:bg-white focus:ring-2 focus:ring-violet-200"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 shadow-inner outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
             />
           </div>
-        </header>
+        </div>
 
-        {flashMessage ? (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-            {flashMessage}
-          </div>
-        ) : null}
-
-        {error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error}
-          </div>
-        ) : null}
-
+        {/* VISÃO 1: LISTA DE INSTÂNCIAS GERAIS */}
         {!selectedInstance ? (
-          <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 px-5 py-4 text-sm font-semibold text-slate-700">
+          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex-shrink-0 border-b border-slate-100 bg-slate-50/50 px-5 py-4 text-sm font-bold text-slate-700">
               Clientes encontrados: {filteredInstances.length}
             </div>
 
-            <div className="max-h-[70vh] overflow-auto">
+            <div className="flex-1 overflow-auto custom-scrollbar">
               <table className="w-full text-left text-sm">
-                <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="sticky top-0 z-10 bg-white/95 text-xs font-bold uppercase tracking-wider text-slate-500 shadow-sm backdrop-blur">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">Instancia</th>
-                    <th className="px-4 py-3 font-semibold">Total</th>
-                    <th className="px-4 py-3 font-semibold">Desatualizadas</th>
-                    <th className="px-4 py-3 font-semibold">Ultima sincronizacao</th>
-                    <th className="px-4 py-3 font-semibold text-right">Acao</th>
+                    <th className="px-6 py-4">Instância</th>
+                    <th className="px-6 py-4">Total de IAs</th>
+                    <th className="px-6 py-4">Desatualizadas</th>
+                    <th className="px-6 py-4">Última Sincronização</th>
+                    <th className="px-6 py-4 text-right">Ação</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {!loading && filteredInstances.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                      <td colSpan={5} className="px-6 py-16 text-center text-slate-400">
+                        <Server className="mx-auto h-8 w-8 opacity-20 mb-3" />
                         Nenhum cliente encontrado.
                       </td>
                     </tr>
                   ) : null}
 
                   {filteredInstances.map((item) => (
-                    <tr key={item.instance} className="transition-colors hover:bg-slate-50">
-                      <td className="px-4 py-3 align-top">
-                        <div className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-2 py-1 text-xs text-blue-700">
-                          <Server className="h-3.5 w-3.5" />
-                          <span className="max-w-[480px] truncate">{item.instance}</span>
+                    <tr key={item.instance} className="group transition-colors hover:bg-slate-50/80">
+                      <td className="px-6 py-4">
+                        <div className="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                          <Server className="h-4 w-4" />
+                          <span className="max-w-[300px] truncate">{item.instance}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 align-top">
-                        <span className="inline-flex rounded-md bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700">
-                          {item.count} IA(s)
+                      <td className="px-6 py-4">
+                        <span className="inline-flex rounded-md bg-slate-100 border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-700">
+                          {item.count} instaladas
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top">
-                        <span
-                          className={`inline-flex rounded-md px-2 py-1 text-xs font-semibold ${
-                            item.outdatedCount > 0
-                              ? 'bg-amber-50 text-amber-700'
-                              : 'bg-emerald-50 text-emerald-700'
-                          }`}
-                        >
-                          {item.outdatedCount}
-                        </span>
+                      <td className="px-6 py-4">
+                        {item.outdatedCount > 0 ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                            {item.outdatedCount} pendentes
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Todas em dia
+                          </span>
+                        )}
                       </td>
-                      <td className="px-4 py-3 align-top text-xs text-slate-600">
+                      <td className="px-6 py-4 text-xs font-medium text-slate-500">
                         <div className="flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                          <Calendar className="h-4 w-4" />
                           {formatDate(item.latestUpdatedAt)}
                         </div>
                       </td>
-                      <td className="px-4 py-3 align-top text-right">
+                      <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => loadInstanceInstallations(item.instance)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-white"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 active:scale-95 group-hover:border-violet-300 group-hover:text-violet-700"
                         >
-                          Entrar
+                          Ver IAs
                           <ChevronRight className="h-3.5 w-3.5" />
                         </button>
                       </td>
@@ -453,122 +574,125 @@ export default function AiVersionsPage() {
             </div>
           </section>
         ) : (
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.65fr_1fr]">
-            <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 px-5 py-4 text-sm font-semibold text-slate-700">
-                Instancia selecionada: {selectedInstance} | Instalacoes encontradas: {filteredItems.length}
+          /* VISÃO 2: DETALHES DE UMA INSTÂNCIA ESPECÍFICA (Split Screen) */
+          <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row">
+            
+            {/* Lado Esquerdo: Tabela de IAs */}
+            <section className="flex min-h-0 flex-[1.65] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex-shrink-0 border-b border-slate-100 bg-slate-50/50 px-5 py-4">
+                <h2 className="text-sm font-bold text-slate-800">
+                  Instância: <span className="text-violet-700">{selectedInstance}</span>
+                </h2>
+                <p className="mt-0.5 text-xs font-medium text-slate-500">
+                  {filteredItems.length} IAs instaladas
+                </p>
               </div>
 
-              <div className="max-h-[68vh] overflow-auto">
+              <div className="flex-1 overflow-auto custom-scrollbar">
                 <table className="w-full text-left text-sm">
-                  <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                  <thead className="sticky top-0 z-10 bg-white/95 text-xs font-bold uppercase tracking-wider text-slate-500 shadow-sm backdrop-blur">
                     <tr>
-                      <th className="px-4 py-3 font-semibold">IA</th>
-                      <th className="px-4 py-3 font-semibold">Provider</th>
-                      <th className="px-4 py-3 font-semibold">Versoes</th>
-                      <th className="px-4 py-3 font-semibold">Status</th>
-                      <th className="px-4 py-3 font-semibold text-right">Acoes</th>
+                      <th className="px-5 py-4">IA / Provider</th>
+                      <th className="px-5 py-4">Versão</th>
+                      <th className="px-5 py-4">Status</th>
+                      <th className="px-5 py-4 text-right">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {!loading && filteredItems.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                          Nenhuma instalacao encontrada nesta instancia.
+                        <td colSpan={4} className="px-6 py-16 text-center text-slate-400">
+                          <Bot className="mx-auto h-8 w-8 opacity-20 mb-3" />
+                          Nenhuma IA encontrada para esta busca.
                         </td>
                       </tr>
                     ) : null}
 
                     {filteredItems.map((item) => {
                       const readyForUpdate = isReadyForUpdate(item);
-                      const showSecondaryStatus =
-                        readyForUpdate ||
-                        isProviderUpdateBlocked(item.provider) ||
-                        !item.canUpdate;
+                      const isBlocked = isProviderUpdateBlocked(item.provider);
+                      const isSelectedRow = selected?.id === item.id;
 
                       return (
-                      <tr
-                        key={item.id}
-                        className={`transition-colors hover:bg-slate-50 ${
-                          selected?.id === item.id ? 'bg-violet-50/50' : ''
-                        }`}
-                      >
-                        <td className="px-4 py-3 align-top">
-                          <div className="font-semibold text-slate-800">
-                            {item.assistantName || 'Sem nome'}
-                          </div>
-                          <div className="mt-1 text-xs text-slate-500">
-                            ID IA: {item.assistantId || '-'}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 align-top">
-                          <span className="inline-flex rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
-                            {providerLabel(item.provider)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 align-top text-xs text-slate-600">
-                          <div>Instalada: {formatVersion(item.installedVersion)}</div>
-                          <div>Atual: {formatVersion(item.currentVersion)}</div>
-                        </td>
-                        <td className="px-4 py-3 align-top">
-                          <div className="flex flex-col gap-1">
-                            <span
-                              className={`inline-flex w-fit items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold ${
-                                item.updateAvailable
-                                  ? 'bg-amber-50 text-amber-700'
-                                  : 'bg-emerald-50 text-emerald-700'
-                              }`}
-                            >
+                        <tr
+                          key={item.id}
+                          className={`group transition-colors hover:bg-slate-50 ${
+                            isSelectedRow ? 'bg-violet-50/40 border-l-2 border-l-violet-500' : 'border-l-2 border-l-transparent'
+                          }`}
+                        >
+                          <td className="px-5 py-4 align-top">
+                            <div className="font-bold text-slate-900">
+                              {item.assistantName || 'IA sem nome'}
+                            </div>
+                            <div className="mt-1 flex items-center gap-2">
+                              <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-600 border border-slate-200">
+                                {providerLabel(item.provider)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-4 align-top">
+                            <div className="text-xs text-slate-700 font-medium">
+                              Instalada: <span className="font-mono text-slate-500">{formatVersion(item.installedVersion)}</span>
+                            </div>
+                            <div className="mt-0.5 text-xs text-slate-700 font-medium">
+                              Em Produção: <span className="font-mono text-slate-500">{formatVersion(item.currentVersion)}</span>
+                            </div>
+                            
+                            {item.componentsNeedingUpdate.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {item.componentsNeedingUpdate.map((key) => (
+                                  <span key={key} className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">
+                                    {COMPONENT_LABELS[key]}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-5 py-4 align-top">
+                            <div className="flex flex-col items-start gap-1.5">
                               {item.updateAvailable ? (
-                                <AlertTriangle className="h-3.5 w-3.5" />
+                                <span className="inline-flex items-center gap-1 rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                                  <AlertTriangle className="h-3 w-3" /> Desatualizada
+                                </span>
                               ) : (
-                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <span className="inline-flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                                  <CheckCircle2 className="h-3 w-3" /> OK
+                                </span>
                               )}
-                              {item.updateAvailable ? 'Desatualizada' : 'Atualizada'}
-                            </span>
-                            {showSecondaryStatus ? (
-                              <span
-                                className={`inline-flex w-fit rounded-md px-2 py-1 text-xs font-semibold ${
-                                  readyForUpdate
-                                    ? 'bg-blue-50 text-blue-700'
-                                    : isProviderUpdateBlocked(item.provider)
-                                      ? 'bg-amber-50 text-amber-700'
-                                      : 'bg-slate-100 text-slate-600'
+                              
+                              {item.updateAvailable && (
+                                <span className={`inline-flex rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                  readyForUpdate ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                                  isBlocked ? 'bg-red-50 border-red-200 text-red-700' :
+                                  'bg-slate-100 border-slate-200 text-slate-600'
+                                }`}>
+                                  {readyForUpdate ? 'Pronta' : isBlocked ? 'Bloqueado' : 'Incompleta'}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-5 py-4 align-top text-right">
+                            <div className="flex flex-col gap-2 items-end">
+                              <button
+                                onClick={() => setSelected(item)}
+                                className={`inline-flex w-fit items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all focus:outline-none focus:ring-2 active:scale-95 ${
+                                  isSelectedRow ? 'bg-violet-100 border-violet-200 text-violet-700 focus:ring-violet-200' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 focus:ring-slate-200'
                                 }`}
                               >
-                                {readyForUpdate
-                                  ? 'Pronta para update'
-                                  : isProviderUpdateBlocked(item.provider)
-                                    ? 'Update bloqueado'
-                                    : 'Cadastro incompleto'}
-                              </span>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 align-top text-right">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => setSelected(item)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-white"
-                            >
-                              <Database className="h-3.5 w-3.5" />
-                              Detalhes
-                            </button>
-                            <button
-                              onClick={() => void handleSingleUpdate(item)}
-                              disabled={!readyForUpdate || updatingId === item.id || bulkUpdating}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              <RefreshCw
-                                className={`h-3.5 w-3.5 ${
-                                  updatingId === item.id ? 'animate-spin' : ''
-                                }`}
-                              />
-                              Atualizar
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                                <Database className="h-3.5 w-3.5" /> Detalhes
+                              </button>
+                              
+                              <button
+                                onClick={() => void handleSingleUpdate(item)}
+                                disabled={!readyForUpdate || updatingId === item.id || bulkUpdating}
+                                className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 active:scale-95 disabled:opacity-40 disabled:grayscale"
+                              >
+                                <RefreshCw className={`h-3.5 w-3.5 ${updatingId === item.id ? 'animate-spin' : ''}`} />
+                                Update
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
                       );
                     })}
                   </tbody>
@@ -576,99 +700,161 @@ export default function AiVersionsPage() {
               </div>
             </section>
 
-            <aside className="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-5 py-4">
+            {/* Lado Direito: Detalhes da IA selecionada */}
+            <aside className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+              <div className="flex-shrink-0 border-b border-slate-200 bg-white px-5 py-4 shadow-sm z-10">
                 <div className="flex items-center gap-2">
-                  <Database className="h-4 w-4 text-violet-600" />
-                  <h2 className="text-sm font-semibold text-slate-800">Detalhes da instalacao</h2>
+                  <Database className="h-5 w-5 text-violet-600" />
+                  <h2 className="text-sm font-bold text-slate-900">Configuração e Setup</h2>
                 </div>
               </div>
 
-              {selected ? (
-                <div className="space-y-4 p-5">
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-700">
-                    <div>
-                      <strong>IA:</strong> {selected.assistantName || 'Sem nome'}
+              <div className="flex-1 overflow-auto p-5 custom-scrollbar">
+                {selected ? (
+                  <div className="space-y-6 pb-6">
+                    
+                    {/* Card: Info Básica */}
+                    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                      <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Informações do Agente
+                      </div>
+                      <div className="p-4 space-y-3 text-sm">
+                        <div className="flex justify-between border-b border-slate-50 pb-2">
+                          <span className="text-slate-500">Nome:</span>
+                          <span className="font-bold text-slate-900">{selected.assistantName || '-'}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-50 pb-2">
+                          <span className="text-slate-500">Provider:</span>
+                          <span className="font-medium text-slate-900">{providerLabel(selected.provider)}</span>
+                        </div>
+                        <div className="flex justify-between pb-1">
+                          <span className="text-slate-500">Origem:</span>
+                          <span className="font-medium text-slate-900">{selected.source || '-'}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <strong>Provider:</strong> {providerLabel(selected.provider)}
+
+                    {/* Card: IDs Técnicos */}
+                    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                      <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+                        IDs Técnicos (Typebot/IA)
+                      </div>
+                      <div className="p-4 grid grid-cols-1 gap-2 text-xs font-mono text-slate-600">
+                        <div className="flex flex-col gap-1 rounded bg-slate-50 p-2 border border-slate-100">
+                          <span className="font-sans text-[10px] font-bold uppercase text-slate-400">Assistant ID</span>
+                          {selected.assistantId || '-'}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex flex-col gap-1 rounded bg-slate-50 p-2 border border-slate-100">
+                            <span className="font-sans text-[10px] font-bold uppercase text-slate-400">Pré Process</span>
+                            {selected.preProcessId || '-'}
+                          </div>
+                          <div className="flex flex-col gap-1 rounded bg-slate-50 p-2 border border-slate-100">
+                            <span className="font-sans text-[10px] font-bold uppercase text-slate-400">Busca Prod</span>
+                            {selected.buscaProdutosId || '-'}
+                          </div>
+                          <div className="flex flex-col gap-1 rounded bg-slate-50 p-2 border border-slate-100">
+                            <span className="font-sans text-[10px] font-bold uppercase text-slate-400">Down. Img</span>
+                            {selected.downloadImagemId || '-'}
+                          </div>
+                          <div className="flex flex-col gap-1 rounded bg-slate-50 p-2 border border-slate-100">
+                            <span className="font-sans text-[10px] font-bold uppercase text-slate-400">URA IA</span>
+                            {selected.uraIaId || '-'}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <strong>Instancia:</strong> {selected.instance}
+
+                    {/* Card: Versões por Componente */}
+                    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                       <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Detalhe de Versões
+                      </div>
+                      <div className="p-4 space-y-2">
+                        {COMPONENT_ORDER.map((componentKey) => {
+                          const installed = selected.installedComponentVersions?.[componentKey] ?? null;
+                          const current = selected.currentComponentVersions?.[componentKey] ?? null;
+                          if (installed === null && current === null) return null;
+
+                          const needsUpdate = selected.componentsNeedingUpdate.includes(componentKey);
+
+                          return (
+                            <div key={componentKey} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                              <span className="text-xs font-bold text-slate-700">{COMPONENT_LABELS[componentKey]}</span>
+                              <div className="flex items-center gap-3 text-[11px] font-medium text-slate-500">
+                                <span>{formatVersion(installed)} → {formatVersion(current)}</span>
+                                <span className={`h-2 w-2 rounded-full ${needsUpdate ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div>
-                      <strong>Versao instalada:</strong> {formatVersion(selected.installedVersion)}
+
+                    {/* Card: Código Fonte (Snapshot) */}
+                    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                      <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/50 px-4 py-3">
+                        <Code2 className="h-4 w-4 text-slate-500" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                          Variáveis Salvas (Snapshot)
+                        </span>
+                      </div>
+                      <pre
+                        className="w-full max-h-[300px] overflow-auto bg-[#0d1117] p-4 font-mono text-[11px] leading-relaxed text-slate-300 custom-scrollbar"
+                        style={{ tabSize: 2 }}
+                      >
+                        {JSON.stringify(selected.configSnapshot ?? {}, null, 2)}
+                      </pre>
                     </div>
-                    <div>
-                      <strong>Versao atual:</strong> {formatVersion(selected.currentVersion)}
-                    </div>
+
+                    {/* Erros e Avisos */}
+                    {selected.lastSyncError && (
+                      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm">
+                        <div className="font-bold mb-1 flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Erro de Sincronização</div>
+                        <span className="text-xs">{selected.lastSyncError}</span>
+                      </div>
+                    )}
+
+                    {isProviderUpdateBlocked(selected.provider) && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 shadow-sm">
+                        <div className="font-bold mb-1 flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Atualização Indisponível</div>
+                        <span className="text-xs">IAs de atendimento "Personalizado" não entram no fluxo de atualização automática.</span>
+                      </div>
+                    )}
                   </div>
-
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-700">
-                    <div><strong>Assistant ID:</strong> {selected.assistantId || '-'}</div>
-                    <div><strong>Pre processamento:</strong> {selected.preProcessId || '-'}</div>
-                    <div><strong>Busca produtos:</strong> {selected.buscaProdutosId || '-'}</div>
-                    <div><strong>Download imagem:</strong> {selected.downloadImagemId || '-'}</div>
-                    <div><strong>URA IA:</strong> {selected.uraIaId || '-'}</div>
-                    <div><strong>URA AB:</strong> {selected.uraAbId || '-'}</div>
-                    <div><strong>Status:</strong> {selected.lastSyncStatus || '-'}</div>
-                    <div><strong>Origem:</strong> {selected.source || '-'}</div>
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center text-center text-slate-400">
+                    <Database className="mb-4 h-12 w-12 opacity-20" />
+                    <p className="text-sm font-medium">Selecione uma IA na lista<br/>para inspecionar a configuração.</p>
                   </div>
-
-                  <div>
-                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Configuracao salva
-                    </h3>
-                    <pre
-                      className="w-full max-w-full min-w-0 max-h-[28vh] overflow-auto rounded-xl border border-slate-200 bg-slate-950 p-4 text-xs leading-relaxed text-slate-100 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
-                      style={{ tabSize: 2 }}
-                    >
-                      {JSON.stringify(selected.configSnapshot ?? {}, null, 2)}
-                    </pre>
-                  </div>
-
-                  {selected.lastSyncError ? (
-                    <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
-                      <strong>Ultimo erro:</strong> {selected.lastSyncError}
-                    </div>
-                  ) : null}
-
-                  {isProviderUpdateBlocked(selected.provider) ? (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                      <strong>Observacao:</strong> IAs de atendimento personalizadas nao entram no fluxo de atualizacao automatica.
-                    </div>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="p-6 text-sm text-slate-500">
-                  Selecione um registro para visualizar os IDs e a configuracao armazenada.
-                </div>
-              )}
+                )}
+              </div>
             </aside>
           </div>
         )}
-      </div>
+      </main>
 
-      {updateModal ? (
+      {/* MODAL DE ATUALIZAÇÃO (2FA) */}
+      {updateModal && (
         <ModalFrame
           onClose={() => {
             if (updatingId === null && !bulkUpdating) {
               setUpdateModal(null);
               setTwoFactorCode('');
+              setSelectedComponentKey('');
+              setSelectedBulkProvider('');
             }
           }}
           maxWidthClassName="max-w-md"
-          bodyClassName="bg-white p-0"
+          bodyClassName="bg-white p-0 rounded-2xl overflow-hidden"
           header={
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-6 py-4">
+            <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50 px-6 py-5">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">
-                  {updateModal.mode === 'single'
-                    ? 'Atualizar instalacao'
-                    : 'Atualizar instalacoes'}
+                <h2 className="text-lg font-extrabold text-slate-900">
+                  {updateModal.mode === 'single' ? 'Confirmar Atualização' : 'Atualização em Lote'}
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Informe o codigo 2FA para continuar.
+                  Validação de segurança necessária para prosseguir.
                 </p>
               </div>
               <button
@@ -676,34 +862,79 @@ export default function AiVersionsPage() {
                   if (updatingId === null && !bulkUpdating) {
                     setUpdateModal(null);
                     setTwoFactorCode('');
+                    setSelectedComponentKey('');
+                    setSelectedBulkProvider('');
                   }
                 }}
-                className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
+                className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300"
               >
-                X
+                <X className="h-5 w-5" />
               </button>
             </div>
           }
         >
-          <div className="space-y-5 p-6">
-            <div className="rounded-xl border border-violet-100 bg-violet-50 p-4 text-sm text-violet-900">
+          <div className="space-y-6 p-6">
+            <div className="rounded-xl border border-violet-100 bg-violet-50 p-4 text-sm text-violet-900 line-clamp-3 shadow-sm ">
               {updateModal.mode === 'single' ? (
                 <>
-                  Atualizar <strong>{updateModal.item.assistantName || updateModal.item.assistantId}</strong> na instancia{' '}
-                  <strong>{updateModal.item.instance}</strong>.
+                  Você está atualizando a IA <strong className="font-bold">{updateModal.item.assistantName || updateModal.item.assistantId}</strong> na instância <strong className="font-bold">{updateModal.item.instance}</strong>.
                 </>
               ) : updateModal.instance ? (
                 <>
-                  Atualizar todas as instalacoes da instancia <strong>{updateModal.instance}</strong>.
+                  Você está prestando a atualizar <strong>todas as IAs desatualizadas</strong> da instância <strong className="font-bold">{updateModal.instance}</strong>.
                 </>
               ) : (
-                <>Atualizar todas as instalacoes gerenciadas.</>
+                <>Você está prestando a atualizar <strong>todas as instalações de todos os clientes</strong>. Esta operação pode demorar.</>
               )}
             </div>
 
-            <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Codigo 2FA
+            {updateModal.mode === 'bulk' && (
+              <div className="space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Selecionar Provider (Opcional)
+                </label>
+                <select
+                  value={selectedBulkProvider}
+                  onChange={(event) => setSelectedBulkProvider(event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-all focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                >
+                  <option value="">
+                    {selectedInstance
+                      ? 'Todos os providers desta instância'
+                      : 'Todos os providers elegíveis'}
+                  </option>
+                  {bulkProviderOptions.map((provider) => (
+                    <option key={provider} value={provider}>
+                      Somente: {providerLabel(provider)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                Selecionar Fluxo (Opcional)
+              </label>
+              <select
+                value={selectedComponentKey}
+                onChange={(event) => setSelectedComponentKey(event.target.value as AiComponentKey | '')}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-all focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              >
+                <option value="">
+                  {updateModal.mode === 'single' ? 'Todos os fluxos pendentes desta IA' : 'Todos os fluxos elegíveis'}
+                </option>
+                {updateModalComponentOptions.map((key) => (
+                  <option key={key} value={key}>
+                    Somente: {COMPONENT_LABELS[key]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                Código de Autenticação (2FA)
               </label>
               <input
                 type="text"
@@ -716,22 +947,24 @@ export default function AiVersionsPage() {
                     void handleConfirmUpdateModal();
                   }
                 }}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition-all focus:border-violet-300 focus:bg-white focus:ring-2 focus:ring-violet-200"
-                placeholder="Digite o 2FA"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-all focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                placeholder="Ex: 123456"
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => {
                   if (updatingId === null && !bulkUpdating) {
                     setUpdateModal(null);
                     setTwoFactorCode('');
+                    setSelectedComponentKey('');
+                    setSelectedBulkProvider('');
                   }
                 }}
                 disabled={updatingId !== null || bulkUpdating}
-                className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 active:scale-95 disabled:opacity-50"
               >
                 Cancelar
               </button>
@@ -739,19 +972,15 @@ export default function AiVersionsPage() {
                 type="button"
                 onClick={() => void handleConfirmUpdateModal()}
                 disabled={!twoFactorCode.trim() || updatingId !== null || bulkUpdating}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 active:scale-95 disabled:opacity-50"
               >
-                <RefreshCw
-                  className={`h-4 w-4 ${
-                    updatingId !== null || bulkUpdating ? 'animate-spin' : ''
-                  }`}
-                />
+                <RefreshCw className={`h-4 w-4 ${updatingId !== null || bulkUpdating ? 'animate-spin' : ''}`} />
                 Confirmar
               </button>
             </div>
           </div>
         </ModalFrame>
-      ) : null}
+      )}
     </div>
   );
 }

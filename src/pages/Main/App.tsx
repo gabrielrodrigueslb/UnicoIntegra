@@ -13,6 +13,7 @@ import DocsRouter from '../Docs/DocsRouter';
 import ExtensionManager from '../ExtensionManager/ExtensionManager';
 import Home from '../Home/Home';
 import AiPage from '../AiPage/AiPage';
+import AiTemplateManagerPage from '../AiPage/AiTemplateManagerPage';
 import AiVersionsPage from '../AiPage/AiVersionsPage';
 import Integrations from '../Integrations/Integrations';
 import LinkAi from '../LinkAi/LinkAi';
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="automations" element={<Automations />} />
             <Route path="iaPage" element={<AiPage />} />
             <Route path="iaPage/list" element={<AiVersionsPage />} />
+            <Route path="iaPage/templates" element={<AiTemplateManagerPage />} />
             <Route path="extensions" element={<ExtensionManager />} />
             <Route path="databases" element={<Databases />} />
             <Route path="docs/*" element={<DocsRouter />} />

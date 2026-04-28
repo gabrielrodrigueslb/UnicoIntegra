@@ -172,13 +172,22 @@ export default function AiPage() {
       onSearchTermChange={(event) => setSearchTerm(event.target.value)}
       searchPlaceholder="Buscar modelos de IA..."
       headerActions={
-        <button
-          onClick={() => navigate('/main/iaPage/list')}
-          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-700 transition-colors hover:bg-violet-100"
-        >
-          <Brain className="h-4 w-4" />
-          Ver IAs instaladas
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => navigate('/main/iaPage/templates')}
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+          >
+            <Sparkles className="h-4 w-4" />
+            Gerenciar templates
+          </button>
+          <button
+            onClick={() => navigate('/main/iaPage/list')}
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-700 transition-colors hover:bg-violet-100"
+          >
+            <Brain className="h-4 w-4" />
+            Ver IAs instaladas
+          </button>
+        </div>
       }
       isEmpty={filteredIAs.length === 0}
       emptyIcon={Bot}

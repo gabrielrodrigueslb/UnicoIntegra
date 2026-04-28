@@ -151,7 +151,7 @@ export const templates = {
         label: 'Token Vetor', 
         type: 'text', 
         placeholder: 'AgAAAGmNu9AtfU9...', 
-        width: 'full' as const 
+        width: 'half' as const 
       },
       {
         key: 'unidade_negocio_vetor',
