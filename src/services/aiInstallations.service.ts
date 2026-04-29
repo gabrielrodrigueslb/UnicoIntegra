@@ -75,6 +75,7 @@ export interface UpdateAllAiInstallationsResult {
   total: number;
   updated: number;
   failed: number;
+  skipped: number;
   results: UpdateAllAiInstallationsResultItem[];
 }
 
