@@ -40,6 +40,13 @@ export const templates = {
         type: 'text', 
         placeholder: 'Ex: 74579', 
         width: 'half' as const 
+      },
+      {
+        key: 'quantidade_de_produtos',
+        label: 'Quantidade de produtos',
+        type: 'number',
+        placeholder: 'Padrao 3, maximo 7',
+        width: 'half' as const
       }
     ]
   },

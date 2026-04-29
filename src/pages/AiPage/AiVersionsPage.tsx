@@ -60,10 +60,10 @@ const COMPONENT_ORDER: AiComponentKey[] = [
   'uraAb',
 ];
 
-const MANUAL_UPDATE_ONLY_COMPONENT_KEYS: AiComponentKey[] = ['uraAb'];
+const UPDATE_EXCLUDED_COMPONENT_KEYS: AiComponentKey[] = ['ura', 'uraAb'];
 
 const BULK_COMPONENT_ORDER = COMPONENT_ORDER.filter(
-  (componentKey) => !MANUAL_UPDATE_ONLY_COMPONENT_KEYS.includes(componentKey),
+  (componentKey) => !UPDATE_EXCLUDED_COMPONENT_KEYS.includes(componentKey),
 );
 
 function buildInstancesSummary(rows: AiInstallationItem[]) {
@@ -120,24 +120,15 @@ function formatVersion(version: number | null) {
 
 function getAvailableComponentOptions(item: AiInstallationItem | null) {
   const pending = (item?.componentsNeedingUpdate ?? []).filter(
-    (componentKey) => !MANUAL_UPDATE_ONLY_COMPONENT_KEYS.includes(componentKey),
+    (componentKey) => !UPDATE_EXCLUDED_COMPONENT_KEYS.includes(componentKey),
   );
-  const manualOnlyOptions = COMPONENT_ORDER.filter((componentKey) => {
-    if (!MANUAL_UPDATE_ONLY_COMPONENT_KEYS.includes(componentKey)) {
-      return false;
-    }
-
-    const installedVersion = item?.installedComponentVersions?.[componentKey] ?? null;
-    const currentVersion = item?.currentComponentVersions?.[componentKey] ?? null;
-    return installedVersion !== null || currentVersion !== null;
-  });
 
   if (pending.length > 0) {
-    return [...pending, ...manualOnlyOptions];
+    return pending;
   }
 
   const automaticOptions = COMPONENT_ORDER.filter((componentKey) => {
-    if (MANUAL_UPDATE_ONLY_COMPONENT_KEYS.includes(componentKey)) {
+    if (UPDATE_EXCLUDED_COMPONENT_KEYS.includes(componentKey)) {
       return false;
     }
 
@@ -146,7 +137,7 @@ function getAvailableComponentOptions(item: AiInstallationItem | null) {
     return installedVersion !== null || currentVersion !== null;
   });
 
-  return [...automaticOptions, ...manualOnlyOptions];
+  return automaticOptions;
 }
 
 export default function AiVersionsPage() {
@@ -315,6 +306,8 @@ export default function AiVersionsPage() {
       setFlashMessage(
         result.failed > 0
           ? `Atualização concluída com ${result.failed} falha(s).`
+          : (result.skipped || 0) > 0
+            ? `${result.updated} instalação(ões) atualizada(s) e ${result.skipped} ignorada(s) por falta de dados.`
           : result.updated > 0
             ? `${result.updated} instalação(ões) atualizada(s) com sucesso.`
             : 'Nenhuma instalação precisava de atualização.',

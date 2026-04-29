@@ -134,6 +134,8 @@ export function TemplateForm({
                         type={field.type || 'text'}
                         className={iaInputClassName}
                         placeholder={field.placeholder}
+                        min={field.key === 'quantidade_de_produtos' ? 1 : undefined}
+                        max={field.key === 'quantidade_de_produtos' ? 7 : undefined}
                         value={formData[field.key] || ''}
                         onChange={(e) =>
                           handleChange(field.key, e.target.value)

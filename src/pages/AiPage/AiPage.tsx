@@ -85,6 +85,10 @@ export default function AiPage() {
       name: selectedIA?.name || 'IA - Unico',
     };
 
+    if (key === 'alpha7') {
+      nextFormData.quantidade_de_produtos = '3';
+    }
+
     if (selectedIA?.contextMode !== 'hidden') {
       nextFormData.context = selectedIA?.context || '';
     }
