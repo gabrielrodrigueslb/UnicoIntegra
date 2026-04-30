@@ -21,8 +21,18 @@ export interface TrierExtensionFormData {
   client_token: string;
 }
 
+export interface InovaFarmaExtensionFormData {
+  instance_url: string;
+  storage_spreadsheet_id: string;
+  budgets_spreadsheet_id: string;
+}
+
 type ProcessStatus = 'idle' | 'generating' | 'success' | 'error';
-type GenerationOperation = 'pkg' | 'trierExtension' | null;
+type GenerationOperation =
+  | 'pkg'
+  | 'trierExtension'
+  | 'inovaFarmaExtension'
+  | null;
 
 interface GenerationContextData {
   status: ProcessStatus;
@@ -31,6 +41,9 @@ interface GenerationContextData {
   operation: GenerationOperation;
   generateApp: (data: PkgFormData) => Promise<void>;
   generateTrierExtension: (data: TrierExtensionFormData) => Promise<void>;
+  generateInovaFarmaExtension: (
+    data: InovaFarmaExtensionFormData,
+  ) => Promise<void>;
   closePopup: () => void;
   toggleMinimize: () => void;
 }
@@ -171,7 +184,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
       triggerBrowserDownload(blob, fileName);
 
       setStatus('success');
-      setFeedback(`Download concluído com sucesso: ${fileName}`);
+      setFeedback(`Download concluido com sucesso: ${fileName}`);
     } catch (error) {
       console.error(error);
       const message =
@@ -191,7 +204,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
         ...formData,
         username: session?.username,
       },
-      startMessage: 'Compilando e gerando executável...',
+      startMessage: 'Compilando e gerando executavel...',
       downloadingMessage: 'Baixando arquivo...',
       fallbackFileName: `app-${formData.nome_cliente || 'cliente'}.zip`,
     });
@@ -207,9 +220,27 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
         ...formData,
         username: session?.username,
       },
-      startMessage: 'Gerando extensão Trier...',
-      downloadingMessage: 'Baixando ZIP da extensão...',
-      fallbackFileName: 'Trier extensão - cliente.zip',
+      startMessage: 'Gerando extensao Trier...',
+      downloadingMessage: 'Baixando ZIP da extensao...',
+      fallbackFileName: 'Trier extensao - cliente.zip',
+    });
+  }
+
+  async function generateInovaFarmaExtension(
+    formData: InovaFarmaExtensionFormData,
+  ) {
+    const session = getAuthSession();
+
+    await requestDownloadGeneration({
+      operation: 'inovaFarmaExtension',
+      endpoint: '/api/extensions/inova-farma/generate',
+      payload: {
+        ...formData,
+        username: session?.username,
+      },
+      startMessage: 'Gerando extensao Inova Farma...',
+      downloadingMessage: 'Baixando ZIP da extensao...',
+      fallbackFileName: 'Inova Farma extensao - cliente.zip',
     });
   }
 
@@ -222,6 +253,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
         operation,
         generateApp,
         generateTrierExtension,
+        generateInovaFarmaExtension,
         closePopup,
         toggleMinimize,
       }}

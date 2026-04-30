@@ -18,7 +18,11 @@ export function GlobalStatusPopup() {
   } = useGeneration();
 
   const operationLabel =
-    operation === 'trierExtension' ? 'Extensão Trier' : 'Executável Alpha 7';
+    operation === 'trierExtension'
+      ? 'Extensao Trier'
+      : operation === 'inovaFarmaExtension'
+        ? 'Extensao Inova Farma'
+        : 'Executavel Alpha 7';
 
   if (status === 'idle') return null;
 
@@ -53,7 +57,7 @@ export function GlobalStatusPopup() {
               {status === 'generating'
                 ? `Gerando ${operationLabel}`
                 : status === 'success'
-                  ? 'Concluído'
+                  ? 'Concluido'
                   : 'Erro'}
             </h4>
             <div className="flex items-center gap-1">

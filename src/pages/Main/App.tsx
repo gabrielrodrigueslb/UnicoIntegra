@@ -5,6 +5,7 @@ import { GlobalStatusPopup } from '../../components/GlobalStatusPopup';
 import { GenerationProvider } from '../../context/GenerationContext';
 import ApplicationsHub from '../Aplications/ApplicationsHub';
 import AiServicesManager from '../Aplications/AiServicesManager';
+import InovaFarmaExtensionGenerator from '../Aplications/InovaFarmaExtensionGenerator';
 import { PkgGenerator } from '../Aplications/PkgGenerator';
 import TrierExtensionGenerator from '../Aplications/TrierExtensionGenerator';
 import Automations from '../Automations/Automations';
@@ -42,6 +43,10 @@ export default function App() {
             <Route
               path="aplications/trier-extension"
               element={<TrierExtensionGenerator />}
+            />
+            <Route
+              path="aplications/inova-farma-extension"
+              element={<InovaFarmaExtensionGenerator />}
             />
             <Route
               path="aplications/ia-services"
