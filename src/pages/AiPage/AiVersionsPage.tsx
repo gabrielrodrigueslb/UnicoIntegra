@@ -23,6 +23,7 @@ import {
   fetchAiInstallations,
   type AiComponentKey,
   type AiInstallationItem,
+  reconfigureAiInstallation,
   updateAiInstallation,
   updateAllAiInstallations,
 } from '../../services/aiInstallations.service';
@@ -41,6 +42,24 @@ type UpdateModalState =
   | { mode: 'single'; item: AiInstallationItem }
   | { mode: 'bulk'; instance: string | null }
   | null;
+
+type ReconfigureModalState =
+  | { item: AiInstallationItem }
+  | null;
+
+type ReconfigureFormState = {
+  assistantId: string;
+  assistantName: string;
+  preProcessId: string;
+  buscaProdutosId: string;
+  downloadImagemId: string;
+  uraIaId: string;
+  uraAbId: string;
+  configSnapshotText: string;
+  applyToClient: boolean;
+  applyUraPatch: boolean;
+  code: string;
+};
 
 const COMPONENT_LABELS: Record<AiComponentKey, string> = {
   assistant: 'Assistente',
@@ -140,6 +159,22 @@ function getAvailableComponentOptions(item: AiInstallationItem | null) {
   return automaticOptions;
 }
 
+function buildReconfigureFormState(item: AiInstallationItem): ReconfigureFormState {
+  return {
+    assistantId: item.assistantId || '',
+    assistantName: item.assistantName || '',
+    preProcessId: item.preProcessId || '',
+    buscaProdutosId: item.buscaProdutosId || '',
+    downloadImagemId: item.downloadImagemId || '',
+    uraIaId: item.uraIaId || '',
+    uraAbId: item.uraAbId || '',
+    configSnapshotText: JSON.stringify(item.configSnapshot ?? {}, null, 2),
+    applyToClient: true,
+    applyUraPatch: true,
+    code: '',
+  };
+}
+
 export default function AiVersionsPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState<AiInstallationItem[]>([]);
@@ -157,9 +192,12 @@ export default function AiVersionsPage() {
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [selectedComponentKey, setSelectedComponentKey] = useState<AiComponentKey | ''>('');
   const [selectedBulkProvider, setSelectedBulkProvider] = useState('');
+  const [reconfigureModal, setReconfigureModal] = useState<ReconfigureModalState>(null);
+  const [reconfigureForm, setReconfigureForm] = useState<ReconfigureFormState | null>(null);
+  const [reconfiguring, setReconfiguring] = useState(false);
 
   useRequireAuth();
-  useBodyScrollLock(Boolean(updateModal));
+  useBodyScrollLock(Boolean(updateModal) || Boolean(reconfigureModal));
 
   const loadInstances = useCallback(async () => {
     setLoading(true);
@@ -348,6 +386,61 @@ export default function AiVersionsPage() {
     setSelectedComponentKey('');
     setSelectedBulkProvider('');
     setUpdateModal({ mode: 'bulk', instance: selectedInstance || null });
+  }
+
+  function handleOpenReconfigureModal(item: AiInstallationItem) {
+    setReconfigureModal({ item });
+    setReconfigureForm(buildReconfigureFormState(item));
+  }
+
+  async function handleConfirmReconfigureModal() {
+    if (!reconfigureModal || !reconfigureForm) {
+      return;
+    }
+
+    const session = requireAuthSession();
+    setReconfiguring(true);
+    setError('');
+
+    try {
+      const parsedConfigSnapshot = JSON.parse(reconfigureForm.configSnapshotText || '{}');
+
+      const result = await reconfigureAiInstallation({
+        id: reconfigureModal.item.id,
+        requestedBy: session.authUsername || 'Sistema',
+        code: reconfigureForm.code.trim() || undefined,
+        assistantId: reconfigureForm.assistantId.trim(),
+        assistantName: reconfigureForm.assistantName.trim(),
+        preProcessId: reconfigureForm.preProcessId.trim(),
+        buscaProdutosId: reconfigureForm.buscaProdutosId.trim(),
+        downloadImagemId: reconfigureForm.downloadImagemId.trim(),
+        uraIaId: reconfigureForm.uraIaId.trim(),
+        uraAbId: reconfigureForm.uraAbId.trim(),
+        configSnapshot: parsedConfigSnapshot,
+        applyToClient: reconfigureForm.applyToClient,
+        applyUraPatch: reconfigureForm.applyUraPatch,
+      });
+
+      setFlashMessage(result.message || 'Configuracao atualizada com sucesso.');
+      setReconfigureModal(null);
+      setReconfigureForm(null);
+
+      if (selectedInstance) {
+        await loadInstanceInstallations(selectedInstance);
+      } else {
+        await loadInstances();
+      }
+    } catch (requestError) {
+      console.error(requestError);
+      setError(
+        extractErrorMessage(
+          requestError,
+          'Falha ao reconfigurar a instalacao da IA.',
+        ),
+      );
+    } finally {
+      setReconfiguring(false);
+    }
   }
 
   async function handleConfirmUpdateModal() {
@@ -718,9 +811,20 @@ export default function AiVersionsPage() {
             {/* Lado Direito: Detalhes da IA selecionada */}
             <aside className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
               <div className="flex-shrink-0 border-b border-slate-200 bg-white px-5 py-4 shadow-sm z-10">
-                <div className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-violet-600" />
-                  <h2 className="text-sm font-bold text-slate-900">Configuração e Setup</h2>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-5 w-5 text-violet-600" />
+                    <h2 className="text-sm font-bold text-slate-900">Configura??o e Setup</h2>
+                  </div>
+                  {selected && (
+                    <button
+                      onClick={() => handleOpenReconfigureModal(selected)}
+                      className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 transition-all hover:bg-violet-100"
+                    >
+                      <Wrench className="h-3.5 w-3.5" />
+                      Editar setup
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -850,7 +954,179 @@ export default function AiVersionsPage() {
       </main>
 
       {/* MODAL DE ATUALIZAÇÃO (2FA) */}
-      {updateModal && (
+            {reconfigureModal && reconfigureForm && (
+        <ModalFrame
+          onClose={() => {
+            if (!reconfiguring) {
+              setReconfigureModal(null);
+              setReconfigureForm(null);
+            }
+          }}
+          maxWidthClassName="max-w-3xl"
+          bodyClassName="bg-white p-0 rounded-2xl overflow-hidden"
+          header={
+            <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50 px-6 py-5">
+              <div>
+                <h2 className="text-lg font-extrabold text-slate-900">
+                  Reconfigurar Instala??o
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Edite IDs e vari?veis salvas. Se quiser, o Integra reaplica isso no cliente usando o template atual do backend.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  if (!reconfiguring) {
+                    setReconfigureModal(null);
+                    setReconfigureForm(null);
+                  }
+                }}
+                className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-6 p-6">
+            <div className="rounded-xl border border-violet-100 bg-violet-50 p-4 text-sm text-violet-900 shadow-sm">
+              Voc? est? reconfigurando a IA <strong>{reconfigureModal.item.assistantName || reconfigureModal.item.assistantId}</strong> da inst?ncia <strong>{reconfigureModal.item.instance}</strong>.
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {[
+                ['assistantId', 'Assistant ID'],
+                ['assistantName', 'Nome da IA'],
+                ['preProcessId', 'Pre Process ID'],
+                ['buscaProdutosId', 'Busca Produtos ID'],
+                ['downloadImagemId', 'Download Imagem ID'],
+                ['uraIaId', 'URA IA ID'],
+                ['uraAbId', 'URA AB ID'],
+              ].map(([field, label]) => (
+                <div key={field} className="space-y-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                    {label}
+                  </label>
+                  <input
+                    type="text"
+                    value={reconfigureForm[field as keyof ReconfigureFormState] as string}
+                    onChange={(event) =>
+                      setReconfigureForm((current) =>
+                        current
+                          ? { ...current, [field]: event.target.value }
+                          : current,
+                      )
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-all focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                Config Snapshot (JSON)
+              </label>
+              <textarea
+                value={reconfigureForm.configSnapshotText}
+                onChange={(event) =>
+                  setReconfigureForm((current) =>
+                    current
+                      ? { ...current, configSnapshotText: event.target.value }
+                      : current,
+                  )
+                }
+                rows={12}
+                className="w-full rounded-xl border border-slate-200 bg-[#0d1117] px-4 py-3 font-mono text-xs text-slate-200 shadow-sm outline-none transition-all focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={reconfigureForm.applyToClient}
+                  onChange={(event) =>
+                    setReconfigureForm((current) =>
+                      current
+                        ? { ...current, applyToClient: event.target.checked }
+                        : current,
+                    )
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                />
+                <span>
+                  <strong className="block text-slate-900">Reaplicar no cliente</strong>
+                  Atualiza a configura??o no cliente usando o template atual do backend.
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={reconfigureForm.applyUraPatch}
+                  onChange={(event) =>
+                    setReconfigureForm((current) =>
+                      current
+                        ? { ...current, applyUraPatch: event.target.checked }
+                        : current,
+                    )
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                />
+                <span>
+                  <strong className="block text-slate-900">Patch seguro na URA</strong>
+                  Mant?m a URA customizada e ajusta apenas as vari?veis do primeiro JavaScript.
+                </span>
+              </label>
+            </div>
+
+            {reconfigureForm.applyToClient && (
+              <div className="space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  C?digo de Autentica??o (2FA opcional)
+                </label>
+                <input
+                  type="text"
+                  value={reconfigureForm.code}
+                  onChange={(event) =>
+                    setReconfigureForm((current) =>
+                      current ? { ...current, code: event.target.value } : current,
+                    )
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-all focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                  placeholder="Usado apenas como fallback manual"
+                />
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!reconfiguring) {
+                    setReconfigureModal(null);
+                    setReconfigureForm(null);
+                  }
+                }}
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleConfirmReconfigureModal()}
+                disabled={reconfiguring}
+                className="flex-1 rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700 disabled:opacity-50"
+              >
+                {reconfiguring ? 'Salvando...' : 'Salvar configura??o'}
+              </button>
+            </div>
+          </div>
+        </ModalFrame>
+      )}
+
+{updateModal && (
         <ModalFrame
           onClose={() => {
             if (updatingId === null && !bulkUpdating) {

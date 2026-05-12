@@ -51,6 +51,30 @@ export interface UpdateAiInstallationResult {
   updatedComponents?: AiComponentKey[];
 }
 
+export interface ReconfigureAiInstallationInput {
+  id: number;
+  requestedBy?: string;
+  code?: string;
+  assistantId?: string;
+  assistantName?: string;
+  preProcessId?: string;
+  buscaProdutosId?: string;
+  downloadImagemId?: string;
+  uraIaId?: string;
+  uraAbId?: string;
+  configSnapshot?: Record<string, unknown>;
+  applyToClient?: boolean;
+  applyUraPatch?: boolean;
+}
+
+export interface ReconfigureAiInstallationResult {
+  updated: boolean;
+  appliedToClient: boolean;
+  message: string;
+  installation?: AiInstallationItem;
+  updatedComponents?: string[];
+}
+
 export interface UpdateAllAiInstallationsInput {
   requestedBy?: string;
   code?: string;
@@ -119,6 +143,30 @@ export async function updateAllAiInstallations(
       provider: input.provider,
       componentKey: input.componentKey,
       force: input.force ?? false,
+    },
+  );
+
+  return response.data;
+}
+
+export async function reconfigureAiInstallation(
+  input: ReconfigureAiInstallationInput,
+): Promise<ReconfigureAiInstallationResult> {
+  const response = await axios.post(
+    `${API_BASE}/api/ia/installations/${input.id}/reconfigure`,
+    {
+      requestedBy: input.requestedBy,
+      code: input.code,
+      assistantId: input.assistantId,
+      assistantName: input.assistantName,
+      preProcessId: input.preProcessId,
+      buscaProdutosId: input.buscaProdutosId,
+      downloadImagemId: input.downloadImagemId,
+      uraIaId: input.uraIaId,
+      uraAbId: input.uraAbId,
+      configSnapshot: input.configSnapshot,
+      applyToClient: input.applyToClient ?? false,
+      applyUraPatch: input.applyUraPatch ?? true,
     },
   );
 
