@@ -814,7 +814,7 @@ export default function AiVersionsPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Database className="h-5 w-5 text-violet-600" />
-                    <h2 className="text-sm font-bold text-slate-900">Configura??o e Setup</h2>
+                    <h2 className="text-sm font-bold text-slate-900">Configuração e Setup</h2>
                   </div>
                   {selected && (
                     <button
