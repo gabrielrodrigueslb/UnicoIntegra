@@ -4,7 +4,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import MessageInput from '../../components/LinkAi/MessageInput';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import {
-  sendChatMessage,
+  sendChatMessageStream,
   type ChatAction,
   type ChatHistoryItem,
   type ChatTraceStep,
@@ -518,7 +518,11 @@ export default function LinkAi() {
       return;
     }
 
-    setVisibleThinkingSteps(thinkingSteps.slice(0, 1));
+    const latestStep = thinkingSteps.length
+      ? thinkingSteps[thinkingSteps.length - 1]
+      : '';
+
+    setVisibleThinkingSteps(latestStep ? [latestStep] : []);
 
     const dotsInterval = window.setInterval(() => {
       setThinkingDots((currentValue) =>
@@ -526,19 +530,8 @@ export default function LinkAi() {
       );
     }, 350);
 
-    const stepsInterval = window.setInterval(() => {
-      setVisibleThinkingSteps((currentValue) => {
-        if (currentValue.length >= thinkingSteps.length) {
-          return currentValue;
-        }
-
-        return thinkingSteps.slice(0, currentValue.length + 1);
-      });
-    }, 1100);
-
     return () => {
       window.clearInterval(dotsInterval);
-      window.clearInterval(stepsInterval);
     };
   }, [isSending, thinkingSteps]);
 
@@ -741,15 +734,53 @@ export default function LinkAi() {
 
     try {
       const session = getAuthSession();
-      const response = await sendChatMessage({
-        message: trimmedMessage,
-        history: mapMessagesToHistory(optimisticMessages),
-        sessionContext: {
-          authUsername: session?.authUsername,
-          authPassword: session?.authPassword,
-          operatorName: session?.username,
+      let response:
+        | {
+            reply: string;
+            action: ChatAction | null;
+            actions?: ChatAction[];
+            trace: ChatTraceStep[];
+          }
+        | null = null;
+
+      await sendChatMessageStream(
+        {
+          message: trimmedMessage,
+          history: mapMessagesToHistory(optimisticMessages),
+          sessionContext: {
+            authUsername: session?.authUsername,
+            authPassword: session?.authPassword,
+            operatorName: session?.username,
+          },
         },
-      });
+        {
+          onEvent(event) {
+            if (event.type === 'trace') {
+              setThinkingSteps((currentValue) => {
+                const nextSteps = [...currentValue];
+
+                if (!nextSteps.includes(event.step.message)) {
+                  nextSteps.push(event.step.message);
+                }
+
+                return nextSteps;
+              });
+              return;
+            }
+
+            if (event.type === 'final') {
+              response = event.payload;
+              return;
+            }
+
+            throw new Error(event.message || 'Falha no streaming do Link AI.');
+          },
+        },
+      );
+
+      if (!response) {
+        throw new Error('O Link AI nao retornou resposta final.');
+      }
 
       const assistantMessage: ChatMessage = {
         id: createId('assistant'),
@@ -969,6 +1000,8 @@ export default function LinkAi() {
               isThinking={true}
               thinkingLabel={`Pensando${thinkingDots}`}
               thinkingSteps={visibleThinkingSteps}
+              thinkingStepIndex={thinkingSteps.length}
+              thinkingStepTotal={thinkingSteps.length}
             />
           ) : null}
         </section>
