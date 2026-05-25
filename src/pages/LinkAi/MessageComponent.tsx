@@ -1,4 +1,10 @@
-import { Fragment, type ReactNode, useEffect, useRef, useState } from 'react';
+import {
+  Fragment,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Bot, LoaderCircle, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { ChatAction, ChatTraceStep } from '../../services/linkAi.service';
@@ -155,8 +161,16 @@ function renderMarkdown(content: string) {
         5: 'text-sm font-semibold',
         6: 'text-sm font-semibold uppercase tracking-wide',
       };
+      const headingTagByLevel = {
+        1: 'h1',
+        2: 'h2',
+        3: 'h3',
+        4: 'h4',
+        5: 'h5',
+        6: 'h6',
+      } as const;
 
-      const Tag = `h${level}` as keyof JSX.IntrinsicElements;
+      const Tag = headingTagByLevel[level as keyof typeof headingTagByLevel];
       nodes.push(
         <Tag
           key={`heading-${index}`}

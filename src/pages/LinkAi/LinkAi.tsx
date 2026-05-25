@@ -7,6 +7,7 @@ import {
   sendChatMessageStream,
   type ChatAction,
   type ChatHistoryItem,
+  type ChatResponse,
   type ChatTraceStep,
 } from '../../services/linkAi.service';
 import { getAuthSession } from '../../utils/authSession';
@@ -734,14 +735,7 @@ export default function LinkAi() {
 
     try {
       const session = getAuthSession();
-      let response:
-        | {
-            reply: string;
-            action: ChatAction | null;
-            actions?: ChatAction[];
-            trace: ChatTraceStep[];
-          }
-        | null = null;
+      let response: ChatResponse | null = null;
 
       await sendChatMessageStream(
         {
@@ -782,13 +776,15 @@ export default function LinkAi() {
         throw new Error('O Link AI nao retornou resposta final.');
       }
 
+      const finalResponse = response as ChatResponse;
+
       const assistantMessage: ChatMessage = {
         id: createId('assistant'),
         role: 'assistant',
-        content: response.reply,
-        action: response.action,
-        actions: Array.isArray(response.actions) ? response.actions : [],
-        trace: response.trace,
+        content: finalResponse.reply,
+        action: finalResponse.action,
+        actions: Array.isArray(finalResponse.actions) ? finalResponse.actions : [],
+        trace: finalResponse.trace,
         animate: true,
       };
 
