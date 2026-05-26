@@ -154,6 +154,16 @@ const AUTOMATIC_VARIABLES = [
   'uraAbId',
 ];
 
+const COMPONENT_AUTOMATIC_VARIABLES: Partial<Record<AiComponentKey, string>> = {
+  preProcess: 'preProcessId',
+  buscaProdutos: 'buscaProdutosId',
+  downloadImagem: 'downloadImagemId',
+  gerarCheckout: 'gerarCheckoutId',
+  transferirHumano: 'transferirHumanoId',
+  ura: 'uraIaId',
+  uraAb: 'uraAbId',
+};
+
 const COMPONENT_LABELS: Record<AiComponentKey, string> = {
   assistant: 'template principal',
   preProcess: 'pré-processamento',
@@ -248,6 +258,13 @@ function getProviderDisplayInfo(provider: string) {
       template?.description || 'Provider gerenciado para instalação.',
     fields: template?.fields || [],
   };
+}
+
+function getSupportedFlowEditors(supportedComponents: AiComponentKey[]) {
+  const supportedSet = new Set(supportedComponents);
+  return COMPONENT_EDITORS.filter((item) =>
+    supportedSet.has(item.componentKey),
+  );
 }
 
 function areDraftsDifferent(left: ProviderDraft, right: ProviderDraft) {
@@ -407,6 +424,24 @@ export default function AiTemplateManagerPage() {
     };
   }, [selectedProvider, workspaceSummaries]);
 
+  const supportedComponents = useMemo(
+    () => workspace?.supportedComponents || [],
+    [workspace],
+  );
+  const supportedFlowEditors = useMemo(
+    () => getSupportedFlowEditors(supportedComponents),
+    [supportedComponents],
+  );
+  const automaticVariables = useMemo(() => {
+    const dynamicVariables = supportedComponents
+      .map((componentKey) => COMPONENT_AUTOMATIC_VARIABLES[componentKey])
+      .filter(Boolean) as string[];
+
+    return Array.from(
+      new Set([...AUTOMATIC_VARIABLES.slice(0, 6), ...dynamicVariables]),
+    );
+  }, [supportedComponents]);
+
   const loadWorkspace = useCallback(async (provider: string) => {
     if (!provider) return;
     setLoadingWorkspace(true);
@@ -457,6 +492,18 @@ export default function AiTemplateManagerPage() {
     const timeout = window.setTimeout(() => setFlashMessage(''), 4000);
     return () => window.clearTimeout(timeout);
   }, [flashMessage]);
+
+  useEffect(() => {
+    if (!supportedFlowEditors.length) return;
+
+    const currentFlowIsSupported = supportedFlowEditors.some(
+      (item) => item.componentKey === activeFlowKey,
+    );
+
+    if (!currentFlowIsSupported) {
+      setActiveFlowKey(supportedFlowEditors[0].componentKey);
+    }
+  }, [activeFlowKey, supportedFlowEditors]);
 
   function updateDraftField<K extends keyof ProviderDraft>(
     field: K,
@@ -647,7 +694,7 @@ export default function AiTemplateManagerPage() {
   }
 
   // Derived state for the Flows tab
-  const activeFlowData = COMPONENT_EDITORS.find(
+  const activeFlowData = supportedFlowEditors.find(
     (c) => c.componentKey === activeFlowKey,
   );
   const fullscreenEditorDirty = useMemo(() => {
@@ -1108,7 +1155,7 @@ export default function AiTemplateManagerPage() {
 
                     <div className="flex min-h-0 flex-1">
                       <div className="w-64 overflow-y-auto border-r border-slate-100 bg-slate-50/30">
-                        {COMPONENT_EDITORS.map((comp) => (
+                        {supportedFlowEditors.map((comp) => (
                           <button
                             key={comp.key}
                             onClick={() => setActiveFlowKey(comp.componentKey)}
@@ -1129,7 +1176,7 @@ export default function AiTemplateManagerPage() {
                       </div>
 
                       <div className="flex flex-1 flex-col bg-slate-50 p-4">
-                        {activeFlowData && (
+                        {activeFlowData ? (
                           <>
                             <div className="mb-3 flex items-center justify-between">
                               <div>
@@ -1212,6 +1259,10 @@ export default function AiTemplateManagerPage() {
                               spellCheck={false}
                             />
                           </>
+                        ) : (
+                          <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white text-sm text-slate-500">
+                            Este provider não possui fluxos configuráveis nesta seção.
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1262,7 +1313,7 @@ export default function AiTemplateManagerPage() {
                           execução.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          {AUTOMATIC_VARIABLES.map((v) => (
+                          {automaticVariables.map((v) => (
                             <span
                               key={v}
                               className="rounded border border-violet-100 bg-white px-2 py-1 font-mono text-xs text-violet-800 shadow-sm"

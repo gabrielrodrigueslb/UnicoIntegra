@@ -62,12 +62,14 @@ export interface AiTemplateWorkspace {
   packageCurrent: AiProviderTemplatePackageItem | null;
   baseHistory: AiTemplateBaseItem[];
   packageHistory: AiProviderTemplatePackageItem[];
+  supportedComponents: AiComponentKey[];
   hasDraftChanges: boolean;
 }
 
 export interface AiTemplateWorkspaceSummary {
   provider: string;
   displayName: string;
+  supportedComponents: AiComponentKey[];
   draftExists: boolean;
   hasDraftChanges: boolean;
   draftUpdatedAt: string | null;
