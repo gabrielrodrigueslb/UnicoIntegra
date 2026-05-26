@@ -90,7 +90,7 @@ export const templates = {
     key: 'vtex',
     name: 'IA - VTEX',
     type: 'assistente',
-    version: '1.0',
+    version: '1.1',
     contextMode: 'hidden' as const,
     description:
       'Agente inteligente capaz de processar linguagem natural e conectar-se com a VTEX.',
