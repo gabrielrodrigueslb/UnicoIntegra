@@ -140,7 +140,7 @@ export default function Home() {
 
         setStats({ databases: totalDbs, licenses: totalLic, activeLicenses: activeLic });
         setNews(latestNews);
-      } catch (error) {
+      } catch {
         if (!isMounted) {
           return;
         }
