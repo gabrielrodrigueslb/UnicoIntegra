@@ -192,7 +192,7 @@ export const templates = {
     contextMode: 'hidden' as const,
     description:
       'Agente inteligente capaz de processar linguagem natural e conectar-se com a Vetor.',
-    banner: '/vetor.jpg',
+    banner: '/vetor.png',
     endpoint: '/vetor',
     fields: [
       { 
