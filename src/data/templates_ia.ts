@@ -106,9 +106,9 @@ export const templates = {
       },
       {
         key: 'url_vtex_variable',
-        label: 'URL Base VTEX',
+        label: 'Endpoint do e-commerce VTEX',
         type: 'text',
-        placeholder: 'https://ambiente.vtexcommercestable.com.br',
+        placeholder: 'Ex: natusfarma',
         width: 'half' as const
       },
       {
