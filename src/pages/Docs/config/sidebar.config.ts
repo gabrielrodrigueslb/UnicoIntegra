@@ -17,6 +17,7 @@ export const sidebarConfig: SidebarItem[] = [
       { label: 'Visão Geral', path: `${DOCS_BASE}/ias` },
       { label: 'IA Alpha 7', path: `${DOCS_BASE}/ias/alpha7` },
       { label: 'IA Trier', path: `${DOCS_BASE}/ias/trier` },
+      { label: 'IA VTEX', path: `${DOCS_BASE}/ias/vtex` },
       { label: 'IA Vannon', path: `${DOCS_BASE}/ias/vannon` },
       { label: 'IA Vetor', path: `${DOCS_BASE}/ias/vetor` },
       { label: 'IA Atendimento', path: `${DOCS_BASE}/ias/atendimento` },

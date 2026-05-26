@@ -53,6 +53,8 @@ type ReconfigureFormState = {
   preProcessId: string;
   buscaProdutosId: string;
   downloadImagemId: string;
+  gerarCheckoutId: string;
+  transferirHumanoId: string;
   uraIaId: string;
   uraAbId: string;
   configSnapshotText: string;
@@ -65,6 +67,8 @@ const COMPONENT_LABELS: Record<AiComponentKey, string> = {
   assistant: 'Assistente',
   downloadImagem: 'Download imagem',
   buscaProdutos: 'Busca produtos',
+  gerarCheckout: 'Gerar checkout',
+  transferirHumano: 'Transferir humano',
   ura: 'URA IA',
   uraAb: 'URA AB',
   preProcess: 'Pré-processamento',
@@ -75,6 +79,8 @@ const COMPONENT_ORDER: AiComponentKey[] = [
   'preProcess',
   'buscaProdutos',
   'downloadImagem',
+  'gerarCheckout',
+  'transferirHumano',
   'ura',
   'uraAb',
 ];
@@ -166,6 +172,8 @@ function buildReconfigureFormState(item: AiInstallationItem): ReconfigureFormSta
     preProcessId: item.preProcessId || '',
     buscaProdutosId: item.buscaProdutosId || '',
     downloadImagemId: item.downloadImagemId || '',
+    gerarCheckoutId: item.gerarCheckoutId || '',
+    transferirHumanoId: item.transferirHumanoId || '',
     uraIaId: item.uraIaId || '',
     uraAbId: item.uraAbId || '',
     configSnapshotText: JSON.stringify(item.configSnapshot ?? {}, null, 2),
@@ -414,6 +422,8 @@ export default function AiVersionsPage() {
         preProcessId: reconfigureForm.preProcessId.trim(),
         buscaProdutosId: reconfigureForm.buscaProdutosId.trim(),
         downloadImagemId: reconfigureForm.downloadImagemId.trim(),
+        gerarCheckoutId: reconfigureForm.gerarCheckoutId.trim(),
+        transferirHumanoId: reconfigureForm.transferirHumanoId.trim(),
         uraIaId: reconfigureForm.uraIaId.trim(),
         uraAbId: reconfigureForm.uraAbId.trim(),
         configSnapshot: parsedConfigSnapshot,
@@ -877,6 +887,14 @@ export default function AiVersionsPage() {
                             {selected.downloadImagemId || '-'}
                           </div>
                           <div className="flex flex-col gap-1 rounded bg-slate-50 p-2 border border-slate-100">
+                            <span className="font-sans text-[10px] font-bold uppercase text-slate-400">Checkout</span>
+                            {selected.gerarCheckoutId || '-'}
+                          </div>
+                          <div className="flex flex-col gap-1 rounded bg-slate-50 p-2 border border-slate-100">
+                            <span className="font-sans text-[10px] font-bold uppercase text-slate-400">Transf. Humano</span>
+                            {selected.transferirHumanoId || '-'}
+                          </div>
+                          <div className="flex flex-col gap-1 rounded bg-slate-50 p-2 border border-slate-100">
                             <span className="font-sans text-[10px] font-bold uppercase text-slate-400">URA IA</span>
                             {selected.uraIaId || '-'}
                           </div>
@@ -1000,6 +1018,8 @@ export default function AiVersionsPage() {
                 ['preProcessId', 'Pre Process ID'],
                 ['buscaProdutosId', 'Busca Produtos ID'],
                 ['downloadImagemId', 'Download Imagem ID'],
+                ['gerarCheckoutId', 'Gerar Checkout ID'],
+                ['transferirHumanoId', 'Transferir Humano ID'],
                 ['uraIaId', 'URA IA ID'],
                 ['uraAbId', 'URA AB ID'],
               ].map(([field, label]) => (

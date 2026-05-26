@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -45,6 +45,8 @@ type ProviderDraft = {
   preProcessTemplate: string;
   buscaProdutosTemplate: string;
   downloadImagemTemplate: string;
+  gerarCheckoutTemplate: string;
+  transferirHumanoTemplate: string;
   uraTemplate: string;
   uraAbTemplate: string;
 };
@@ -63,7 +65,11 @@ type FullscreenEditorState =
       title: string;
       field: keyof Omit<
         ProviderDraft,
-        'baseTemplateName' | 'templateName' | 'contentType' | 'sourcePath' | 'baseTemplateContent'
+        | 'baseTemplateName'
+        | 'templateName'
+        | 'contentType'
+        | 'sourcePath'
+        | 'baseTemplateContent'
       >;
       initialValue: string;
     }
@@ -72,7 +78,11 @@ type FullscreenEditorState =
 const COMPONENT_EDITORS: Array<{
   key: keyof Omit<
     ProviderDraft,
-    'baseTemplateName' | 'templateName' | 'contentType' | 'sourcePath' | 'baseTemplateContent'
+    | 'baseTemplateName'
+    | 'templateName'
+    | 'contentType'
+    | 'sourcePath'
+    | 'baseTemplateContent'
   >;
   componentKey: AiComponentKey;
   label: string;
@@ -103,6 +113,18 @@ const COMPONENT_EDITORS: Array<{
     description: 'Captura e preparação de imagens.',
   },
   {
+    key: 'gerarCheckoutTemplate',
+    componentKey: 'gerarCheckout',
+    label: 'Gerar Checkout',
+    description: 'Fluxo de montagem e geração do checkout.',
+  },
+  {
+    key: 'transferirHumanoTemplate',
+    componentKey: 'transferirHumano',
+    label: 'Transferir Humano',
+    description: 'Fluxo de transferência para atendimento humano.',
+  },
+  {
     key: 'uraTemplate',
     componentKey: 'ura',
     label: 'URA IA',
@@ -117,8 +139,19 @@ const COMPONENT_EDITORS: Array<{
 ];
 
 const AUTOMATIC_VARIABLES = [
-  'instance', 'name', 'username', 'password', 'code',
-  'assistantId', 'preProcessId', 'buscaProdutosId', 'downloadImagemId', 'uraIaId', 'uraAbId',
+  'instance',
+  'name',
+  'username',
+  'password',
+  'code',
+  'assistantId',
+  'preProcessId',
+  'buscaProdutosId',
+  'downloadImagemId',
+  'gerarCheckoutId',
+  'transferirHumanoId',
+  'uraIaId',
+  'uraAbId',
 ];
 
 const COMPONENT_LABELS: Record<AiComponentKey, string> = {
@@ -126,6 +159,8 @@ const COMPONENT_LABELS: Record<AiComponentKey, string> = {
   preProcess: 'pré-processamento',
   buscaProdutos: 'busca de produtos',
   downloadImagem: 'download de imagem',
+  gerarCheckout: 'gerar checkout',
+  transferirHumano: 'transferir humano',
   ura: 'URA IA',
   uraAb: 'URA AB',
 };
@@ -134,26 +169,44 @@ const COMPONENT_FIELD_BY_KEY: Record<
   AiComponentKey,
   keyof Omit<
     ProviderDraft,
-    'baseTemplateName' | 'templateName' | 'contentType' | 'sourcePath' | 'baseTemplateContent'
+    | 'baseTemplateName'
+    | 'templateName'
+    | 'contentType'
+    | 'sourcePath'
+    | 'baseTemplateContent'
   >
 > = {
   assistant: 'assistantTemplate',
   preProcess: 'preProcessTemplate',
   buscaProdutos: 'buscaProdutosTemplate',
   downloadImagem: 'downloadImagemTemplate',
+  gerarCheckout: 'gerarCheckoutTemplate',
+  transferirHumano: 'transferirHumanoTemplate',
   ura: 'uraTemplate',
   uraAb: 'uraAbTemplate',
 };
 
 function emptyDraft(): ProviderDraft {
   return {
-    baseTemplateName: '', templateName: '', contentType: 'json-template', sourcePath: null,
-    baseTemplateContent: '', assistantTemplate: '', preProcessTemplate: '', buscaProdutosTemplate: '',
-    downloadImagemTemplate: '', uraTemplate: '', uraAbTemplate: '',
+    baseTemplateName: '',
+    templateName: '',
+    contentType: 'json-template',
+    sourcePath: null,
+    baseTemplateContent: '',
+    assistantTemplate: '',
+    preProcessTemplate: '',
+    buscaProdutosTemplate: '',
+    downloadImagemTemplate: '',
+    gerarCheckoutTemplate: '',
+    transferirHumanoTemplate: '',
+    uraTemplate: '',
+    uraAbTemplate: '',
   };
 }
 
-function buildDraftFromWorkspace(workspace: AiTemplateWorkspace | null): ProviderDraft {
+function buildDraftFromWorkspace(
+  workspace: AiTemplateWorkspace | null,
+): ProviderDraft {
   if (!workspace) return emptyDraft();
   if (workspace.draft) {
     return { ...workspace.draft };
@@ -166,8 +219,14 @@ function buildDraftFromWorkspace(workspace: AiTemplateWorkspace | null): Provide
     baseTemplateContent: workspace.baseCurrent?.templateContent || '',
     assistantTemplate: workspace.packageCurrent?.assistantTemplate || '',
     preProcessTemplate: workspace.packageCurrent?.preProcessTemplate || '',
-    buscaProdutosTemplate: workspace.packageCurrent?.buscaProdutosTemplate || '',
-    downloadImagemTemplate: workspace.packageCurrent?.downloadImagemTemplate || '',
+    buscaProdutosTemplate:
+      workspace.packageCurrent?.buscaProdutosTemplate || '',
+    downloadImagemTemplate:
+      workspace.packageCurrent?.downloadImagemTemplate || '',
+    gerarCheckoutTemplate:
+      workspace.packageCurrent?.gerarCheckoutTemplate || '',
+    transferirHumanoTemplate:
+      workspace.packageCurrent?.transferirHumanoTemplate || '',
     uraTemplate: workspace.packageCurrent?.uraTemplate || '',
     uraAbTemplate: workspace.packageCurrent?.uraAbTemplate || '',
   };
@@ -175,21 +234,26 @@ function buildDraftFromWorkspace(workspace: AiTemplateWorkspace | null): Provide
 
 function formatDate(value?: string | null) {
   if (!value) return '-';
-  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value));
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date(value));
 }
 
 function getProviderDisplayInfo(provider: string) {
   const template = templates[provider as keyof typeof templates];
   return {
     displayName: template?.name || provider,
-    description: template?.description || 'Provider gerenciado para instalação.',
+    description:
+      template?.description || 'Provider gerenciado para instalação.',
     fields: template?.fields || [],
   };
 }
 
 function areDraftsDifferent(left: ProviderDraft, right: ProviderDraft) {
   return Object.keys(left).some(
-    (key) => left[key as keyof ProviderDraft] !== right[key as keyof ProviderDraft]
+    (key) =>
+      left[key as keyof ProviderDraft] !== right[key as keyof ProviderDraft],
   );
 }
 
@@ -209,16 +273,20 @@ function isFlowDraftDifferent(
 ) {
   const field = COMPONENT_FIELD_BY_KEY[flowKey];
   return (
-    left.templateName !== right.templateName ||
-    left[field] !== right[field]
+    left.templateName !== right.templateName || left[field] !== right[field]
   );
 }
 
 function VersionHistoryBlock({
-  title, rows, currentVersion, onRollback,
+  title,
+  rows,
+  currentVersion,
+  onRollback,
 }: {
-  title: string; rows: Array<AiTemplateBaseItem | AiProviderTemplatePackageItem>;
-  currentVersion: number | null; onRollback: (version: number) => void;
+  title: string;
+  rows: Array<AiTemplateBaseItem | AiProviderTemplatePackageItem>;
+  currentVersion: number | null;
+  onRollback: (version: number) => void;
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white">
@@ -227,19 +295,28 @@ function VersionHistoryBlock({
       </div>
       <div className="p-2">
         {rows.length === 0 ? (
-          <div className="p-6 text-center text-sm text-slate-500">Sem histórico.</div>
+          <div className="p-6 text-center text-sm text-slate-500">
+            Sem histórico.
+          </div>
         ) : (
           <ul className="divide-y divide-slate-100">
             {rows.slice(0, 8).map((item) => (
-              <li key={item.version} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50/50">
+              <li
+                key={item.version}
+                className="flex items-center justify-between px-4 py-3 hover:bg-slate-50/50"
+              >
                 <div>
                   <div className="flex items-center gap-2 font-medium text-slate-900">
                     v{item.version}
                     {currentVersion === item.version && (
-                      <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-700">Atual</span>
+                      <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-700">
+                        Atual
+                      </span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-500">{formatDate(item.updatedAt)}</div>
+                  <div className="text-xs text-slate-500">
+                    {formatDate(item.updatedAt)}
+                  </div>
                 </div>
                 {currentVersion !== item.version && (
                   <button
@@ -260,17 +337,21 @@ function VersionHistoryBlock({
 
 export default function AiTemplateManagerPage() {
   const navigate = useNavigate();
-  const [workspaceSummaries, setWorkspaceSummaries] = useState<AiTemplateWorkspaceSummary[]>([]);
+  const [workspaceSummaries, setWorkspaceSummaries] = useState<
+    AiTemplateWorkspaceSummary[]
+  >([]);
   const [selectedProvider, setSelectedProvider] = useState('');
   const [workspace, setWorkspace] = useState<AiTemplateWorkspace | null>(null);
   const [draft, setDraft] = useState<ProviderDraft>(emptyDraft);
   const [search, setSearch] = useState('');
-  
+
   // UX State
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  const [activeFlowKey, setActiveFlowKey] = useState<AiComponentKey>('assistant');
-  const [fullscreenEditor, setFullscreenEditor] = useState<FullscreenEditorState>(null);
-  
+  const [activeFlowKey, setActiveFlowKey] =
+    useState<AiComponentKey>('assistant');
+  const [fullscreenEditor, setFullscreenEditor] =
+    useState<FullscreenEditorState>(null);
+
   // Loading & Actions State
   const [loadingList, setLoadingList] = useState(false);
   const [loadingWorkspace, setLoadingWorkspace] = useState(false);
@@ -282,8 +363,14 @@ export default function AiTemplateManagerPage() {
 
   useRequireAuth();
 
-  const baseDraft = useMemo(() => buildDraftFromWorkspace(workspace), [workspace]);
-  const hasLocalChanges = useMemo(() => areDraftsDifferent(draft, baseDraft), [draft, baseDraft]);
+  const baseDraft = useMemo(
+    () => buildDraftFromWorkspace(workspace),
+    [workspace],
+  );
+  const hasLocalChanges = useMemo(
+    () => areDraftsDifferent(draft, baseDraft),
+    [draft, baseDraft],
+  );
   const hasBaseLocalChanges = useMemo(
     () => isBaseDraftDifferent(draft, baseDraft),
     [draft, baseDraft],
@@ -297,12 +384,21 @@ export default function AiTemplateManagerPage() {
     const term = search.trim().toLowerCase();
     return workspaceSummaries
       .map((item) => ({ ...item, ...getProviderDisplayInfo(item.provider) }))
-      .filter((item) => !term || [item.provider, item.displayName].join(' ').toLowerCase().includes(term));
+      .filter(
+        (item) =>
+          !term ||
+          [item.provider, item.displayName]
+            .join(' ')
+            .toLowerCase()
+            .includes(term),
+      );
   }, [search, workspaceSummaries]);
 
   const selectedCard = useMemo(() => {
     if (!selectedProvider) return null;
-    const summary = workspaceSummaries.find((item) => item.provider === selectedProvider);
+    const summary = workspaceSummaries.find(
+      (item) => item.provider === selectedProvider,
+    );
     if (!summary) return null;
 
     return {
@@ -328,22 +424,33 @@ export default function AiTemplateManagerPage() {
     }
   }, []);
 
-  const loadSummaries = useCallback(async (preferredProvider?: string) => {
-    setLoadingList(true);
-    setError('');
-    try {
-      const data = await fetchAiTemplateWorkspaces();
-      setWorkspaceSummaries(data);
-      const nextProvider = preferredProvider || selectedProvider || data[0]?.provider || 'alpha7';
-      if (nextProvider) await loadWorkspace(nextProvider);
-    } catch (err) {
-      setError(extractErrorMessage(err, 'Falha ao carregar lista de templates.'));
-    } finally {
-      setLoadingList(false);
-    }
-  }, [loadWorkspace, selectedProvider]);
+  const loadSummaries = useCallback(
+    async (preferredProvider?: string) => {
+      setLoadingList(true);
+      setError('');
+      try {
+        const data = await fetchAiTemplateWorkspaces();
+        setWorkspaceSummaries(data);
+        const nextProvider =
+          preferredProvider ||
+          selectedProvider ||
+          data[0]?.provider ||
+          'alpha7';
+        if (nextProvider) await loadWorkspace(nextProvider);
+      } catch (err) {
+        setError(
+          extractErrorMessage(err, 'Falha ao carregar lista de templates.'),
+        );
+      } finally {
+        setLoadingList(false);
+      }
+    },
+    [loadWorkspace, selectedProvider],
+  );
 
-  useEffect(() => { void loadSummaries(); }, [loadSummaries]);
+  useEffect(() => {
+    void loadSummaries();
+  }, [loadSummaries]);
 
   useEffect(() => {
     if (!flashMessage) return;
@@ -351,32 +458,46 @@ export default function AiTemplateManagerPage() {
     return () => window.clearTimeout(timeout);
   }, [flashMessage]);
 
-  function updateDraftField<K extends keyof ProviderDraft>(field: K, value: ProviderDraft[K]) {
+  function updateDraftField<K extends keyof ProviderDraft>(
+    field: K,
+    value: ProviderDraft[K],
+  ) {
     setDraft((curr) => ({ ...curr, [field]: value }));
   }
 
   async function handleProviderSelection(provider: string) {
     if (provider === selectedProvider) return;
     if (hasLocalChanges) {
-      if (!window.confirm('Existem alterações não salvas. Descartar e trocar de provider?')) return;
+      if (
+        !window.confirm(
+          'Existem alteracoes nao salvas. Descartar e trocar de provider?',
+        )
+      )
+        return;
     }
     await loadWorkspace(provider);
   }
 
   async function handleSaveDraft() {
     if (!selectedProvider || !workspace || savingDraft) return;
-    setSavingDraft(true); setError('');
+    setSavingDraft(true);
+    setError('');
     try {
       const res = await saveAiTemplateWorkspaceDraft(selectedProvider, draft);
-      setWorkspace(res.data); setDraft(buildDraftFromWorkspace(res.data));
+      setWorkspace(res.data);
+      setDraft(buildDraftFromWorkspace(res.data));
       setFlashMessage(res.message);
       setWorkspaceSummaries(await fetchAiTemplateWorkspaces());
     } catch (err) {
       setError(extractErrorMessage(err, 'Falha ao salvar rascunho.'));
-    } finally { setSavingDraft(false); }
+    } finally {
+      setSavingDraft(false);
+    }
   }
 
-  function buildScopedDraftPayload(scope: DraftSaveScope): Partial<ProviderDraft> {
+  function buildScopedDraftPayload(
+    scope: DraftSaveScope,
+  ): Partial<ProviderDraft> {
     if (scope === 'all') {
       return draft;
     }
@@ -410,7 +531,9 @@ export default function AiTemplateManagerPage() {
         buildScopedDraftPayload(scope),
       );
       setWorkspace(res.data);
-      setDraft(scope === 'all' ? buildDraftFromWorkspace(res.data) : currentDraft);
+      setDraft(
+        scope === 'all' ? buildDraftFromWorkspace(res.data) : currentDraft,
+      );
       setFlashMessage(
         scope === 'all'
           ? res.message
@@ -428,65 +551,105 @@ export default function AiTemplateManagerPage() {
 
   async function handleDiscardDraft() {
     if (!selectedProvider || !workspace) return;
-    if (!window.confirm('Descartar o rascunho salvo e voltar ao estado de produção?')) return;
-    setSavingDraft(true); setError('');
+    if (
+      !window.confirm(
+        'Descartar o rascunho salvo e voltar ao estado de produção?',
+      )
+    )
+      return;
+    setSavingDraft(true);
+    setError('');
     try {
       const res = await discardAiTemplateWorkspaceDraft(selectedProvider);
-      setWorkspace(res.data); setDraft(buildDraftFromWorkspace(res.data));
+      setWorkspace(res.data);
+      setDraft(buildDraftFromWorkspace(res.data));
       setFlashMessage(res.message);
       setWorkspaceSummaries(await fetchAiTemplateWorkspaces());
     } catch (err) {
       setError(extractErrorMessage(err, 'Falha ao descartar rascunho.'));
-    } finally { setSavingDraft(false); }
+    } finally {
+      setSavingDraft(false);
+    }
   }
 
   async function handleReleaseScope(scope: AiTemplateReleaseScope) {
     if (!selectedProvider || !workspace) return;
-    if (hasLocalChanges) return setError('Salve o rascunho local antes de liberar para produção.');
+    if (hasLocalChanges)
+      return setError('Salve o rascunho local antes de liberar para produção.');
     if (!workspace.draft) return setError('Não há rascunho para publicar.');
 
-    const scopeLabel = scope === 'all' ? 'TODOS os fluxos e base' : scope === 'base' ? 'o Template Base' : `o fluxo ${COMPONENT_LABELS[scope]}`;
-    if (!window.confirm(`Confirma o envio de ${scopeLabel} para produção?`)) return;
+    const scopeLabel =
+      scope === 'all'
+        ? 'TODOS os fluxos e base'
+        : scope === 'base'
+          ? 'o Template Base'
+          : `o fluxo ${COMPONENT_LABELS[scope]}`;
+    if (!window.confirm(`Confirma o envio de ${scopeLabel} para produção?`))
+      return;
 
-    setReleasing(true); setError('');
+    setReleasing(true);
+    setError('');
     try {
-      const res = await releaseAiTemplateWorkspaceDraft(selectedProvider, scope);
-      setWorkspace(res.data); setDraft(buildDraftFromWorkspace(res.data));
+      const res = await releaseAiTemplateWorkspaceDraft(
+        selectedProvider,
+        scope,
+      );
+      setWorkspace(res.data);
+      setDraft(buildDraftFromWorkspace(res.data));
       setFlashMessage(res.message);
       setWorkspaceSummaries(await fetchAiTemplateWorkspaces());
     } catch (err) {
       setError(extractErrorMessage(err, 'Falha ao liberar produção.'));
-    } finally { setReleasing(false); }
+    } finally {
+      setReleasing(false);
+    }
   }
 
   async function handleRollback(baseVersion?: number, packageVersion?: number) {
     if (!selectedProvider) return;
-    if (!window.confirm('Confirma o rollback? Isso criará uma nova versão em produção baseada no histórico.')) return;
-    setReleasing(true); setError('');
+    if (
+      !window.confirm(
+        'Confirma o rollback? Isso criará uma nova versão em produção baseada no histórico.',
+      )
+    )
+      return;
+    setReleasing(true);
+    setError('');
     try {
-      const res = await rollbackAiTemplateWorkspace(selectedProvider, { baseVersion, packageVersion });
-      setWorkspace(res.data); setDraft(buildDraftFromWorkspace(res.data));
+      const res = await rollbackAiTemplateWorkspace(selectedProvider, {
+        baseVersion,
+        packageVersion,
+      });
+      setWorkspace(res.data);
+      setDraft(buildDraftFromWorkspace(res.data));
       setFlashMessage(res.message);
       setWorkspaceSummaries(await fetchAiTemplateWorkspaces());
     } catch (err) {
       setError(extractErrorMessage(err, 'Falha ao realizar rollback.'));
-    } finally { setReleasing(false); }
+    } finally {
+      setReleasing(false);
+    }
   }
 
   async function handleSyncCurrent() {
     if (syncing) return;
-    setSyncing(true); setError('');
+    setSyncing(true);
+    setError('');
     try {
       const res = await syncCurrentAiTemplates();
       setFlashMessage(res.message || 'Sincronizado com sucesso.');
       await loadSummaries(selectedProvider);
     } catch (err) {
       setError(extractErrorMessage(err, 'Falha ao sincronizar.'));
-    } finally { setSyncing(false); }
+    } finally {
+      setSyncing(false);
+    }
   }
 
   // Derived state for the Flows tab
-  const activeFlowData = COMPONENT_EDITORS.find(c => c.componentKey === activeFlowKey);
+  const activeFlowData = COMPONENT_EDITORS.find(
+    (c) => c.componentKey === activeFlowKey,
+  );
   const fullscreenEditorDirty = useMemo(() => {
     if (!fullscreenEditor) return false;
     return draft[fullscreenEditor.field] !== fullscreenEditor.initialValue;
@@ -541,7 +704,6 @@ export default function AiTemplateManagerPage() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-slate-50 font-sans text-slate-900">
-      
       {/* Top Navigation Bar - Clean & Minimal */}
       <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm">
         <div className="flex items-center gap-4">
@@ -560,8 +722,16 @@ export default function AiTemplateManagerPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {flashMessage && <span className="mr-4 text-xs font-medium text-emerald-600 animate-pulse">{flashMessage}</span>}
-          {error && <span className="mr-4 text-xs font-medium text-red-600">{error}</span>}
+          {flashMessage && (
+            <span className="mr-4 text-xs font-medium text-emerald-600 animate-pulse">
+              {flashMessage}
+            </span>
+          )}
+          {error && (
+            <span className="mr-4 text-xs font-medium text-red-600">
+              {error}
+            </span>
+          )}
 
           <div className="group relative flex items-center justify-center">
             <button
@@ -569,7 +739,9 @@ export default function AiTemplateManagerPage() {
               disabled={loadingList || loadingWorkspace || syncing}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-200 active:scale-95 disabled:opacity-50"
             >
-              <RefreshCcw className={`h-4 w-4 ${syncing ? 'animate-spin text-violet-600' : ''}`} />
+              <RefreshCcw
+                className={`h-4 w-4 ${syncing ? 'animate-spin text-violet-600' : ''}`}
+              />
             </button>
             <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2">
               Sincronizar Arquivos
@@ -580,7 +752,6 @@ export default function AiTemplateManagerPage() {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        
         {/* Left Sidebar - Providers List */}
         <aside className="flex w-72 flex-col border-r border-slate-200 bg-white">
           <div className="p-4">
@@ -594,7 +765,7 @@ export default function AiTemplateManagerPage() {
               />
             </div>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto px-2 pb-4 custom-scrollbar">
             <div className="space-y-1">
               {providerCards.map((item) => {
@@ -604,16 +775,27 @@ export default function AiTemplateManagerPage() {
                     key={item.provider}
                     onClick={() => void handleProviderSelection(item.provider)}
                     className={`flex w-full flex-col gap-1 rounded-lg px-3 py-2.5 text-left transition-colors ${
-                      isActive ? 'bg-violet-50 text-violet-900' : 'hover:bg-slate-50 text-slate-700'
+                      isActive
+                        ? 'bg-violet-50 text-violet-900'
+                        : 'hover:bg-slate-50 text-slate-700'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={`text-sm font-bold ${isActive ? 'text-violet-900' : 'text-slate-900'}`}>
+                      <span
+                        className={`text-sm font-bold ${isActive ? 'text-violet-900' : 'text-slate-900'}`}
+                      >
                         {item.displayName}
                       </span>
-                      {item.hasDraftChanges && <div className="h-2 w-2 rounded-full bg-amber-400" title="Rascunho pendente" />}
+                      {item.hasDraftChanges && (
+                        <div
+                          className="h-2 w-2 rounded-full bg-amber-400"
+                          title="Rascunho pendente"
+                        />
+                      )}
                     </div>
-                    <span className="text-[10px] font-mono text-slate-500">{item.provider}</span>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {item.provider}
+                    </span>
                   </button>
                 );
               })}
@@ -626,24 +808,45 @@ export default function AiTemplateManagerPage() {
           {workspace && selectedCard ? (
             <>
               {/* Workspace Header & Actions */}
-              <div className="border-b border-slate-200 bg-white px-6 py-4 shadow-sm z-10">
+              <div className="z-10 border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900">{selectedCard.displayName}</h2>
+                    <h2 className="text-xl font-bold text-slate-900">
+                      {selectedCard.displayName}
+                    </h2>
                     <div className="mt-1.5 flex items-center gap-3 text-xs font-medium">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 border ${hasLocalChanges ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                        <div className={`h-1.5 w-1.5 rounded-full ${hasLocalChanges ? 'bg-amber-500' : 'bg-slate-400'}`} />
-                        {hasLocalChanges ? 'Modificado na tela' : 'Sincronizado com rascunho'}
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 ${
+                          hasLocalChanges
+                            ? 'border-amber-200 bg-amber-50 text-amber-700'
+                            : 'border-slate-200 bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        <div
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            hasLocalChanges ? 'bg-amber-500' : 'bg-slate-400'
+                          }`}
+                        />
+                        {hasLocalChanges
+                          ? 'Modificado na tela'
+                          : 'Sincronizado com rascunho'}
                       </span>
                       <span className="text-slate-400">|</span>
-                      <span className={`text-slate-600 ${workspace.hasDraftChanges ? 'text-blue-600 font-semibold' : ''}`}>
-                        {workspace.hasDraftChanges ? 'Rascunho difere de Prod' : 'Rascunho = Produção'}
+                      <span
+                        className={`${
+                          workspace.hasDraftChanges
+                            ? 'font-semibold text-blue-600'
+                            : 'text-slate-600'
+                        }`}
+                      >
+                        {workspace.hasDraftChanges
+                          ? 'Rascunho difere de Produção'
+                          : 'Rascunho = Produção'}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2.5">
-                    {/* Descartar Rascunho */}
                     <div className="group relative flex items-center justify-center">
                       <button
                         onClick={() => void handleDiscardDraft()}
@@ -652,51 +855,61 @@ export default function AiTemplateManagerPage() {
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
-                      <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2">
-                        Descartar Rascunho
-                        <div className="absolute -top-1 right-3 sm:right-auto sm:left-1/2 h-2 w-2 sm:-translate-x-1/2 rotate-45 bg-slate-800"></div>
+                      <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 translate-y-1 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 sm:left-1/2 sm:right-auto sm:-translate-x-1/2">
+                        Descartar rascunho
+                        <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800 sm:left-1/2 sm:right-auto sm:-translate-x-1/2" />
                       </div>
                     </div>
 
-                    {/* Salvar Rascunho */}
                     <div className="group relative flex items-center justify-center">
                       <button
                         onClick={() => void handleSaveDraft()}
                         disabled={!hasLocalChanges || savingDraft || releasing}
                         className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95 disabled:opacity-50"
                       >
-                        <Save className={`h-4 w-4 ${savingDraft ? 'animate-pulse' : ''}`} />
+                        <Save
+                          className={`h-4 w-4 ${savingDraft ? 'animate-pulse' : ''}`}
+                        />
                       </button>
-                      <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2">
-                        Salvar Tudo
-                        <div className="absolute -top-1 right-3 sm:right-auto sm:left-1/2 h-2 w-2 sm:-translate-x-1/2 rotate-45 bg-slate-800"></div>
+                      <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 translate-y-1 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 sm:left-1/2 sm:right-auto sm:-translate-x-1/2">
+                        Salvar tudo
+                        <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800 sm:left-1/2 sm:right-auto sm:-translate-x-1/2" />
                       </div>
                     </div>
 
-                    {/* Liberar Tudo para Prod */}
                     <div className="group relative flex items-center justify-center">
                       <button
                         onClick={() => void handleReleaseScope('all')}
-                        disabled={!workspace.draft || savingDraft || releasing || hasLocalChanges}
+                        disabled={
+                          !workspace.draft ||
+                          savingDraft ||
+                          releasing ||
+                          hasLocalChanges
+                        }
                         className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition-all hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 active:scale-95 disabled:opacity-50"
                       >
-                        <UploadCloud className={`h-4 w-4 ${releasing ? 'animate-pulse' : ''}`} />
+                        <UploadCloud
+                          className={`h-4 w-4 ${releasing ? 'animate-pulse' : ''}`}
+                        />
                       </button>
-                      <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2">
-                        Liberar Tudo para Produção
-                        <div className="absolute -top-1 right-3 sm:right-auto sm:left-1/2 h-2 w-2 sm:-translate-x-1/2 rotate-45 bg-slate-800"></div>
+                      <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 translate-y-1 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 sm:left-1/2 sm:right-auto sm:-translate-x-1/2">
+                        Liberar tudo para produção
+                        <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800 sm:left-1/2 sm:right-auto sm:-translate-x-1/2" />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Tabs Navigation */}
                 <div className="mt-6 flex gap-6">
                   {[
                     { id: 'dashboard', label: 'Painel Geral', icon: Sparkles },
                     { id: 'base', label: 'Template Base', icon: Bot },
                     { id: 'flows', label: 'Fluxos de IA', icon: Workflow },
-                    { id: 'history', label: 'Histórico & Variáveis', icon: History },
+                    {
+                      id: 'history',
+                      label: 'Histórico & Variáveis',
+                      icon: History,
+                    },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -707,43 +920,71 @@ export default function AiTemplateManagerPage() {
                           : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
                       }`}
                     >
-                      <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? 'text-violet-600' : 'text-slate-400 group-hover:text-slate-500'}`} />
+                      <tab.icon
+                        className={`h-4 w-4 ${
+                          activeTab === tab.id
+                            ? 'text-violet-600'
+                            : 'text-slate-400 group-hover:text-slate-500'
+                        }`}
+                      />
                       {tab.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Tab Contents - Scrollable Area */}
               <div className="flex-1 overflow-y-auto p-6">
-                
-                {/* TAB: DASHBOARD */}
                 {activeTab === 'dashboard' && (
                   <div className="mx-auto max-w-4xl space-y-6">
                     <div className="grid gap-6 md:grid-cols-2">
                       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h3 className="mb-4 text-sm font-bold text-slate-900">Versões Atuais (Produção)</h3>
+                        <h3 className="mb-4 text-sm font-bold text-slate-900">
+                          Versões Atuais (Produção)
+                        </h3>
                         <div className="space-y-4">
                           <div className="flex justify-between border-b border-slate-100 pb-2">
-                            <span className="text-sm text-slate-600">Template Base</span>
-                            <span className="font-bold text-slate-900">{workspace.baseCurrent ? `v${workspace.baseCurrent.version}` : 'Nenhum'}</span>
+                            <span className="text-sm text-slate-600">
+                              Template Base
+                            </span>
+                            <span className="font-bold text-slate-900">
+                              {workspace.baseCurrent
+                                ? `v${workspace.baseCurrent.version}`
+                                : 'Nenhum'}
+                            </span>
                           </div>
                           <div className="flex justify-between border-b border-slate-100 pb-2">
-                            <span className="text-sm text-slate-600">Pacote de Fluxos</span>
-                            <span className="font-bold text-slate-900">{workspace.packageCurrent ? `v${workspace.packageCurrent.version}` : 'Nenhum'}</span>
+                            <span className="text-sm text-slate-600">
+                              Pacote de Fluxos
+                            </span>
+                            <span className="font-bold text-slate-900">
+                              {workspace.packageCurrent
+                                ? `v${workspace.packageCurrent.version}`
+                                : 'Nenhum'}
+                            </span>
                           </div>
                         </div>
                       </div>
 
                       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h3 className="mb-4 text-sm font-bold text-slate-900">Status do Rascunho Local</h3>
+                        <h3 className="mb-4 text-sm font-bold text-slate-900">
+                          Status do Rascunho Local
+                        </h3>
                         <div className="space-y-4">
                           <div className="flex justify-between border-b border-slate-100 pb-2">
-                            <span className="text-sm text-slate-600">Última modificação</span>
-                            <span className="font-medium text-slate-900">{workspace.draft ? formatDate(workspace.draft.updatedAt) : 'Sem rascunho'}</span>
+                            <span className="text-sm text-slate-600">
+                              Última modificação
+                            </span>
+                            <span className="font-medium text-slate-900">
+                              {workspace.draft
+                                ? formatDate(workspace.draft.updatedAt)
+                                : 'Sem rascunho'}
+                            </span>
                           </div>
-                          <div className="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-                            <strong>Como funciona:</strong> Altere os arquivos nas abas <em>Template Base</em> ou <em>Fluxos</em>. Salve o rascunho para garantir o progresso e clique em liberar para enviar para produção.
+                          <div className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                            <strong>Como funciona:</strong> Altere os arquivos
+                            nas abas <em>Template Base</em> ou <em>Fluxos</em>.
+                            Salve o rascunho para garantir o progresso e clique
+                            em liberar para enviar para produção.
                           </div>
                         </div>
                       </div>
@@ -751,24 +992,37 @@ export default function AiTemplateManagerPage() {
                   </div>
                 )}
 
-                {/* TAB: TEMPLATE BASE */}
                 {activeTab === 'base' && (
                   <div className="flex h-full flex-col gap-4">
                     <div className="flex items-end justify-between">
                       <div className="flex w-full max-w-2xl gap-4">
                         <div className="flex-1 space-y-1.5">
-                          <label className="text-xs font-semibold text-slate-600">Nome do Template</label>
+                          <label className="text-xs font-semibold text-slate-600">
+                            Nome do Template
+                          </label>
                           <input
                             value={draft.baseTemplateName}
-                            onChange={(e) => updateDraftField('baseTemplateName', e.target.value)}
+                            onChange={(e) =>
+                              updateDraftField(
+                                'baseTemplateName',
+                                e.target.value,
+                              )
+                            }
                             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                           />
                         </div>
                         <div className="flex-1 space-y-1.5">
-                          <label className="text-xs font-semibold text-slate-600">Caminho Origem (Opcional)</label>
+                          <label className="text-xs font-semibold text-slate-600">
+                            Caminho de Origem (Opcional)
+                          </label>
                           <input
                             value={draft.sourcePath || ''}
-                            onChange={(e) => updateDraftField('sourcePath', e.target.value || null)}
+                            onChange={(e) =>
+                              updateDraftField(
+                                'sourcePath',
+                                e.target.value || null,
+                              )
+                            }
                             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                           />
                         </div>
@@ -782,69 +1036,78 @@ export default function AiTemplateManagerPage() {
                           >
                             <Maximize2 className="h-4 w-4" />
                           </button>
-                          <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0">
+                          <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 translate-y-1 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
                             Abrir editor maximizado
-                            <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800"></div>
+                            <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800" />
                           </div>
-                      </div>
-
-                      <div className="group relative flex items-center justify-center">
-                        <button
-                          onClick={() => void handleSaveDraftScope('base')}
-                          disabled={!hasBaseLocalChanges || savingDraft || releasing}
-                          className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95 disabled:opacity-50"
-                        >
-                          <Save className="h-4 w-4" />
-                        </button>
-                        <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0">
-                          Salvar Rascunho da Base
-                          <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800"></div>
                         </div>
-                      </div>
 
-                      <div className="group relative flex items-center justify-center">
-                        <button
-                          onClick={() => void handleReleaseScope('base')}
-                            disabled={!workspace.draft || savingDraft || releasing || hasLocalChanges}
+                        <div className="group relative flex items-center justify-center">
+                          <button
+                            onClick={() => void handleSaveDraftScope('base')}
+                            disabled={
+                              !hasBaseLocalChanges || savingDraft || releasing
+                            }
+                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95 disabled:opacity-50"
+                          >
+                            <Save className="h-4 w-4" />
+                          </button>
+                          <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 translate-y-1 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+                            Salvar rascunho da base
+                            <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800" />
+                          </div>
+                        </div>
+
+                        <div className="group relative flex items-center justify-center">
+                          <button
+                            onClick={() => void handleReleaseScope('base')}
+                            disabled={
+                              !workspace.draft ||
+                              savingDraft ||
+                              releasing ||
+                              hasLocalChanges
+                            }
                             className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition-all hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 active:scale-95 disabled:opacity-50"
                           >
                             <UploadCloud className="h-4 w-4" />
                           </button>
-                          <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0">
-                            Liberar Base para Prod
-                            <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800"></div>
+                          <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 translate-y-1 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+                            Liberar base para produção
+                            <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800" />
                           </div>
                         </div>
                       </div>
                     </div>
                     <textarea
                       value={draft.baseTemplateContent}
-                      onChange={(e) => updateDraftField('baseTemplateContent', e.target.value)}
-                      className="flex-1 w-full resize-none rounded-xl border border-slate-200 bg-[#0d1117] p-4 font-mono text-[13px] leading-relaxed text-slate-50 shadow-inner outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200 custom-scrollbar"
+                      onChange={(e) =>
+                        updateDraftField('baseTemplateContent', e.target.value)
+                      }
+                      className="custom-scrollbar flex-1 w-full resize-none rounded-xl border border-slate-200 bg-[#0d1117] p-4 font-mono text-[13px] leading-relaxed text-slate-50 shadow-inner outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200"
                       spellCheck={false}
                     />
                   </div>
                 )}
 
-                {/* TAB: FLOWS (Master-Detail) */}
                 {activeTab === 'flows' && (
-                  <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    {/* Toolbar Flows */}
+                  <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                     <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <label className="text-sm font-semibold text-slate-700">Nome do Pacote:</label>
+                        <label className="text-sm font-semibold text-slate-700">
+                          Nome do Pacote:
+                        </label>
                         <input
                           value={draft.templateName}
-                          onChange={(e) => updateDraftField('templateName', e.target.value)}
+                          onChange={(e) =>
+                            updateDraftField('templateName', e.target.value)
+                          }
                           className="w-64 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-violet-400"
                         />
                       </div>
                     </div>
-                    
-                    {/* Master-Detail Area */}
+
                     <div className="flex min-h-0 flex-1">
-                      {/* Flows Menu List */}
-                      <div className="w-64 border-r border-slate-100 bg-slate-50/30 overflow-y-auto">
+                      <div className="w-64 overflow-y-auto border-r border-slate-100 bg-slate-50/30">
                         {COMPONENT_EDITORS.map((comp) => (
                           <button
                             key={comp.key}
@@ -855,21 +1118,29 @@ export default function AiTemplateManagerPage() {
                                 : 'border-transparent text-slate-600 hover:bg-slate-100'
                             }`}
                           >
-                            <div className="font-semibold text-sm">{comp.label}</div>
-                            <div className="mt-0.5 truncate text-[10px] text-slate-500">{comp.description}</div>
+                            <div className="text-sm font-semibold">
+                              {comp.label}
+                            </div>
+                            <div className="mt-0.5 truncate text-[10px] text-slate-500">
+                              {comp.description}
+                            </div>
                           </button>
                         ))}
                       </div>
 
-                      {/* Flow Editor Textarea */}
-                      <div className="flex flex-1 flex-col p-4 bg-slate-50">
+                      <div className="flex flex-1 flex-col bg-slate-50 p-4">
                         {activeFlowData && (
                           <>
                             <div className="mb-3 flex items-center justify-between">
                               <div>
-                                <h3 className="font-bold text-slate-900">{activeFlowData.label}</h3>
+                                <h3 className="font-bold text-slate-900">
+                                  {activeFlowData.label}
+                                </h3>
                                 <p className="text-xs text-slate-500">
-                                  Versão em Prod: {workspace.packageCurrent?.componentVersions?.[activeFlowKey] ?? 'Sem versão'}
+                                  Versão em Produção:{' '}
+                                  {workspace.packageCurrent
+                                    ?.componentVersions?.[activeFlowKey] ??
+                                    'Sem versão'}
                                 </p>
                               </div>
 
@@ -881,45 +1152,63 @@ export default function AiTemplateManagerPage() {
                                   >
                                     <Maximize2 className="h-4 w-4" />
                                   </button>
-                                  <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0">
+                                  <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 translate-y-1 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
                                     Abrir editor maximizado
-                                    <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800"></div>
+                                    <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800" />
                                   </div>
-                              </div>
-
-                              <div className="group relative flex items-center justify-center">
-                                <button
-                                  onClick={() => void handleSaveDraftScope(activeFlowKey)}
-                                  disabled={!hasActiveFlowLocalChanges || savingDraft || releasing}
-                                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95 disabled:opacity-50"
-                                >
-                                  <Save className="h-4 w-4" />
-                                </button>
-                                <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0">
-                                  Salvar Este Fluxo
-                                  <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800"></div>
                                 </div>
-                              </div>
 
-                              <div className="group relative flex items-center justify-center">
-                                <button
-                                  onClick={() => void handleReleaseScope(activeFlowKey)}
-                                    disabled={!workspace.draft || savingDraft || releasing || hasLocalChanges}
+                                <div className="group relative flex items-center justify-center">
+                                  <button
+                                    onClick={() =>
+                                      void handleSaveDraftScope(activeFlowKey)
+                                    }
+                                    disabled={
+                                      !hasActiveFlowLocalChanges ||
+                                      savingDraft ||
+                                      releasing
+                                    }
+                                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 active:scale-95 disabled:opacity-50"
+                                  >
+                                    <Save className="h-4 w-4" />
+                                  </button>
+                                  <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 translate-y-1 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+                                    Salvar este fluxo
+                                    <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800" />
+                                  </div>
+                                </div>
+
+                                <div className="group relative flex items-center justify-center">
+                                  <button
+                                    onClick={() =>
+                                      void handleReleaseScope(activeFlowKey)
+                                    }
+                                    disabled={
+                                      !workspace.draft ||
+                                      savingDraft ||
+                                      releasing ||
+                                      hasLocalChanges
+                                    }
                                     className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition-all hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-300 active:scale-95 disabled:opacity-50"
                                   >
                                     <UploadCloud className="h-4 w-4" />
                                   </button>
-                                  <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0">
-                                    Publicar Este Fluxo
-                                    <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800"></div>
+                                  <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 translate-y-1 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+                                    Publicar este fluxo
+                                    <div className="absolute -top-1 right-3 h-2 w-2 rotate-45 bg-slate-800" />
                                   </div>
                                 </div>
                               </div>
                             </div>
                             <textarea
                               value={draft[activeFlowData.key]}
-                              onChange={(e) => updateDraftField(activeFlowData.key, e.target.value)}
-                              className="flex-1 w-full resize-none rounded-xl border border-slate-200 bg-[#0d1117] p-4 font-mono text-[13px] leading-relaxed text-slate-50 shadow-inner outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200 custom-scrollbar"
+                              onChange={(e) =>
+                                updateDraftField(
+                                  activeFlowData.key,
+                                  e.target.value,
+                                )
+                              }
+                              className="custom-scrollbar flex-1 w-full resize-none rounded-xl border border-slate-200 bg-[#0d1117] p-4 font-mono text-[13px] leading-relaxed text-slate-50 shadow-inner outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200"
                               spellCheck={false}
                             />
                           </>
@@ -929,39 +1218,55 @@ export default function AiTemplateManagerPage() {
                   </div>
                 )}
 
-                {/* TAB: HISTORY & VARIABLES */}
                 {activeTab === 'history' && (
-                  <div className="grid gap-6 xl:grid-cols-2 max-w-6xl mx-auto">
-                    
-                    {/* Variáveis */}
+                  <div className="mx-auto grid max-w-6xl gap-6 xl:grid-cols-2">
                     <div className="space-y-6">
                       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                         <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
                           <Code2 className="h-5 w-5 text-violet-600" />
-                          <h3 className="font-bold text-slate-900">Variáveis de Instalação (Setup)</h3>
+                          <h3 className="font-bold text-slate-900">
+                            Variáveis de Instalação (Setup)
+                          </h3>
                         </div>
                         <div className="space-y-3">
                           {selectedCard.fields.length > 0 ? (
                             selectedCard.fields.map((field) => (
-                              <div key={field.key} className="rounded-lg bg-slate-50 p-3 text-sm border border-slate-100">
+                              <div
+                                key={field.key}
+                                className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-sm"
+                              >
                                 <span className="font-bold">{field.label}</span>
-                                <div className="mt-1 text-slate-600 text-xs">
-                                  Key: <code className="bg-slate-200 px-1 rounded">{field.key}</code> | Tipo: {field.type}
+                                <div className="mt-1 text-xs text-slate-600">
+                                  Key:{' '}
+                                  <code className="rounded bg-slate-200 px-1">
+                                    {field.key}
+                                  </code>{' '}
+                                  | Tipo: {field.type}
                                 </div>
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-slate-500">Nenhuma variável configurável neste provider.</p>
+                            <p className="text-sm text-slate-500">
+                              Nenhuma variável configurável neste provider.
+                            </p>
                           )}
                         </div>
                       </div>
 
                       <div className="rounded-2xl border border-violet-100 bg-violet-50 p-6">
-                        <h3 className="mb-2 font-bold text-violet-900">Variáveis Automáticas Injetadas</h3>
-                        <p className="mb-4 text-xs text-violet-700">O sistema substitui essas variáveis em tempo de execução.</p>
+                        <h3 className="mb-2 font-bold text-violet-900">
+                          Variáveis Automáticas Injetadas
+                        </h3>
+                        <p className="mb-4 text-xs text-violet-700">
+                          O sistema substitui essas variáveis em tempo de
+                          execução.
+                        </p>
                         <div className="flex flex-wrap gap-2">
-                          {AUTOMATIC_VARIABLES.map(v => (
-                            <span key={v} className="rounded bg-white px-2 py-1 font-mono text-xs text-violet-800 shadow-sm border border-violet-100">
+                          {AUTOMATIC_VARIABLES.map((v) => (
+                            <span
+                              key={v}
+                              className="rounded border border-violet-100 bg-white px-2 py-1 font-mono text-xs text-violet-800 shadow-sm"
+                            >
                               {v}
                             </span>
                           ))}
@@ -969,7 +1274,6 @@ export default function AiTemplateManagerPage() {
                       </div>
                     </div>
 
-                    {/* Histórico */}
                     <div className="space-y-6">
                       <VersionHistoryBlock
                         title="Histórico: Template Base"
@@ -980,11 +1284,12 @@ export default function AiTemplateManagerPage() {
                       <VersionHistoryBlock
                         title="Histórico: Pacote de Fluxos"
                         rows={workspace.packageHistory}
-                        currentVersion={workspace.packageCurrent?.version ?? null}
+                        currentVersion={
+                          workspace.packageCurrent?.version ?? null
+                        }
                         onRollback={(v) => void handleRollback(undefined, v)}
                       />
                     </div>
-
                   </div>
                 )}
               </div>
@@ -995,7 +1300,7 @@ export default function AiTemplateManagerPage() {
                 <RefreshCcw className="h-8 w-8 animate-spin" />
               ) : (
                 <div className="text-center">
-                  <Bot className="mx-auto h-12 w-12 opacity-20 mb-3" />
+                  <Bot className="mx-auto mb-3 h-12 w-12 opacity-20" />
                   <p>Selecione um provider no menu lateral para editar.</p>
                 </div>
               )}
@@ -1017,7 +1322,8 @@ export default function AiTemplateManagerPage() {
             <div className="border-b border-slate-800 bg-slate-900 px-6 py-3 text-sm text-slate-300">
               <div className="flex items-center justify-between gap-4">
                 <span>
-                  Edite o JSON com mais espaco. As alteracoes feitas aqui atualizam o mesmo rascunho da tela.
+                  Edite o JSON com mais espaço. As alterações feitas aqui
+                  atualizam o mesmo rascunho da tela.
                 </span>
                 <div className="flex items-center gap-3">
                   <button
@@ -1033,14 +1339,16 @@ export default function AiTemplateManagerPage() {
                     disabled={!fullscreenEditorDirty}
                     className="rounded-lg bg-violet-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Salvar alteracao
+                    Salvar alteração
                   </button>
                 </div>
               </div>
             </div>
             <textarea
               value={draft[fullscreenEditor.field]}
-              onChange={(event) => updateDraftField(fullscreenEditor.field, event.target.value)}
+              onChange={(event) =>
+                updateDraftField(fullscreenEditor.field, event.target.value)
+              }
               className="flex-1 w-full resize-none border-0 bg-slate-950 p-6 pb-15 font-mono text-[14px] leading-relaxed text-slate-100 outline-none focus:ring-0"
               spellCheck={false}
               autoFocus

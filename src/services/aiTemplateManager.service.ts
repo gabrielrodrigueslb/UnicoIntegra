@@ -24,6 +24,8 @@ export interface AiProviderTemplatePackageItem {
   preProcessTemplate: string | null;
   buscaProdutosTemplate: string | null;
   downloadImagemTemplate: string | null;
+  gerarCheckoutTemplate: string | null;
+  transferirHumanoTemplate: string | null;
   uraTemplate: string | null;
   uraAbTemplate: string | null;
   componentVersions: Partial<Record<AiComponentKey, number>>;
@@ -44,6 +46,8 @@ export interface AiTemplateWorkspaceDraft {
   preProcessTemplate: string;
   buscaProdutosTemplate: string;
   downloadImagemTemplate: string;
+  gerarCheckoutTemplate: string;
+  transferirHumanoTemplate: string;
   uraTemplate: string;
   uraAbTemplate: string;
   basedOnBaseVersion: number | null;
@@ -81,6 +85,8 @@ export interface SaveAiTemplateWorkspaceDraftInput {
   preProcessTemplate?: string;
   buscaProdutosTemplate?: string;
   downloadImagemTemplate?: string;
+  gerarCheckoutTemplate?: string;
+  transferirHumanoTemplate?: string;
   uraTemplate?: string;
   uraAbTemplate?: string;
 }

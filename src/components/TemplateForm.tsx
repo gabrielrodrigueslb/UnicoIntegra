@@ -65,7 +65,7 @@ export function TemplateForm({
           }
         >
           <div
-            className={`custom-scrollbar max-h-[60vh] overflow-y-auto ${
+            className={`custom-scrollbar overflow-y-auto ${
               showIaContextField ? 'space-y-4 pr-2 lg:max-h-none' : 'space-y-6 pr-1'
             }`}
           >

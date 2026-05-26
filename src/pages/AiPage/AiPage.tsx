@@ -85,7 +85,7 @@ export default function AiPage() {
       name: selectedIA?.name || 'IA - Unico',
     };
 
-    if (key === 'alpha7') {
+    if (key === 'alpha7' || key === 'vtex') {
       nextFormData.quantidade_de_produtos = '3';
     }
 

@@ -6,6 +6,8 @@ export type AiComponentKey =
   | 'assistant'
   | 'downloadImagem'
   | 'buscaProdutos'
+  | 'gerarCheckout'
+  | 'transferirHumano'
   | 'ura'
   | 'uraAb'
   | 'preProcess';
@@ -25,6 +27,8 @@ export interface AiInstallationItem {
   preProcessId: string | null;
   buscaProdutosId: string | null;
   downloadImagemId: string | null;
+  gerarCheckoutId: string | null;
+  transferirHumanoId: string | null;
   uraIaId: string | null;
   uraAbId: string | null;
   lastSyncStatus: string;
@@ -60,6 +64,8 @@ export interface ReconfigureAiInstallationInput {
   preProcessId?: string;
   buscaProdutosId?: string;
   downloadImagemId?: string;
+  gerarCheckoutId?: string;
+  transferirHumanoId?: string;
   uraIaId?: string;
   uraAbId?: string;
   configSnapshot?: Record<string, unknown>;
@@ -162,6 +168,8 @@ export async function reconfigureAiInstallation(
       preProcessId: input.preProcessId,
       buscaProdutosId: input.buscaProdutosId,
       downloadImagemId: input.downloadImagemId,
+      gerarCheckoutId: input.gerarCheckoutId,
+      transferirHumanoId: input.transferirHumanoId,
       uraIaId: input.uraIaId,
       uraAbId: input.uraAbId,
       configSnapshot: input.configSnapshot,

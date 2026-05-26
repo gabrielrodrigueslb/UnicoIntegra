@@ -7,6 +7,7 @@ import CriarContato from './content/referencia/contatos/CriarContato'
 import IAsOverview from './content/ias/IAsOverview'
 import Alpha7Docs from './content/ias/alpha7.mdx'
 import TrierDocs from './content/ias/trier.mdx'
+import VtexDocs from './content/ias/vtex.mdx'
 import VannonDocs from './content/ias/vannon.mdx'
 import VetorDocs from './content/ias/vetor.mdx'
 import AtendimentoDocs from './content/ias/atendimento.mdx'
@@ -92,6 +93,7 @@ const DocsRouter: React.FC = () => {
         <Route path="ias" element={<IAsOverview />} />
         <Route path="ias/alpha7" element={<Alpha7Docs />} />
         <Route path="ias/trier" element={<TrierDocs />} />
+        <Route path="ias/vtex" element={<VtexDocs />} />
         <Route path="ias/vannon" element={<VannonDocs />} />
         <Route path="ias/vetor" element={<VetorDocs />} />
         <Route path="ias/atendimento" element={<AtendimentoDocs />} />

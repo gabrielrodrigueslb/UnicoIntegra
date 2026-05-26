@@ -86,6 +86,62 @@ export const templates = {
     ]
   },
 
+  vtex: {
+    key: 'vtex',
+    name: 'IA - VTEX',
+    type: 'assistente',
+    version: '1.0',
+    contextMode: 'hidden' as const,
+    description:
+      'Agente inteligente capaz de processar linguagem natural e conectar-se com a VTEX.',
+    banner: '/vtex.png',
+    endpoint: '/vtex',
+    fields: [
+      {
+        key: 'nomeCliente',
+        label: 'Nome da loja',
+        type: 'text',
+        placeholder: 'Farmacia X',
+        width: 'half' as const
+      },
+      {
+        key: 'url_vtex_variable',
+        label: 'URL Base VTEX',
+        type: 'text',
+        placeholder: 'https://ambiente.vtexcommercestable.com.br',
+        width: 'half' as const
+      },
+      {
+        key: 'vtex_app_key_variable',
+        label: 'VTEX App Key',
+        type: 'password',
+        placeholder: 'Sua app key VTEX',
+        width: 'half' as const
+      },
+      {
+        key: 'vtex_app_token_variable',
+        label: 'VTEX App Token',
+        type: 'password',
+        placeholder: 'Seu app token VTEX',
+        width: 'half' as const
+      },
+      {
+        key: 'apiKey',
+        label: 'API Key Global',
+        type: 'password',
+        placeholder: 'Sua chave de API',
+        width: 'half' as const
+      },
+      {
+        key: 'quantidade_de_produtos',
+        label: 'Quantidade de produtos',
+        type: 'number',
+        placeholder: 'Padrao 3, maximo 7',
+        width: 'half' as const
+      },
+    ]
+  },
+
   vannon: {
     key: 'vannon',
     name: 'IA - Vannon',
