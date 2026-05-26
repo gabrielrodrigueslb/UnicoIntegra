@@ -19,9 +19,13 @@ function hasFlag(flag) {
 }
 
 async function run(command, args, options = {}) {
+  const shouldUseShell =
+    process.platform === 'win32' && /\.cmd$/i.test(command)
+
   const result = await execFile(command, args, {
     cwd: rootDir,
     windowsHide: true,
+    shell: shouldUseShell,
     ...options,
   })
 
