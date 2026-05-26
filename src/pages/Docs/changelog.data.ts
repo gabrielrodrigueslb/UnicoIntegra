@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: 'v1.4.1',
+    date: '26 May 2026',
+    type: 'improvement',
+    items: [
+      'Melhorias internas e ajustes operacionais nesta versão.',
+    ],
+  },
+  {
     version: 'v1.4.0',
     date: '26 May 2026',
     type: 'improvement',
