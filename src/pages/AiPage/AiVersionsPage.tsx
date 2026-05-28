@@ -981,12 +981,12 @@ export default function AiVersionsPage() {
             }
           }}
           maxWidthClassName="max-w-3xl"
-          bodyClassName="bg-white p-0 rounded-2xl overflow-hidden"
+          bodyClassName="bg-white p-0 rounded-2xl overflow-y-auto"
           header={
             <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50 px-6 py-5">
               <div>
                 <h2 className="text-lg font-extrabold text-slate-900">
-                  Reconfigurar Instala??o
+                  Reconfigurar Instalação
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Edite IDs e vari?veis salvas. Se quiser, o Integra reaplica isso no cliente usando o template atual do backend.
@@ -1008,7 +1008,7 @@ export default function AiVersionsPage() {
         >
           <div className="space-y-6 p-6">
             <div className="rounded-xl border border-violet-100 bg-violet-50 p-4 text-sm text-violet-900 shadow-sm">
-              Voc? est? reconfigurando a IA <strong>{reconfigureModal.item.assistantName || reconfigureModal.item.assistantId}</strong> da inst?ncia <strong>{reconfigureModal.item.instance}</strong>.
+              Você está reconfigurando a IA <strong>{reconfigureModal.item.assistantName || reconfigureModal.item.assistantId}</strong> da instância <strong>{reconfigureModal.item.instance}</strong>.
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -1077,7 +1077,7 @@ export default function AiVersionsPage() {
                 />
                 <span>
                   <strong className="block text-slate-900">Reaplicar no cliente</strong>
-                  Atualiza a configura??o no cliente usando o template atual do backend.
+                  Atualiza a configuração no cliente usando o template atual do backend.
                 </span>
               </label>
 
@@ -1096,7 +1096,7 @@ export default function AiVersionsPage() {
                 />
                 <span>
                   <strong className="block text-slate-900">Patch seguro na URA</strong>
-                  Mant?m a URA customizada e ajusta apenas as vari?veis do primeiro JavaScript.
+                  Mantêm a URA customizada e ajusta apenas as variáveis do primeiro JavaScript.
                 </span>
               </label>
             </div>
@@ -1104,7 +1104,7 @@ export default function AiVersionsPage() {
             {reconfigureForm.applyToClient && (
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
-                  C?digo de Autentica??o (2FA opcional)
+                  Código de Autenticação (2FA opcional)
                 </label>
                 <input
                   type="text"
@@ -1139,7 +1139,7 @@ export default function AiVersionsPage() {
                 disabled={reconfiguring}
                 className="flex-1 rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700 disabled:opacity-50"
               >
-                {reconfiguring ? 'Salvando...' : 'Salvar configura??o'}
+                {reconfiguring ? 'Salvando...' : 'Salvar configuração'}
               </button>
             </div>
           </div>
