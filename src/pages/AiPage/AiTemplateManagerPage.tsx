@@ -26,7 +26,6 @@ import {
   releaseAiTemplateWorkspaceDraft,
   rollbackAiTemplateWorkspace,
   saveAiTemplateWorkspaceDraft,
-  syncCurrentAiTemplates,
   type AiProviderTemplatePackageItem,
   type AiTemplateBaseItem,
   type AiTemplateWorkspace,
@@ -374,7 +373,6 @@ export default function AiTemplateManagerPage() {
   const [loadingWorkspace, setLoadingWorkspace] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [releasing, setReleasing] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
   const [flashMessage, setFlashMessage] = useState('');
 
@@ -678,21 +676,6 @@ export default function AiTemplateManagerPage() {
     }
   }
 
-  async function handleSyncCurrent() {
-    if (syncing) return;
-    setSyncing(true);
-    setError('');
-    try {
-      const res = await syncCurrentAiTemplates();
-      setFlashMessage(res.message || 'Sincronizado com sucesso.');
-      await loadSummaries(selectedProvider);
-    } catch (err) {
-      setError(extractErrorMessage(err, 'Falha ao sincronizar.'));
-    } finally {
-      setSyncing(false);
-    }
-  }
-
   // Derived state for the Flows tab
   const activeFlowData = supportedFlowEditors.find(
     (c) => c.componentKey === activeFlowKey,
@@ -780,21 +763,6 @@ export default function AiTemplateManagerPage() {
             </span>
           )}
 
-          <div className="group relative flex items-center justify-center">
-            <button
-              onClick={() => void handleSyncCurrent()}
-              disabled={loadingList || loadingWorkspace || syncing}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-200 active:scale-95 disabled:opacity-50"
-            >
-              <RefreshCcw
-                className={`h-4 w-4 ${syncing ? 'animate-spin text-violet-600' : ''}`}
-              />
-            </button>
-            <div className="pointer-events-none absolute top-full z-50 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2">
-              Sincronizar Arquivos
-              <div className="absolute -top-1 right-3 sm:right-auto sm:left-1/2 h-2 w-2 sm:-translate-x-1/2 rotate-45 bg-slate-800"></div>
-            </div>
-          </div>
         </div>
       </header>
 
