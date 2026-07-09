@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MessageSquareText, Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import MessageInput from '../../components/LinkAi/MessageInput';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
@@ -55,12 +55,6 @@ const ACTIVE_CONVERSATION_STORAGE_PREFIX = 'link-ai-active-conversation-v1';
 const MAX_PERSISTED_MESSAGES = 50;
 const MAX_CONVERSATIONS = 30;
 const DEFAULT_CONVERSATION_TITLE = 'Nova conversa';
-const CONVERSATION_DATE_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
-  day: '2-digit',
-  month: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-});
 
 function createId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -330,38 +324,6 @@ function mapMessagesToHistory(messages: ChatMessage[]): ChatHistoryItem[] {
     .slice(-10);
 }
 
-function buildConversationPreview(conversation: ChatConversation) {
-  const latestMessage = [...conversation.messages]
-    .reverse()
-    .find(
-      (message) =>
-        message.content.trim() &&
-        (message.role === 'user' || message.content !== INITIAL_MESSAGE.content),
-    );
-
-  if (!latestMessage) {
-    return 'Sem mensagens ainda';
-  }
-
-  const normalizedPreview = latestMessage.content.replace(/\s+/g, ' ').trim();
-
-  if (normalizedPreview.length <= 68) {
-    return normalizedPreview;
-  }
-
-  return `${normalizedPreview.slice(0, 65).trimEnd()}...`;
-}
-
-function formatConversationTimestamp(timestamp: string) {
-  const parsedTimestamp = Date.parse(timestamp);
-
-  if (Number.isNaN(parsedTimestamp)) {
-    return '';
-  }
-
-  return CONVERSATION_DATE_FORMATTER.format(new Date(parsedTimestamp));
-}
-
 function ConversationsToggleIcon() {
   return (
     <svg
@@ -407,16 +369,13 @@ export default function LinkAi() {
   const messageInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [composerHeight, setComposerHeight] = useState(108);
   const [isSending, setIsSending] = useState(false);
-  const [thinkingDots, setThinkingDots] = useState('.');
   const [thinkingSteps, setThinkingSteps] = useState<string[]>([]);
   const [visibleThinkingSteps, setVisibleThinkingSteps] = useState<string[]>([]);
-  const [isConversationPanelOpen, setIsConversationPanelOpen] = useState(false);
+  const [isConversationPanelOpen, setIsConversationPanelOpen] = useState(true);
   const [conversationPendingDelete, setConversationPendingDelete] =
     useState<ChatConversation | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  useBodyScrollLock(
-    isConversationPanelOpen || Boolean(conversationPendingDelete),
-  );
+  useBodyScrollLock(Boolean(conversationPendingDelete));
 
   const conversations = conversationState.conversations;
   const activeConversation =
@@ -514,7 +473,6 @@ export default function LinkAi() {
 
   useEffect(() => {
     if (!isSending) {
-      setThinkingDots('.');
       setVisibleThinkingSteps([]);
       return;
     }
@@ -524,16 +482,6 @@ export default function LinkAi() {
       : '';
 
     setVisibleThinkingSteps(latestStep ? [latestStep] : []);
-
-    const dotsInterval = window.setInterval(() => {
-      setThinkingDots((currentValue) =>
-        currentValue.length >= 3 ? '.' : `${currentValue}.`,
-      );
-    }, 350);
-
-    return () => {
-      window.clearInterval(dotsInterval);
-    };
   }, [isSending, thinkingSteps]);
 
   useEffect(() => {
@@ -569,26 +517,6 @@ export default function LinkAi() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isConversationPanelOpen) {
-      return;
-    }
-
-    function handleEscapeKey(event: KeyboardEvent) {
-      if (event.key !== 'Escape') {
-        return;
-      }
-
-      setIsConversationPanelOpen(false);
-    }
-
-    window.addEventListener('keydown', handleEscapeKey);
-
-    return () => {
-      window.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, [isConversationPanelOpen]);
-
   function updateActiveConversationDraft(nextDraft: string) {
     if (!activeConversation) {
       return;
@@ -622,7 +550,6 @@ export default function LinkAi() {
       activeConversationId: nextConversation.id,
     }));
 
-    setIsConversationPanelOpen(false);
     focusComposer();
   }
 
@@ -636,7 +563,6 @@ export default function LinkAi() {
       activeConversationId: conversationId,
     }));
 
-    setIsConversationPanelOpen(false);
     focusComposer();
   }
 
@@ -846,93 +772,51 @@ export default function LinkAi() {
   }
 
   return (
-    <>
-      <div
-        className={`fixed inset-0 z-30 bg-black/20 transition-opacity duration-200 ${
-          isConversationPanelOpen
-            ? 'pointer-events-auto opacity-100'
-            : 'pointer-events-none opacity-0'
-        }`}
-        onClick={() => setIsConversationPanelOpen(false)}
-        aria-hidden={!isConversationPanelOpen}
-      />
-
+    <div className="flex h-full w-full overflow-hidden">
       <aside
-        className={`fixed bottom-5 right-5 top-5 z-40 flex w-[320px] max-w-[calc(100vw-2.5rem)] flex-col rounded-3xl border-2 border-border bg-primary-foreground p-4 shadow-2xl transition-transform duration-200 ${
-          isConversationPanelOpen
-            ? 'translate-x-0'
-            : 'translate-x-[calc(100%+2rem)]'
+        className={`flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-foreground/[0.015] transition-[width] duration-200 ease-out ${
+          isConversationPanelOpen ? 'w-[260px]' : 'w-0'
         }`}
         aria-hidden={!isConversationPanelOpen}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-border pb-4">
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">Conversas</h2>
-            <p className="mt-1 text-sm font-normal text-foreground/60">
-              {conversations.length} conversa(s) salvas
-            </p>
-          </div>
-
+        <div className="flex h-full w-[260px] flex-col p-3">
           <button
             type="button"
-            onClick={() => setIsConversationPanelOpen(false)}
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-foreground/55 transition-colors hover:bg-foreground/5 hover:text-foreground"
-            aria-label="Fechar conversas"
+            disabled={isSending}
+            onClick={handleCreateConversation}
+            className="inline-flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <X size={18} />
+            <Plus size={16} className="text-foreground/50" />
+            Nova conversa
           </button>
-        </div>
 
-        <button
-          type="button"
-          disabled={isSending}
-          onClick={handleCreateConversation}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Plus size={16} />
-          Nova conversa
-        </button>
+          <p className="mt-4 px-2.5 text-[11px] font-medium text-foreground/40">
+            Conversas
+          </p>
 
-        <div className="scrollbar-minimal mt-4 flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
-          {conversations.map((conversation) => {
-            const isActive = conversation.id === activeConversation?.id;
+          <div className="scrollbar-minimal mt-1 flex flex-1 flex-col gap-0.5 overflow-y-auto">
+            {conversations.map((conversation) => {
+              const isActive = conversation.id === activeConversation?.id;
 
-            return (
-              <div
-                key={conversation.id}
-                className={`rounded-2xl border p-3 transition-colors ${
-                  isActive
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border bg-background/70'
-                }`}
-              >
-                <div className="flex items-start gap-2">
+              return (
+                <div
+                  key={conversation.id}
+                  className={`group flex items-center rounded-lg transition-colors ${
+                    isActive ? 'bg-primary/10' : 'hover:bg-foreground/[0.04]'
+                  }`}
+                >
                   <button
                     type="button"
                     disabled={isSending}
                     onClick={() => handleSelectConversation(conversation.id)}
-                    className="flex min-w-0 flex-1 items-start gap-3 text-left disabled:cursor-not-allowed"
+                    className="min-w-0 flex-1 py-2 pl-2.5 text-left disabled:cursor-not-allowed"
                   >
                     <span
-                      className={`mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-full ${
-                        isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-primary/10 text-primary'
+                      className={`block truncate text-sm ${
+                        isActive ? 'font-medium text-primary' : 'text-foreground/75'
                       }`}
                     >
-                      <MessageSquareText size={16} />
-                    </span>
-
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-foreground">
-                        {conversation.title}
-                      </span>
-                      <span className="mt-1 block text-xs font-normal text-foreground/60">
-                        {formatConversationTimestamp(conversation.updatedAt)}
-                      </span>
-                      <span className="mt-2 block line-clamp-2 text-xs font-normal text-foreground/70">
-                        {buildConversationPreview(conversation)}
-                      </span>
+                      {conversation.title}
                     </span>
                   </button>
 
@@ -940,39 +824,37 @@ export default function LinkAi() {
                     type="button"
                     disabled={isSending}
                     onClick={() => handleDeleteConversation(conversation.id)}
-                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-foreground/50 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-foreground/30 opacity-0 transition-colors hover:bg-rose-50 hover:text-rose-600 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label={`Excluir conversa ${conversation.title}`}
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </aside>
 
-      <main className="relative flex h-full w-full flex-col overflow-hidden p-5 text-2xl font-bold text-gray-700">
-        <div className="flex items-center justify-between gap-4 pb-4">
-          <h1>Link AI</h1>
-
+      <main className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3.5">
           <button
             type="button"
-            disabled={isSending}
             onClick={() =>
               setIsConversationPanelOpen((currentValue) => !currentValue)
             }
-            className="inline-flex size-12 shrink-0 items-center justify-center rounded-xl  text-foreground transition-colors hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="Abrir conversas"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-foreground/50 transition-colors hover:bg-foreground/5 hover:text-foreground"
+            aria-label={isConversationPanelOpen ? 'Recolher conversas' : 'Mostrar conversas'}
             aria-expanded={isConversationPanelOpen}
           >
             <ConversationsToggleIcon />
           </button>
-        </div>
+          <h1 className="text-sm font-semibold text-foreground">Link AI</h1>
+        </header>
 
         <section
           ref={scrollContainerRef}
-          className="scrollbar-minimal flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-2"
+          className="scrollbar-minimal mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 overflow-y-auto px-6 py-6"
           style={{
             paddingBottom: `${composerHeight + 40}px`,
           }}
@@ -994,10 +876,7 @@ export default function LinkAi() {
             <MessageComponent
               role="assistant"
               isThinking={true}
-              thinkingLabel={`Pensando${thinkingDots}`}
               thinkingSteps={visibleThinkingSteps}
-              thinkingStepIndex={thinkingSteps.length}
-              thinkingStepTotal={thinkingSteps.length}
             />
           ) : null}
         </section>
@@ -1023,6 +902,6 @@ export default function LinkAi() {
           onConfirm={confirmDeleteConversation}
         />
       ) : null}
-    </>
+    </div>
   );
 }

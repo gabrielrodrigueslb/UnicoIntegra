@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Bot, LoaderCircle, User } from 'lucide-react';
+import { Bot, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { ChatAction, ChatTraceStep } from '../../services/linkAi.service';
 
@@ -18,10 +18,7 @@ type Props = {
   actions?: ChatAction[];
   trace?: ChatTraceStep[];
   isThinking?: boolean;
-  thinkingLabel?: string;
   thinkingSteps?: string[];
-  thinkingStepIndex?: number;
-  thinkingStepTotal?: number;
   animate?: boolean;
   onContentProgress?: () => void;
 };
@@ -259,10 +256,7 @@ export default function MessageComponent({
   actions = [],
   trace = [],
   isThinking = false,
-  thinkingLabel = 'Pensando...',
   thinkingSteps = [],
-  thinkingStepIndex = 0,
-  thinkingStepTotal = 0,
   animate = false,
   onContentProgress,
 }: Props) {
@@ -328,75 +322,66 @@ export default function MessageComponent({
 
   if (isThinking) {
     return (
-      <div className="flex w-full items-start gap-4 self-start">
-        <span className="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-border bg-primary-foreground p-2 text-primary shadow">
-          <Bot size={20} />
+      <div className="flex w-full items-start gap-3 self-start">
+        <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Bot size={15} />
         </span>
 
-        <div className="pt-1">
-          <div className="flex items-center gap-3">
-            <LoaderCircle className="animate-spin text-primary" size={18} />
-            <p className="text-[18px] font-medium text-foreground">
-              {thinkingLabel}
-            </p>
+        <div className="min-w-0 pt-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="typing-dot size-1.5 rounded-full bg-foreground/40 [animation-delay:0ms]" />
+            <span className="typing-dot size-1.5 rounded-full bg-foreground/40 [animation-delay:180ms]" />
+            <span className="typing-dot size-1.5 rounded-full bg-foreground/40 [animation-delay:360ms]" />
           </div>
 
-          {!!thinkingSteps.length && (
-            <div className="mt-3 flex items-center gap-3 text-[15px] font-normal text-foreground/75">
-              <span className="rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/55">
-                {`${Math.max(thinkingStepIndex, 1)} de ${Math.max(
-                  thinkingStepTotal,
-                  1,
-                )}`}
-              </span>
-              <span>{thinkingSteps[0]}</span>
-            </div>
-          )}
+          {thinkingSteps.length ? (
+            <p className="mt-2 text-xs text-foreground/45">{thinkingSteps[0]}</p>
+          ) : null}
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className={`flex w-full items-start gap-4 ${
-        isAi ? 'self-start' : 'flex-row-reverse self-end'
-      }`}
-    >
-      <span className="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-border bg-primary-foreground p-2 text-primary shadow">
-        {isAi ? <Bot size={20} /> : <User size={20} />}
+    <div className={`flex w-full items-start gap-3 ${isAi ? 'self-start' : 'flex-row-reverse self-end'}`}>
+      <span
+        className={`mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full ${
+          isAi ? 'bg-primary/10 text-primary' : 'bg-foreground/8 text-foreground/60'
+        }`}
+      >
+        {isAi ? <Bot size={15} /> : <User size={15} />}
       </span>
 
       <div
-        className={`min-w-0 w-fit max-w-[550px] rounded-xl border-2 p-4 shadow ${
+        className={`min-w-0 w-fit  ${
           isAi
-            ? 'rounded-tl-none border-border bg-primary-foreground text-foreground'
-            : 'rounded-tr-none border-primary bg-primary text-primary-foreground'
-        } ${isAi ? 'link-ai-message-in' : ''}`}
+            ? `text-foreground ${isAi ? 'link-ai-message-in max-w-[640px]' : ''}`
+            : 'rounded-2xl bg-primary px-4 py-2.5 text-primary-foreground max-w-[550px]'
+        }`}
       >
         <div>
           {isAi && !isAnimating ? (
-            <div className="break-words text-base font-normal leading-normal">
+            <div className="break-words text-[15px] font-normal leading-relaxed">
               {renderMarkdown(displayedContent)}
             </div>
           ) : (
-            <p className="whitespace-pre-wrap break-words text-base font-normal leading-normal">
+            <p className="whitespace-pre-wrap break-words text-[15px] font-normal leading-relaxed">
               {displayedContent}
               {isAi && isAnimating ? (
-                <span className="ml-1 inline-block h-5 w-[2px] animate-pulse rounded-full bg-primary align-middle " />
+                <span className="ml-1 inline-block h-4 w-[2px] animate-pulse rounded-full bg-primary align-middle" />
               ) : null}
             </p>
           )}
 
           {isAi && !isAnimating && availableActions.length ? (
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               {availableActions.map((downloadAction, index) => (
                 <a
                   key={`${downloadAction.url}-${index}`}
                   href={downloadAction.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+                  className="inline-flex items-center rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
                 >
                   {downloadAction.label || `Baixar arquivo ${index + 1}`}
                 </a>
@@ -405,20 +390,20 @@ export default function MessageComponent({
           ) : null}
 
           {isAi && !isAnimating && !!trace.length ? (
-            <details className="mt-4 w-full max-w-[320px] rounded-xl border border-border bg-background/90">
-              <summary className="cursor-pointer list-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-foreground/55">
+            <details className="mt-3 w-full max-w-[320px] rounded-lg border border-border">
+              <summary className="cursor-pointer list-none px-3.5 py-2.5 text-left text-xs font-medium text-foreground/50">
                 Ver etapas executadas
               </summary>
 
-              <div className="border-t border-border px-4 py-3">
+              <div className="border-t border-border px-3.5 py-2.5">
                 <div className="space-y-2">
                   {trace.map((step) => (
                     <div
                       key={step.id}
-                      className="flex items-start gap-3 text-xs font-normal text-foreground/80"
+                      className="flex items-start gap-2.5 text-xs text-foreground/70"
                     >
                       <span
-                        className={`mt-1 size-2.5 rounded-full ${getTraceDotColor(step.status)}`}
+                        className={`mt-1 size-1.5 shrink-0 rounded-full ${getTraceDotColor(step.status)}`}
                       />
                       <span>{step.message}</span>
                     </div>

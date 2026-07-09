@@ -105,7 +105,7 @@ export default function ClientFormModal({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 p-4 backdrop-blur-[2px]" onClick={onClose}>
       <div
-        className="custom-scrollbar max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-background p-5 shadow-xl"
+        className="custom-scrollbar max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-background p-5 shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between">

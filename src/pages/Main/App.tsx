@@ -24,6 +24,7 @@ import LinkAi from '../LinkAi/LinkAi';
 import Logs from '../SystemLogs/Logs';
 import { getAuthSession } from '../../utils/authSession';
 import Clientes from '../Clientes/Clientes';
+import ClienteDetalhes from '../Clientes/ClienteDetalhes';
 
 export default function App() {
   const session = getAuthSession();
@@ -77,6 +78,7 @@ export default function App() {
             <Route path="databases" element={<Databases />} />
             <Route path="docs/*" element={<DocsRouter />} />
             <Route path="logs" element={<Logs />} />
+            <Route path="clientes/:id" element={<ClienteDetalhes />} />
             <Route path="clientes" element={<Clientes />} />
             <Route path="*" element={<Navigate to="home" replace />} />
           </Routes>

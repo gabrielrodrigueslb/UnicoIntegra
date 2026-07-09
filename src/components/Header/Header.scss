@@ -1,13 +1,5 @@
-.active {
-  background: var(--color-primary);
-}
-
 @media (max-width: 1450px) {
-  .nav-list{
-    gap: 10px;
-    li{
-      padding: 10px;
-      ;
-    }
+  .nav-list {
+    gap: 8px;
   }
 }

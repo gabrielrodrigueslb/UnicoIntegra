@@ -49,7 +49,7 @@ export default function ConfirmModal({
       onClick={() => !submitting && onClose()}
     >
       <div
-        className="w-full max-w-sm rounded-xl border border-border bg-background p-5 shadow-xl"
+        className="w-full max-w-sm rounded-xl border border-border bg-background p-5 shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start gap-3">

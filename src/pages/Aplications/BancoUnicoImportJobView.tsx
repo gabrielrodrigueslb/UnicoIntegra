@@ -390,116 +390,117 @@ export default function BancoUnicoImportJobView() {
           </div>
         ) : null}
 
-        {/* Tier 1: progress hero */}
-        <div className="rounded-xl border border-border bg-background p-5">
-          <div className="flex items-center justify-between text-xs font-medium text-foreground/50">
-            <span>Progresso geral</span>
-            <span className="tabular-nums">
-              {job.progressCurrent}/{job.progressTotal || 0} &middot; {job.progressPercent}%
-            </span>
+        {/* Progresso, funil e metadados: uma seção só, dividida por border-t — não três cards empilhados */}
+        <div className="rounded-xl border border-border bg-background">
+          <div className="p-5">
+            <div className="flex items-center justify-between text-xs font-medium text-foreground/50">
+              <span>Progresso geral</span>
+              <span className="tabular-nums">
+                {job.progressCurrent}/{job.progressTotal || 0} &middot; {job.progressPercent}%
+              </span>
+            </div>
+            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-foreground/[0.06]">
+              <div
+                className="h-full rounded-full bg-primary transition-[width]"
+                style={{ width: `${job.progressPercent}%` }}
+              />
+            </div>
+            {job.currentStage ? (
+              <p className="mt-2 text-xs text-foreground/45">Etapa atual: {job.currentStage}</p>
+            ) : null}
           </div>
-          <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-foreground/[0.06]">
-            <div
-              className="h-full rounded-full bg-primary transition-[width]"
-              style={{ width: `${job.progressPercent}%` }}
-            />
-          </div>
-          {job.currentStage ? (
-            <p className="mt-2 text-xs text-foreground/45">Etapa atual: {job.currentStage}</p>
+
+          {shouldShowSourceLoadingNotice ? (
+            <div className="flex items-start gap-3 border-t border-border px-5 py-3 text-sm text-foreground/70">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <div className="min-w-0">
+                <p className="font-medium text-foreground">
+                  A importacao ainda esta carregando o catalogo da origem.
+                </p>
+                <p className="mt-1 text-foreground/55">
+                  Os itens carregados pela origem podem aparecer na tabela durante esta etapa e ser atualizados conforme avancam no processamento.
+                  {loadingSourceHint
+                    ? ` Ate agora foram carregados ${loadingSourceHint.loaded} produto(s) da pagina ${loadingSourceHint.page}.`
+                    : ' Aguarde as proximas paginas para acompanhar os registros na tabela abaixo.'}
+                </p>
+              </div>
+            </div>
           ) : null}
-        </div>
 
-        {shouldShowSourceLoadingNotice ? (
-          <div className="flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50/80 px-4 py-3 text-sm text-sky-900">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />
-            <div className="min-w-0">
-              <p className="font-medium">
-                A importacao ainda esta carregando o catalogo da origem.
-              </p>
-              <p className="mt-1 text-sky-800/80">
-                Os itens carregados pela origem podem aparecer na tabela durante esta etapa e ser atualizados conforme avancam no processamento.
-                {loadingSourceHint
-                  ? ` Ate agora foram carregados ${loadingSourceHint.loaded} produto(s) da pagina ${loadingSourceHint.page}.`
-                  : ' Aguarde as proximas paginas para acompanhar os registros na tabela abaixo.'}
-              </p>
-            </div>
-          </div>
-        ) : null}
-
-        {/* Tier 2: funnel sequence + metadata */}
-        <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-          <div className="rounded-xl border border-border bg-background p-5">
-            <h2 className="text-sm font-semibold text-foreground">Funil de processamento</h2>
-            <div className="mt-4 flex items-stretch gap-1 overflow-x-auto">
-              {FUNNEL_STEPS.map((step, index) => (
-                <div key={step.key} className="flex items-stretch">
-                  <div className="flex min-w-[104px] flex-col justify-center px-3 py-2">
-                    <span className="text-xs text-foreground/45">{step.label}</span>
-                    <span className={`mt-1 text-2xl font-semibold tabular-nums ${step.tone}`}>
-                      {job[step.key]}
-                    </span>
+          <div className="grid border-t border-border xl:grid-cols-[1.4fr_1fr]">
+            <div className="p-5">
+              <h2 className="text-sm font-semibold text-foreground">Funil de processamento</h2>
+              <div className="mt-4 flex items-stretch gap-1 overflow-x-auto">
+                {FUNNEL_STEPS.map((step, index) => (
+                  <div key={step.key} className="flex items-stretch">
+                    <div className="flex min-w-[104px] flex-col justify-center px-3 py-2">
+                      <span className="text-xs text-foreground/45">{step.label}</span>
+                      <span className={`mt-1 text-2xl font-semibold tabular-nums ${step.tone}`}>
+                        {job[step.key]}
+                      </span>
+                    </div>
+                    {index < FUNNEL_STEPS.length - 1 ? (
+                      <div className="flex items-center px-1 text-foreground/20">&rarr;</div>
+                    ) : null}
                   </div>
-                  {index < FUNNEL_STEPS.length - 1 ? (
-                    <div className="flex items-center px-1 text-foreground/20">&rarr;</div>
-                  ) : null}
-                </div>
-              ))}
+                ))}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 border-t border-border pt-3 text-xs text-foreground/50">
+                <span>Amostra analisada: <strong className="font-semibold text-foreground/75">{job.totalSampled}</strong></span>
+                <span>Catalogo valido: <strong className="font-semibold text-foreground/75">{job.totalCatalogValid}</strong></span>
+                <span>EANs invalidos: <strong className="font-semibold text-foreground/75">{job.totalInvalidEans}</strong></span>
+                <span>Ignorados: <strong className="font-semibold text-foreground/75">{job.totalSkipped}</strong></span>
+              </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 border-t border-border pt-3 text-xs text-foreground/50">
-              <span>Amostra analisada: <strong className="font-semibold text-foreground/75">{job.totalSampled}</strong></span>
-              <span>Catalogo valido: <strong className="font-semibold text-foreground/75">{job.totalCatalogValid}</strong></span>
-              <span>EANs invalidos: <strong className="font-semibold text-foreground/75">{job.totalInvalidEans}</strong></span>
-              <span>Ignorados: <strong className="font-semibold text-foreground/75">{job.totalSkipped}</strong></span>
-            </div>
-          </div>
 
-          <div className="rounded-xl border border-border bg-background p-5">
-            <h2 className="text-sm font-semibold text-foreground">Detalhes da execucao</h2>
-            <dl className="mt-4 space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <dt className="flex items-center gap-1.5 text-foreground/50">
-                  <Database className="h-3.5 w-3.5 text-foreground/35" /> Origem
-                </dt>
-                <dd className="truncate text-right font-medium text-foreground">
-                  {SOURCE_TYPE_LABEL[job.sourceType] || job.sourceType}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="flex items-center gap-1.5 text-foreground/50">
-                  <Boxes className="h-3.5 w-3.5 text-foreground/35" /> Modo
-                </dt>
-                <dd className="truncate text-right font-medium text-foreground">
-                  {MODE_LABEL[job.mode] || job.mode}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="flex items-center gap-1.5 text-foreground/50">
-                  <User className="h-3.5 w-3.5 text-foreground/35" /> Solicitado por
-                </dt>
-                <dd className="truncate text-right font-medium text-foreground">
-                  {job.requestedBy || '-'}
-                </dd>
-              </div>
-              <div className="border-t border-border pt-3" />
-              <div className="flex items-center justify-between gap-3">
-                <dt className="flex items-center gap-1.5 text-foreground/50">
-                  <Clock3 className="h-3.5 w-3.5 text-foreground/35" /> Criada
-                </dt>
-                <dd className="text-right text-foreground/75">{formatDateTime(job.createdAt)}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="flex items-center gap-1.5 text-foreground/50">
-                  <Clock3 className="h-3.5 w-3.5 text-foreground/35" /> Iniciada
-                </dt>
-                <dd className="text-right text-foreground/75">{formatDateTime(job.startedAt)}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="flex items-center gap-1.5 text-foreground/50">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-foreground/35" /> Finalizada
-                </dt>
-                <dd className="text-right text-foreground/75">{formatDateTime(job.finishedAt)}</dd>
-              </div>
-            </dl>
+            <div className="border-t border-border p-5 xl:border-l xl:border-t-0">
+              <h2 className="text-sm font-semibold text-foreground">Detalhes da execucao</h2>
+              <dl className="mt-4 space-y-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="flex items-center gap-1.5 text-foreground/50">
+                    <Database className="h-3.5 w-3.5 text-foreground/35" /> Origem
+                  </dt>
+                  <dd className="truncate text-right font-medium text-foreground">
+                    {SOURCE_TYPE_LABEL[job.sourceType] || job.sourceType}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="flex items-center gap-1.5 text-foreground/50">
+                    <Boxes className="h-3.5 w-3.5 text-foreground/35" /> Modo
+                  </dt>
+                  <dd className="truncate text-right font-medium text-foreground">
+                    {MODE_LABEL[job.mode] || job.mode}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="flex items-center gap-1.5 text-foreground/50">
+                    <User className="h-3.5 w-3.5 text-foreground/35" /> Solicitado por
+                  </dt>
+                  <dd className="truncate text-right font-medium text-foreground">
+                    {job.requestedBy || '-'}
+                  </dd>
+                </div>
+                <div className="border-t border-border pt-3" />
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="flex items-center gap-1.5 text-foreground/50">
+                    <Clock3 className="h-3.5 w-3.5 text-foreground/35" /> Criada
+                  </dt>
+                  <dd className="text-right text-foreground/75">{formatDateTime(job.createdAt)}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="flex items-center gap-1.5 text-foreground/50">
+                    <Clock3 className="h-3.5 w-3.5 text-foreground/35" /> Iniciada
+                  </dt>
+                  <dd className="text-right text-foreground/75">{formatDateTime(job.startedAt)}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="flex items-center gap-1.5 text-foreground/50">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-foreground/35" /> Finalizada
+                  </dt>
+                  <dd className="text-right text-foreground/75">{formatDateTime(job.finishedAt)}</dd>
+                </div>
+              </dl>
+            </div>
           </div>
         </div>
 

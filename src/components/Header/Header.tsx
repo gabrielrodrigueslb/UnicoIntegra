@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { GrIntegration } from 'react-icons/gr';
-import { AiOutlineHome } from 'react-icons/ai';
-import { Cpu, Database, Logs, Boxes, Book, Bot} from 'lucide-react';
-import { MdLogout } from 'react-icons/md';
+import {
+  Book,
+  Boxes,
+  Bot,
+  Cpu,
+  Database,
+  Home,
+  LogOut,
+  Logs,
+  Plug,
+  Puzzle,
+  Users,
+} from 'lucide-react';
 import ConfirmDialog from '../ConfirmDialog';
 import './Header.scss';
-import { BsPuzzle } from 'react-icons/bs';
 import { clearAuthSession } from '../../utils/authSession';
 
 export default function Header() {
@@ -26,69 +34,80 @@ export default function Header() {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   }
 
-  const menuItems = [
-    { path: '/main/home', icon: <AiOutlineHome size={20}/>, description: 'Início' },
-    {
-      path: '/main/databases',
-      icon: <Database size={20}/>,
-      description: 'Bancos de Dados',
-    },
-    {
-      path: '/main/link-ai',
-      icon: <Bot size={20}/>,
-      description: 'Link IA',
-    },
-    {
-      path: '/main/aplications',
-      icon: <Boxes size={20}/>,
-      description: 'Serviços',
-    },
-    {
-      path: '/main/integrations',
-      icon: <GrIntegration size={20}/>,
-      description: 'Integrações',
-    },
-    { path: '/main/extensions', icon: <BsPuzzle size={20}/>, description: 'Extensões' },
-    { path: '/main/iaPage', icon: <Cpu size={20}/>, description: 'IAs' },
-    { path: '/main/docs', icon: <Book size={20}/>, description: 'Documentação' },
-    { path: '/main/logs', icon: <Logs size={20}/>, description: 'Logs do sistema' },
+  const primaryMenuItems = [
+    { path: '/main/home', icon: Home, description: 'Início' },
+    { path: '/main/databases', icon: Database, description: 'Bancos de Dados' },
+    { path: '/main/link-ai', icon: Bot, description: 'Link IA' },
+    { path: '/main/aplications', icon: Boxes, description: 'Serviços' },
+    { path: '/main/clientes', icon: Users, description: 'Clientes' },
   ];
+
+  const secondaryMenuItems = [
+    { path: '/main/integrations', icon: Plug, description: 'Integrações' },
+    { path: '/main/extensions', icon: Puzzle, description: 'Extensões' },
+    { path: '/main/iaPage', icon: Cpu, description: 'IAs' },
+    { path: '/main/docs', icon: Book, description: 'Documentação' },
+    { path: '/main/logs', icon: Logs, description: 'Logs do sistema' },
+  ];
+
+  function renderMenuItem({
+    path,
+    icon: Icon,
+    description,
+  }: {
+    path: string;
+    icon: typeof Home;
+    description: string;
+  }) {
+    const isActive = isMenuItemActive(path);
+
+    return (
+      <Link to={path} key={path} className="group relative flex">
+        <span
+          className={`flex size-11 items-center justify-center rounded-full transition-colors duration-150 ${
+            isActive
+              ? 'bg-primary text-primary-foreground'
+              : 'text-white/50 hover:bg-white/[0.06] hover:text-white'
+          }`}
+        >
+          <Icon size={19} />
+        </span>
+
+        <span
+          className="pointer-events-none absolute left-full top-1/2 z-20 ml-3 -translate-x-1 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100"
+        >
+          {description}
+        </span>
+      </Link>
+    );
+  }
 
   return (
     <>
       <header className="header h-screen p-2 bg-background">
-        <nav className="navbar bg-gray-950 flex-col flex p-3 rounded-2xl  h-full items-center">
-          <img className="w-10 pt-3 pb-6" src="/unico-fav.svg" alt="" />
-          <div className="justify-between flex flex-col h-full items-center">
-            <ul className="nav-list justify-between flex-col flex gap-3">
-              {menuItems.map((item, index) => (
-                <Link to={item.path} key={index} className="relative group">
-                  <li
-                    className={`p-3 bg-gray-950 text-white rounded-full text-xl cursor-pointer transition-colors duration-150 relative items-center justify-center flex ${
-                      isMenuItemActive(item.path) ? 'active' : ''
-                    }`}
-                    key={index}
-                  >
-                    {item.icon}
-                  </li>
+        <nav className="navbar flex h-full flex-col items-center gap-5 rounded-2xl bg-gray-950 px-3 py-5">
+          <img className="w-10" src="/unico-fav.svg" alt="Unico Integra" />
 
-                  <div
-                    className="absolute left-full ml-3 top-1/2 -translate-y-1/2
-      p-2 bg-background border border-border rounded-xl
-      text-sm whitespace-nowrap
-      hidden group-hover:flex
-      z-20 "
-                  >
-                    {item.description}
-                  </div>
-                </Link>
-              ))}
-            </ul>
+          <div className="flex h-full flex-col items-center justify-between">
+            <div className="flex flex-col items-center gap-5">
+              <ul className="nav-list flex flex-col gap-1.5">
+                {primaryMenuItems.map((item) => renderMenuItem(item))}
+              </ul>
+
+              <div className="w-8 border-t border-white/10" />
+
+              <ul className="nav-list flex flex-col gap-1.5">
+                {secondaryMenuItems.map((item) => renderMenuItem(item))}
+              </ul>
+            </div>
+
             <button
+              type="button"
               onClick={() => setIsLogoutDialogOpen(true)}
-              className="logout-button p-4 bg-gray-950 text-white rounded-full text-2xl cursor-pointer relative"
+              className="flex size-11 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white"
+              aria-label="Sair da conta"
             >
-              <MdLogout size={25}/>
+              <LogOut size={19} />
             </button>
           </div>
         </nav>

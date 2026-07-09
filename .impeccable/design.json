@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-08T00:00:00.000Z",
+  "title": "Design System: UnicoIntegra — Painel de Integração Banco Único",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Sinal Azul", "canonical": "#145efc", "tonalRamp": ["#03122e", "#062458", "#0a3b8f", "#0f4fc4", "#145efc", "#4c85ff", "#8bafff", "#d3e2ff"] },
+      "background": { "role": "neutral", "displayName": "Fundo", "canonical": "#ffffff", "tonalRamp": ["#0a0a0c", "#1a1a1f", "#2e2e35", "#55555f", "#8b8b95", "#c4c4ca", "#e8e8ea", "#ffffff"] },
+      "foreground": { "role": "neutral", "displayName": "Texto", "canonical": "oklch(0.17 0.02 265)", "tonalRamp": ["#0d0e14", "#15161f", "#20212e", "#3a3c4d", "#5c5e70", "#8c8ea0", "#c3c4cf", "#eef0f7"] },
+      "border": { "role": "neutral", "displayName": "Borda", "canonical": "oklch(0.85 0 0)", "tonalRamp": ["#2b2b2b", "#454545", "#5f5f5f", "#7a7a7a", "#969696", "#b3b3b3", "#d1d1d1", "#efefef"] },
+      "success": { "role": "tertiary", "displayName": "Sucesso", "canonical": "#059669" },
+      "warning": { "role": "tertiary", "displayName": "Atenção", "canonical": "#d97706" },
+      "danger": { "role": "tertiary", "displayName": "Erro", "canonical": "#e11d48" },
+      "info": { "role": "tertiary", "displayName": "Info", "canonical": "#0369a1" },
+      "console-bg": { "role": "surface", "displayName": "Console BG", "canonical": "#050816" },
+      "console-chrome": { "role": "surface", "displayName": "Console Chrome", "canonical": "#030712" }
+    },
+    "typographyMeta": {
+      "body": { "displayName": "Body", "purpose": "Texto padrão, valores de tabela, descrições." },
+      "title": { "displayName": "Title", "purpose": "Título de card/seção e cabeçalho de página." },
+      "label": { "displayName": "Label", "purpose": "Rótulo de campo, badge, cabeçalho de coluna." },
+      "mono": { "displayName": "Mono", "purpose": "Linha de log, EAN, contadores tabulares." }
+    },
+    "shadows": [
+      { "name": "overlay", "value": "0 8px 24px rgba(0,0,0,0.12)", "purpose": "Único uso legítimo de sombra: modal/dialog flutuando sobre a página." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Transição padrão de estado (hover, largura de progresso)." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal (confirmar, salvar).",
+      "html": "<button class=\"ds-btn-primary\">Confirmar</button>",
+      "css": ".ds-btn-primary { background: #145efc; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; border: none; transition: opacity 0.15s; } .ds-btn-primary:hover { opacity: 0.9; } .ds-btn-primary:focus-visible { outline: 2px solid #145efc; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.4; }"
+    },
+    {
+      "name": "Secondary/Ghost Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ação secundária (cancelar, voltar).",
+      "html": "<button class=\"ds-btn-secondary\">Cancelar</button>",
+      "css": ".ds-btn-secondary { background: transparent; color: oklch(0.17 0.02 265 / 0.7); padding: 8px 14px; border-radius: 8px; border: 1px solid oklch(0.85 0 0); font-size: 14px; font-weight: 500; transition: background-color 0.15s; } .ds-btn-secondary:hover { background: rgba(0,0,0,0.03); }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Ação destrutiva (excluir, cancelar job).",
+      "html": "<button class=\"ds-btn-danger\">Excluir</button>",
+      "css": ".ds-btn-danger { background: #e11d48; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; border: none; transition: opacity 0.15s; } .ds-btn-danger:hover { opacity: 0.9; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "Ponto colorido + label semântico (sucesso/atenção/erro/neutro/ativo).",
+      "html": "<span class=\"ds-status-badge\"><span class=\"ds-status-dot\"></span>Publicado</span>",
+      "css": ".ds-status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #059669; } .ds-status-dot { width: 6px; height: 6px; border-radius: 999px; background: #10b981; flex-shrink: 0; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-text",
+      "description": "Campo de busca/texto com foco em azul primário.",
+      "html": "<input class=\"ds-input\" placeholder=\"Buscar item...\" />",
+      "css": ".ds-input { background: rgba(0,0,0,0.02); color: oklch(0.17 0.02 265); padding: 8px 12px; border-radius: 8px; border: 1px solid oklch(0.85 0 0); font-size: 14px; outline: none; transition: border-color 0.15s, background-color 0.15s; } .ds-input:focus-visible { border-color: #145efc; background: #fff; box-shadow: 0 0 0 1px #145efc; }"
+    },
+    {
+      "name": "Progress Bar",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Barra de progresso de job de importação — trilha neutra, preenchimento sólido azul.",
+      "html": "<div class=\"ds-progress-track\"><div class=\"ds-progress-fill\" style=\"width: 62%\"></div></div>",
+      "css": ".ds-progress-track { height: 10px; border-radius: 999px; background: rgba(0,0,0,0.06); overflow: hidden; } .ds-progress-fill { height: 100%; border-radius: 999px; background: #145efc; transition: width 0.3s cubic-bezier(0.4,0,0.2,1); }"
+    },
+    {
+      "name": "Log Console",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Componente de assinatura: terminal de log ao vivo com fundo quase-preto, moldura em camadas e prompt de linha estilo terminal — a única superfície do sistema com peso e sombra próprios.",
+      "html": "<div class=\"ds-console\"><div class=\"ds-console-header\">Console da importação</div><div class=\"ds-console-body\"><div class=\"ds-console-line\"><span class=\"ds-console-prompt\">$</span> 14:32:08 Item publicado com sucesso</div></div></div>",
+      "css": ".ds-console { border-radius: 16px; overflow: hidden; border: 1px solid #1f2937; background: #111827; box-shadow: 0 8px 24px rgba(0,0,0,0.12); } .ds-console-header { background: #030712; color: #fff; font-size: 13px; font-weight: 600; padding: 12px 16px; border-bottom: 1px solid #1f2937; } .ds-console-body { background: #050816; padding: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 1.6; color: #e5e7eb; height: 280px; overflow-y: auto; } .ds-console-line { display: flex; gap: 8px; margin-bottom: 4px; } .ds-console-prompt { color: #6b7280; user-select: none; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Sala de Controle",
+    "overview": "Um operador olha pra essa tela enquanto uma importação de catálogo roda ao vivo: precisa saber, num relance, se está tudo indo bem, onde travou e por quê. O sistema é desenhado pra esse momento — não pra impressionar num screenshot de landing page. Um único sinal de cor (azul #145efc) marca ação e estado ativo; o resto é chrome neutro que não disputa atenção com o dado. O console de log em terminal escuro é a peça central da sala de controle — é onde o operador realmente diagnostica um erro — e é o único lugar que se comporta como um objeto físico com profundidade própria.\n\nRejeita explicitamente o \"template de SaaS genérico\" citado no PRODUCT.md: nada de grade de cards idênticos, nada de sombra decorativa em toda superfície, nada de badge colorido sem função. Também rejeita o extremo oposto (tabela crua, sem hierarquia, densidade tipo phpMyAdmin). Hierarquia vem de tipografia, divisores e espaçamento — não de empilhar cards.",
+    "keyCharacteristics": [
+      "Flat por padrão: borda de 1px substitui sombra na quase totalidade da interface.",
+      "Um acento só (primary), reservado pra ação e estado ativo.",
+      "Densidade tabular assumida — não escondida atrás de cards.",
+      "O console de log é o único elemento com peso visual \"de objeto\": fundo quase-preto, tipografia mono, leve profundidade."
+    ],
+    "rules": [
+      { "name": "A Regra do Sinal Único", "body": "Azul primário só em botão de ação, link, item ativo, barra de progresso. Nunca em fundo decorativo, nunca em ícone estático sem função.", "section": "colors" },
+      { "name": "A Regra do Texto Fracionado", "body": "Hierarquia de texto secundário vem de opacidade sobre foreground (/70, /50, /40), não de trocar pra um cinza genérico do Tailwind.", "section": "colors" },
+      { "name": "A Regra do Número Alinhado", "body": "Todo número que aparece em sequência vertical (contador, progresso, paginação) usa tabular-nums.", "section": "typography" },
+      { "name": "A Regra Flat-Por-Padrão", "body": "Se dá pra resolver com borda de 1px + fundo, sombra não entra. Sombra existe só pra comunicar 'isso está literalmente por cima de outra coisa' — nunca pra dar profundidade decorativa a um card em repouso.", "section": "elevation" },
+      { "name": "A Regra Anti-Empilhamento de Cards", "body": "Não aninhar card dentro de card. Uma seção de página é: título + divisor + conteúdo. Onde hoje existe card só pra separar bloco de conteúdo, o divisor (border-t) e o espaçamento fazem o mesmo trabalho sem a caixa.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar borda de 1px (border token) + fundo pra separar blocos de conteúdo.",
+      "Do reservar sombra pra overlay real (modal, popover) — nunca pra card em repouso.",
+      "Do manter o azul primário (#145efc) só em ação/estado ativo.",
+      "Do usar tabular-nums em todo número que aparece em sequência.",
+      "Do deixar o console de log ser o único elemento 'escuro e pesado' da tela."
+    ],
+    "donts": [
+      "Don't empilhar card dentro de card. Nunca.",
+      "Don't aplicar shadow-xl ou qualquer sombra decorativa em card, painel de métricas ou bloco de metadados.",
+      "Don't usar badge de status com fundo colorido saturado.",
+      "Don't trocar texto secundário por um cinza genérico do Tailwind (text-gray-400 solto).",
+      "Don't usar mais de uma cor de acento decorativa na mesma tela.",
+      "Don't replicar a densidade 'tabela crua' citada como anti-referência no PRODUCT.md."
+    ]
+  }
+}
