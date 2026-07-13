@@ -2,6 +2,41 @@
 /* eslint-disable no-useless-escape */
 
 export const templates = {
+  trier2: {
+    key: 'trier2',
+    name: 'IA - Trier 2.0',
+    type: 'assistente',
+    version: '1.0',
+    contextMode: 'hidden' as const,
+    description: 'IA Trier 2.0 com consulta, envio de produtos e URA integrados.',
+    banner: '/trier.jpg',
+    endpoint: '/trier2',
+    fields: [
+      { key: 'nome_cliente', label: 'Nome da loja', type: 'text', placeholder: 'Farmacia X', width: 'half' as const },
+      { key: 'apiKey', label: 'API Key Global', type: 'password', placeholder: 'Sua chave de API', width: 'half' as const },
+      { key: 'trierToken', label: 'Token Trier', type: 'password', placeholder: 'Token da integracao Trier', width: 'half' as const },
+      { key: 'quantidade_de_produtos', label: 'Quantidade de produtos', type: 'number', placeholder: 'Padrao 3, maximo 7', width: 'half' as const },
+    ],
+  },
+
+  alpha2: {
+    key: 'alpha2',
+    name: 'IA - Alpha 2.0',
+    type: 'assistente',
+    version: '1.0',
+    contextMode: 'hidden' as const,
+    description: 'IA Alpha 2.0 com consulta de produtos, envio de itens e fluxos URA integrados.',
+    banner: '/Alpha.png',
+    endpoint: '/alpha2',
+    fields: [
+      { key: 'nome_cliente', label: 'Nome do Cliente (Loja)', type: 'text', placeholder: 'Farmacia X', width: 'half' as const },
+      { key: 'apiKey', label: 'API Key Global do Sistema', type: 'password', placeholder: 'Sua chave de API', width: 'half' as const },
+      { key: 'alphaToken', label: 'Token Alpha 7', type: 'password', placeholder: 'Token de autenticacao Alpha 7', width: 'half' as const },
+      { key: 'unidade_negocio', label: 'Unidade de negocio (ID)', type: 'text', placeholder: 'Ex: 74579', width: 'half' as const },
+      { key: 'quantidade_de_produtos', label: 'Quantidade de produtos', type: 'number', placeholder: 'Padrao 3, maximo 7', width: 'half' as const },
+    ],
+  },
+
   alpha7: {
     key: 'alpha7',
     name: 'IA - Alpha 7',

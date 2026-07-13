@@ -94,7 +94,7 @@ export default function MessageInput({
   return (
     <div
       ref={containerRef}
-      className="fixed bottom-6 left-1/2 z-20 flex w-[90%] max-w-3xl -translate-x-1/2 items-center gap-3 rounded-lg border-2 border-border bg-primary-foreground px-4 py-3 shadow-2xl"
+      className="fixed bottom-6 left-1/2 z-20 flex w-[90%] max-w-3xl -translate-x-1/2 items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-colors focus-within:border-primary"
     >
       <div
         className="flex min-h-[48px] flex-1 cursor-text items-start rounded-md px-1.5 py-2"
