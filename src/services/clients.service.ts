@@ -13,12 +13,11 @@ export interface Client {
   instance: string;
   providerConfig: string;
   hasCredential: boolean;
+  credentialHint: string | null;
   alpha7Port: number | null;
   alpha7Database: string | null;
   alpha7User: string | null;
   alpha7Schema: string | null;
-  totalProdutosEstoque?: number;
-  totalNoBanco?: number;
   createdAt: string;
   updatedAt: string;
 }

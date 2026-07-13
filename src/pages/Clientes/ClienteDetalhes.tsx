@@ -11,7 +11,6 @@ import {
   Loader2,
   Package,
   Pencil,
-  Search,
   Upload,
 } from 'lucide-react';
 import { getClient, type Client } from '../../services/clients.service';
@@ -31,8 +30,8 @@ import ImportJobView from './Components/ImportJobView';
 type Tab = 'overview' | 'imports' | 'products';
 
 const TABS: Array<{ key: Tab; label: string; icon: typeof Package }> = [
-  { key: 'overview', label: 'Visao geral', icon: Package },
-  { key: 'imports', label: 'Importacoes', icon: Upload },
+  { key: 'overview', label: 'Visão Geral', icon: Package },
+  { key: 'imports', label: 'Importações', icon: Upload },
   { key: 'products', label: 'Produtos', icon: Database },
 ];
 
@@ -52,6 +51,7 @@ export default function ClienteDetalhes() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
 
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showImportForm, setShowImportForm] = useState(false);
   const [activeJobId, setActiveJobId] = useState<number | null>(null);
   const [importRefreshKey, setImportRefreshKey] = useState(0);
   const [importError, setImportError] = useState<string | null>(null);
@@ -59,8 +59,14 @@ export default function ClienteDetalhes() {
   const [latestJob, setLatestJob] = useState<BancoUnicoImportJob | null>(null);
   const [products, setProducts] = useState<BancoUnicoImportItem[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
-  const [productSearch, setProductSearch] = useState('');
-  const [productStatus, setProductStatus] = useState('all');
+  const [productFilters, setProductFilters] = useState({
+    status: 'all',
+    ean: '',
+    name: '',
+    manufacturer: '',
+    activeIngredient: '',
+    hasError: 'all' as 'all' | 'yes' | 'no',
+  });
   const [productPage, setProductPage] = useState(1);
   const [productTotalPages, setProductTotalPages] = useState(1);
   const [productTotalItems, setProductTotalItems] = useState(0);
@@ -100,8 +106,12 @@ export default function ClienteDetalhes() {
       const res = await listBancoUnicoImportItems(latestJob.id, {
         page: productPage,
         limit: PRODUCT_PAGE_SIZE,
-        search: productSearch || undefined,
-        status: productStatus === 'all' ? undefined : productStatus,
+        status: productFilters.status === 'all' ? undefined : productFilters.status,
+        ean: productFilters.ean || undefined,
+        name: productFilters.name || undefined,
+        manufacturer: productFilters.manufacturer || undefined,
+        activeIngredient: productFilters.activeIngredient || undefined,
+        hasError: productFilters.hasError === 'all' ? undefined : productFilters.hasError,
       });
       setProducts(res.data);
       setProductTotalPages(res.meta.totalPages);
@@ -117,12 +127,21 @@ export default function ClienteDetalhes() {
     if (activeTab === 'products' && latestJob) {
       void loadProducts();
     }
-  }, [activeTab, latestJob, productPage, productSearch, productStatus]);
+  }, [activeTab, latestJob, productPage, productFilters]);
 
-  const estoqueTotal = client?.totalProdutosEstoque ?? 0;
-  const noBanco = client?.totalNoBanco ?? 0;
+  function updateProductFilter<K extends keyof typeof productFilters>(key: K, value: (typeof productFilters)[K]) {
+    setProductFilters((current) => ({ ...current, [key]: value }));
+    setProductPage(1);
+  }
+
+  const estoqueTotal = latestJob?.totalCatalogValid ?? 0;
+  const noBanco = latestJob ? latestJob.totalExisting + latestJob.totalPublished : 0;
   const porcentagem = estoqueTotal > 0 ? Math.round((noBanco / estoqueTotal) * 100) : 0;
   const providerAvatar = client ? PROVIDER_AVATAR[client.provider] : null;
+  const hasActiveProductFilters =
+    productFilters.status !== 'all' ||
+    productFilters.hasError !== 'all' ||
+    Boolean(productFilters.ean || productFilters.name || productFilters.manufacturer || productFilters.activeIngredient);
 
   if (clientLoading) {
     return (
@@ -183,7 +202,11 @@ export default function ClienteDetalhes() {
 
           <div className="flex shrink-0 items-center gap-2">
             <button
-              onClick={() => setActiveTab('imports')}
+              onClick={() => {
+                setActiveTab('imports');
+                setActiveJobId(null);
+                setShowImportForm(true);
+              }}
               className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#0f50df] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <Upload size={15} /> Nova importação
@@ -259,7 +282,7 @@ export default function ClienteDetalhes() {
                   <button type="button" onClick={() => { setActiveTab('imports'); setActiveJobId(latestJob.id); }} className="mt-6 inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#cbd7e6] px-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Ver detalhes da importação <ArrowRight className="size-4" /></button>
                 </div>
               ) : (
-                <div className="flex min-h-64 flex-col items-center justify-center px-6 text-center"><Upload className="size-7 text-primary" /><h3 className="mt-3 text-sm font-semibold text-slate-900">Nenhuma importação ainda</h3><p className="mt-1 max-w-[34ch] text-sm leading-6 text-slate-500">Faça a primeira importação para acompanhar produtos e cobertura deste cliente.</p><button type="button" onClick={() => setActiveTab('imports')} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#0f50df]">Nova importação <ArrowRight className="size-4" /></button></div>
+                <div className="flex min-h-64 flex-col items-center justify-center px-6 text-center"><Upload className="size-7 text-primary" /><h3 className="mt-3 text-sm font-semibold text-slate-900">Nenhuma importação ainda</h3><p className="mt-1 max-w-[34ch] text-sm leading-6 text-slate-500">Faça a primeira importação para acompanhar produtos e cobertura deste cliente.</p><button type="button" onClick={() => { setActiveTab('imports'); setShowImportForm(true); }} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#0f50df]">Nova importação <ArrowRight className="size-4" /></button></div>
               )}
             </div>
 
@@ -283,22 +306,26 @@ export default function ClienteDetalhes() {
               onBack={() => setActiveJobId(null)}
             />
           ) : (
-            <div className="grid gap-5 lg:grid-cols-[420px_1fr]">
-              <ImportForm
-                client={client}
-                onCreated={() => {
-                  setImportRefreshKey((k) => k + 1);
-                  setImportError(null);
-                }}
-                onError={setImportError}
-              />
-              <ImportJobList
-                clientId={client.id}
-                onSelectJob={(job) => setActiveJobId(job.id)}
-                refreshKey={importRefreshKey}
-              />
-            </div>
+            <ImportJobList
+              clientId={client.id}
+              onSelectJob={(job) => setActiveJobId(job.id)}
+              onNewImport={() => setShowImportForm(true)}
+              refreshKey={importRefreshKey}
+            />
           )}
+
+          {showImportForm ? (
+            <ImportForm
+              client={client}
+              onClose={() => setShowImportForm(false)}
+              onCreated={() => {
+                setImportRefreshKey((k) => k + 1);
+                setImportError(null);
+                setShowImportForm(false);
+              }}
+              onError={setImportError}
+            />
+          ) : null}
         </div>
       ) : null}
 
@@ -329,43 +356,21 @@ export default function ClienteDetalhes() {
                 <span>{latestJob.currentMessage || 'Sem detalhes'}</span>
               </div>
 
-              <div className="mb-4 flex flex-wrap items-center gap-3">
-                <span className="border border-border flex items-center gap-2 px-3 rounded-lg max-w-[320px] w-full">
-                  <Search size={15} className="text-foreground/35" />
-                  <input
-                    type="text"
-                    value={productSearch}
-                    onChange={(e) => {
-                      setProductSearch(e.target.value);
-                      setProductPage(1);
-                    }}
-                    className="outline-none flex flex-1 py-2 text-sm bg-transparent"
-                    placeholder="EAN, nome, fabricante..."
-                  />
-                </span>
-
-                <select
-                  value={productStatus}
-                  onChange={(e) => {
-                    setProductStatus(e.target.value);
-                    setProductPage(1);
-                  }}
-                  className="rounded-lg border border-border bg-foreground/[0.02] px-3 py-2 text-xs outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-                >
-                  <option value="all">Todos os status</option>
-                  <option value="loaded">Carregados</option>
-                  <option value="classified">Clarificados</option>
-                  <option value="prepared">Preparados</option>
-                  <option value="published">Publicados</option>
-                  <option value="already_exists">Existiam</option>
-                  <option value="invalid_ean">EAN invalido</option>
-                  <option value="classification_error">Erro classificacao</option>
-                  <option value="publish_error">Erro publicacao</option>
-                </select>
-
+              <div className="mb-3 flex items-center justify-between gap-3">
                 <span className="text-xs text-foreground/45 tabular-nums">
                   {productTotalItems} item{productTotalItems !== 1 ? 's' : ''}
                 </span>
+                {hasActiveProductFilters ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setProductFilters({ status: 'all', ean: '', name: '', manufacturer: '', activeIngredient: '', hasError: 'all' })
+                    }
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    Limpar filtros
+                  </button>
+                ) : null}
               </div>
 
               <div className="border border-border rounded-lg overflow-hidden">
@@ -379,14 +384,52 @@ export default function ClienteDetalhes() {
                       <th className="px-4 py-2.5 text-left w-[14%]">Principio Ativo</th>
                       <th className="px-4 py-2.5 text-left w-[13%]">Erro</th>
                     </tr>
+                    <tr className="border-b border-border bg-background">
+                      <th className="px-3 py-2">
+                        <select
+                          value={productFilters.status}
+                          onChange={(e) => updateProductFilter('status', e.target.value)}
+                          className="w-full rounded-md border border-border bg-foreground/[0.02] px-2 py-1.5 text-xs font-normal text-foreground outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
+                        >
+                          <option value="all">Todos</option>
+                          <option value="loaded">Carregados</option>
+                          <option value="classified">Clarificados</option>
+                          <option value="prepared">Preparados</option>
+                          <option value="published">Publicados</option>
+                          <option value="already_exists">Existiam</option>
+                          <option value="invalid_ean">EAN invalido</option>
+                          <option value="classification_error">Erro classificacao</option>
+                          <option value="publish_error">Erro publicacao</option>
+                        </select>
+                      </th>
+                      <th className="px-3 py-2">
+                        <ColumnFilterInput value={productFilters.ean} onChange={(v) => updateProductFilter('ean', v)} placeholder="Filtrar EAN" />
+                      </th>
+                      <th className="px-3 py-2">
+                        <ColumnFilterInput value={productFilters.name} onChange={(v) => updateProductFilter('name', v)} placeholder="Filtrar produto" />
+                      </th>
+                      <th className="px-3 py-2">
+                        <ColumnFilterInput value={productFilters.manufacturer} onChange={(v) => updateProductFilter('manufacturer', v)} placeholder="Filtrar fabricante" />
+                      </th>
+                      <th className="px-3 py-2">
+                        <ColumnFilterInput value={productFilters.activeIngredient} onChange={(v) => updateProductFilter('activeIngredient', v)} placeholder="Filtrar princípio" />
+                      </th>
+                      <th className="px-3 py-2">
+                        <select
+                          value={productFilters.hasError}
+                          onChange={(e) => updateProductFilter('hasError', e.target.value as 'all' | 'yes' | 'no')}
+                          className="w-full rounded-md border border-border bg-foreground/[0.02] px-2 py-1.5 text-xs font-normal text-foreground outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
+                        >
+                          <option value="all">Todos</option>
+                          <option value="yes">Com erro</option>
+                          <option value="no">Sem erro</option>
+                        </select>
+                      </th>
+                    </tr>
                   </thead>
                   <tbody>
                     {productsLoading ? (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-12 text-center">
-                          <Loader2 className="mx-auto h-4 w-4 animate-spin text-foreground/40" />
-                        </td>
-                      </tr>
+                      Array.from({ length: 8 }, (_, i) => <ProductSkeletonRow key={i} index={i} />)
                     ) : products.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-4 py-12 text-center text-sm text-foreground/40">
@@ -476,6 +519,51 @@ export default function ClienteDetalhes() {
         />
       ) : null}
     </main>
+  );
+}
+
+function ColumnFilterInput({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full rounded-md border border-border bg-foreground/[0.02] px-2 py-1.5 text-xs font-normal text-foreground outline-none transition-colors placeholder:text-foreground/40 focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
+    />
+  );
+}
+
+const SKELETON_NAME_WIDTHS = ['70%', '55%', '82%', '62%'];
+const SKELETON_SUB_WIDTHS = ['40%', '30%', '48%'];
+const SKELETON_MANUFACTURER_WIDTHS = ['5rem', '6.5rem', '4rem'];
+const SKELETON_INGREDIENT_WIDTHS = ['3.5rem', '5rem', '0'];
+
+function ProductSkeletonRow({ index }: { index: number }) {
+  const bar = 'animate-pulse rounded bg-foreground/10';
+  const delay = { animationDelay: `${(index % 6) * 60}ms` };
+
+  return (
+    <tr className="border-b border-border last:border-0">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground/10" style={delay} />
+          <span className={`h-3 w-14 ${bar}`} style={delay} />
+        </div>
+      </td>
+      <td className="px-4 py-3"><span className={`block h-3 w-20 ${bar}`} style={delay} /></td>
+      <td className="px-4 py-3">
+        <span className={`block h-3 ${bar}`} style={{ width: SKELETON_NAME_WIDTHS[index % SKELETON_NAME_WIDTHS.length], ...delay }} />
+        <span className={`mt-1.5 block h-2.5 ${bar}`} style={{ width: SKELETON_SUB_WIDTHS[index % SKELETON_SUB_WIDTHS.length], ...delay }} />
+      </td>
+      <td className="px-4 py-3"><span className={`block h-3 ${bar}`} style={{ width: SKELETON_MANUFACTURER_WIDTHS[index % SKELETON_MANUFACTURER_WIDTHS.length], ...delay }} /></td>
+      <td className="px-4 py-3">
+        {SKELETON_INGREDIENT_WIDTHS[index % SKELETON_INGREDIENT_WIDTHS.length] !== '0' ? (
+          <span className={`block h-3 ${bar}`} style={{ width: SKELETON_INGREDIENT_WIDTHS[index % SKELETON_INGREDIENT_WIDTHS.length], ...delay }} />
+        ) : null}
+      </td>
+      <td className="px-4 py-3" />
+    </tr>
   );
 }
 

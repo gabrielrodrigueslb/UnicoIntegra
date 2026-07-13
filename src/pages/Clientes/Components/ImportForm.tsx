@@ -1,14 +1,16 @@
-import { useState } from 'react';
-import { Loader2, Play, Settings2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronDown, Loader2, Play, Settings2, X } from 'lucide-react';
 import {
   createBancoUnicoImport,
   type CreateBancoUnicoImportPayload,
 } from '../../../services/bancoUnicoImports.service';
 import type { Client } from '../../../services/clients.service';
 import { extractErrorMessage } from '../../../utils/error';
+import { SOURCE_TYPE_LABEL } from '../../Aplications/bancoUnicoImports.ui';
 
 type ImportFormProps = {
   client: Client;
+  onClose: () => void;
   onCreated: () => void;
   onError: (message: string) => void;
 };
@@ -32,22 +34,60 @@ const INITIAL_FORM = {
   offset: '0',
 };
 
-export default function ImportForm({ client, onCreated, onError }: ImportFormProps) {
+const INPUT_CLASS = 'w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-foreground/45 focus:border-primary focus:ring-2 focus:ring-primary/15';
+
+export default function ImportForm({ client, onClose, onCreated, onError }: ImportFormProps) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !submitting) onClose();
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, submitting]);
 
   function handleChange<K extends keyof typeof INITIAL_FORM>(
     key: K,
     value: (typeof INITIAL_FORM)[K],
   ) {
+    setValidationError(null);
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function validateNumbers() {
+    const values: Array<[string, string, boolean]> = [
+      ['Lote de publicação', form.batchSize, false],
+      ['Concorrência de classificação', form.classifyConcurrency, false],
+      ['Limite de novos produtos', form.limitNew, true],
+      ['Página de origem', form.sourcePageSize, false],
+      ['Limite total', form.limit, true],
+      ['Offset', form.offset, false],
+      ['Concorrência de publicação', form.publishConcurrency, false],
+      ['Lote de conferência', form.existingCheckBatchSize, false],
+      ['Concorrência de conferência', form.existingCheckConcurrency, false],
+    ];
+
+    const invalid = values.find(([, value, optional]) => {
+      if (!value && optional) return false;
+      return !Number.isInteger(Number(value)) || Number(value) < 0;
+    });
+
+    if (invalid) {
+      setValidationError(`${invalid[0]} deve ser um número inteiro igual ou maior que zero.`);
+      return false;
+    }
+    return true;
   }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setSubmitting(true);
+    if (!validateNumbers()) return;
 
+    setSubmitting(true);
     try {
       const payload: CreateBancoUnicoImportPayload = {
         clientId: client.id,
@@ -68,241 +108,128 @@ export default function ImportForm({ client, onCreated, onError }: ImportFormPro
         offset: Number(form.offset),
       };
 
-      if (form.bancoUnicoAuthorization) {
-        payload.bancoUnicoAuthorization = form.bancoUnicoAuthorization;
-      }
+      if (form.bancoUnicoAuthorization) payload.bancoUnicoAuthorization = form.bancoUnicoAuthorization;
 
       await createBancoUnicoImport(payload);
       setForm(INITIAL_FORM);
+      setShowAdvanced(false);
       onCreated();
     } catch (error) {
-      onError(extractErrorMessage(error, 'Erro ao iniciar importacao.'));
+      onError(extractErrorMessage(error, 'Não foi possível iniciar a importação. Revise os dados e tente novamente.'));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <form
-      onSubmit={(event) => {
-        void handleSubmit(event);
-      }}
-      className="rounded-lg border border-border bg-background p-5"
-    >
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold text-foreground">Nova importacao</h3>
-        <p className="mt-1 text-xs text-foreground/50">
-          Origem: <span className="font-medium text-foreground/70">{client.provider}</span>
-          {client.cnpj ? <> &middot; CNPJ: <span className="font-medium text-foreground/70">{client.cnpj}</span></> : null}
-        </p>
-      </div>
+    <div className="fixed inset-0 z-50 flex justify-end bg-foreground/30 backdrop-blur-[2px]" onClick={() => !submitting && onClose()}>
+      <form
+        onSubmit={(event) => void handleSubmit(event)}
+        onClick={(event) => event.stopPropagation()}
+        className="rise-in flex h-full w-full max-w-md flex-col border-l border-border bg-background shadow-[0_8px_32px_rgba(0,0,0,0.16)]"
+      >
+        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-5 py-4">
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold tracking-[-0.015em] text-foreground">Nova importação</h2>
+            <p className="mt-1 text-sm leading-5 text-foreground/60">Envia somente os produtos que ainda faltam no Banco Único.</p>
+            <span className="mt-2 inline-block rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+              {SOURCE_TYPE_LABEL[client.provider] || client.provider}
+            </span>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Fechar" className="flex size-8 shrink-0 items-center justify-center rounded-lg text-foreground/50 transition-colors hover:bg-foreground/[0.06] hover:text-foreground">
+            <X className="size-4" />
+          </button>
+        </header>
 
-      <div className="space-y-4">
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-foreground/55">
-            Authorization Banco Unico (opcional)
-          </label>
-          <input
-            type="password"
-            value={form.bancoUnicoAuthorization}
-            onChange={(event) => handleChange('bancoUnicoAuthorization', event.target.value)}
-            className="w-full rounded-lg border border-border bg-foreground/[0.02] px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-            placeholder="Deixe em branco se a API nao exigir"
-          />
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto scrollbar-minimal px-5 py-5">
+          <section aria-labelledby="import-scope-title">
+            <div className="flex items-center justify-between gap-3">
+              <h3 id="import-scope-title" className="text-sm font-semibold text-foreground">Escopo da execução</h3>
+              <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600">Somente faltantes</span>
+            </div>
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Field label="Limite de novos produtos" hint="Vazio para todos os faltantes.">
+                <input type="number" min="0" inputMode="numeric" value={form.limitNew} onChange={(event) => handleChange('limitNew', event.target.value)} placeholder="Todos" className={INPUT_CLASS} />
+              </Field>
+              <Field label="Lote de publicação" hint="Quantidade enviada por vez.">
+                <input type="number" min="1" inputMode="numeric" value={form.batchSize} onChange={(event) => handleChange('batchSize', event.target.value)} className={INPUT_CLASS} />
+              </Field>
+            </div>
+
+            <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-foreground/[0.02] p-3 text-sm text-foreground/80 transition-colors hover:border-primary/35">
+              <input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={form.mode === 'classify-only'} onChange={(event) => handleChange('mode', event.target.checked ? 'classify-only' : 'publish')} />
+              <span><span className="block font-semibold text-foreground">Somente classificar</span><span className="mt-0.5 block text-xs leading-5 text-foreground/60">Analisa e prepara os produtos, sem publicá-los no Banco Único.</span></span>
+            </label>
+          </section>
+
+          <section aria-labelledby="import-intelligence-title" className="border-t border-border pt-5">
+            <h3 id="import-intelligence-title" className="text-sm font-semibold text-foreground">Tratamento inteligente</h3>
+            <div className="mt-3 space-y-3">
+              <ToggleField label="Usar IA na normalização" description="Melhora nomes e informações antes da publicação." checked={form.useAiNormalization} onChange={(checked) => handleChange('useAiNormalization', checked)} />
+              <ToggleField label="Reforçar IA na árvore" description="Solicita classificação mais criteriosa para a taxonomia." checked={form.forceTaxonomyAi} onChange={(checked) => handleChange('forceTaxonomyAi', checked)} />
+            </div>
+          </section>
+
+          <section className="border-t border-border pt-5" aria-labelledby="advanced-import-title">
+            <button type="button" onClick={() => setShowAdvanced((current) => !current)} aria-expanded={showAdvanced} aria-controls="advanced-import-settings" className="flex w-full items-center justify-between gap-3 rounded-lg px-1 py-1 text-left text-sm font-semibold text-foreground/80 transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+              <span className="flex items-center gap-2"><Settings2 className="size-4" /> Ajustes avançados</span>
+              <ChevronDown className={`size-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showAdvanced ? (
+              <div id="advanced-import-settings" className="mt-4 space-y-5 rounded-lg border border-border bg-foreground/[0.02] p-4">
+                <fieldset>
+                  <legend className="text-sm font-semibold text-foreground">Recorte e origem</legend>
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <Field label="Credencial do Banco Único" hint="Opcional; use somente se a API exigir."><input type="password" value={form.bancoUnicoAuthorization} onChange={(event) => handleChange('bancoUnicoAuthorization', event.target.value)} placeholder="Padrão do sistema" className={INPUT_CLASS} /></Field>
+                    <Field label="Página de origem" hint="Itens lidos por página."><input type="number" min="1" inputMode="numeric" value={form.sourcePageSize} onChange={(event) => handleChange('sourcePageSize', event.target.value)} className={INPUT_CLASS} /></Field>
+                    <Field label="Limite total" hint="Vazio para não limitar."><input type="number" min="0" inputMode="numeric" value={form.limit} onChange={(event) => handleChange('limit', event.target.value)} placeholder="Todos" className={INPUT_CLASS} /></Field>
+                    <Field label="Offset" hint="Posição inicial na origem."><input type="number" min="0" inputMode="numeric" value={form.offset} onChange={(event) => handleChange('offset', event.target.value)} className={INPUT_CLASS} /></Field>
+                  </div>
+                </fieldset>
+
+                <fieldset className="border-t border-border pt-5">
+                  <legend className="text-sm font-semibold text-foreground">Desempenho</legend>
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <Field label="Concorrência de classificação"><input type="number" min="1" inputMode="numeric" value={form.classifyConcurrency} onChange={(event) => handleChange('classifyConcurrency', event.target.value)} className={INPUT_CLASS} /></Field>
+                    <Field label="Concorrência de publicação"><input type="number" min="1" inputMode="numeric" value={form.publishConcurrency} onChange={(event) => handleChange('publishConcurrency', event.target.value)} className={INPUT_CLASS} /></Field>
+                    <Field label="Lote de conferência"><input type="number" min="1" inputMode="numeric" value={form.existingCheckBatchSize} onChange={(event) => handleChange('existingCheckBatchSize', event.target.value)} className={INPUT_CLASS} /></Field>
+                    <Field label="Concorrência de conferência"><input type="number" min="1" inputMode="numeric" value={form.existingCheckConcurrency} onChange={(event) => handleChange('existingCheckConcurrency', event.target.value)} className={INPUT_CLASS} /></Field>
+                  </div>
+                </fieldset>
+
+                <fieldset className="space-y-3 border-t border-border pt-5">
+                  <legend className="text-sm font-semibold text-foreground">Exceções</legend>
+                  <ToggleField label="Forçar reenvio de itens existentes" description="Ignora a conferência no Banco Único. Use apenas em correções controladas." tone="danger" checked={form.ignoreExistingCheck} onChange={(checked) => handleChange('ignoreExistingCheck', checked)} />
+                  <ToggleField label="Desabilitar IA na normalização" description="Mantém a classificação, mas não normaliza com IA." checked={form.disableNormalizeAi} onChange={(checked) => handleChange('disableNormalizeAi', checked)} />
+                  <ToggleField label="Desabilitar toda a IA" description="Processa sem classificação nem normalização assistida." checked={form.disableAi} onChange={(checked) => handleChange('disableAi', checked)} />
+                </fieldset>
+              </div>
+            ) : null}
+          </section>
+
+          {validationError ? <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm font-medium text-rose-800">{validationError}</p> : null}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-foreground/55">
-              Lote de publicacao
-            </label>
-            <input
-              value={form.batchSize}
-              onChange={(event) => handleChange('batchSize', event.target.value)}
-              className="w-full rounded-lg border border-border bg-foreground/[0.02] px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-foreground/55">
-              Concorrencia classificacao
-            </label>
-            <input
-              value={form.classifyConcurrency}
-              onChange={(event) => handleChange('classifyConcurrency', event.target.value)}
-              className="w-full rounded-lg border border-border bg-foreground/[0.02] px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-            />
-          </div>
+        <div className="shrink-0 border-t border-border bg-background px-5 py-4">
+          <button type="submit" disabled={submitting} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#0f50df] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50">
+            {submitting ? <><Loader2 className="size-4 animate-spin" /> Iniciando importação…</> : <><Play className="size-4" /> Iniciar importação</>}
+          </button>
         </div>
-
-        <div className="flex flex-wrap gap-3">
-          <label className="inline-flex items-center gap-2 text-xs font-medium text-foreground/65">
-            <input
-              type="checkbox"
-              className="accent-primary"
-              checked={form.mode === 'classify-only'}
-              onChange={(event) =>
-                handleChange('mode', event.target.checked ? 'classify-only' : 'publish')
-              }
-            />
-            Apenas classificar
-          </label>
-          <label className="inline-flex items-center gap-2 text-xs font-medium text-foreground/65">
-            <input
-              type="checkbox"
-              className="accent-primary"
-              checked={form.forceTaxonomyAi}
-              onChange={(event) => handleChange('forceTaxonomyAi', event.target.checked)}
-            />
-            Forcar IA na arvore
-          </label>
-          <label className="inline-flex items-center gap-2 text-xs font-medium text-foreground/65">
-            <input
-              type="checkbox"
-              className="accent-primary"
-              checked={form.useAiNormalization}
-              onChange={(event) => handleChange('useAiNormalization', event.target.checked)}
-            />
-            IA na normalizacao
-          </label>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-1.5 text-xs font-medium text-foreground/45 transition-colors hover:text-foreground/70"
-        >
-          <Settings2 size={13} />
-          {showAdvanced ? 'Ocultar' : 'Avancado'}
-        </button>
-
-        {showAdvanced ? (
-          <div className="grid gap-3 border-t border-border pt-4 sm:grid-cols-3">
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-foreground/55">
-                Pagina origem
-              </label>
-              <input
-                value={form.sourcePageSize}
-                onChange={(event) => handleChange('sourcePageSize', event.target.value)}
-                className="w-full rounded-lg border border-border bg-foreground/[0.02] px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-foreground/55">
-                Limite
-              </label>
-              <input
-                value={form.limit}
-                onChange={(event) => handleChange('limit', event.target.value)}
-                placeholder="Todos"
-                className="w-full rounded-lg border border-border bg-foreground/[0.02] px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-foreground/55">
-                Limite de novos
-              </label>
-              <input
-                value={form.limitNew}
-                onChange={(event) => handleChange('limitNew', event.target.value)}
-                placeholder="Todos os faltantes"
-                className="w-full rounded-lg border border-border bg-foreground/[0.02] px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <label className="flex items-center gap-2 self-end pb-3 text-xs font-medium text-rose-700">
-              <input
-                type="checkbox"
-                className="accent-rose-600"
-                checked={form.ignoreExistingCheck}
-                onChange={(event) => handleChange('ignoreExistingCheck', event.target.checked)}
-              />
-              Forçar reenvio de itens existentes
-            </label>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-foreground/55">
-                Offset
-              </label>
-              <input
-                value={form.offset}
-                onChange={(event) => handleChange('offset', event.target.value)}
-                className="w-full rounded-lg border border-border bg-foreground/[0.02] px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-foreground/55">
-                Concorrencia publicacao
-              </label>
-              <input
-                value={form.publishConcurrency}
-                onChange={(event) => handleChange('publishConcurrency', event.target.value)}
-                className="w-full rounded-lg border border-border bg-foreground/[0.02] px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-foreground/55">
-                Batch existentes
-              </label>
-              <input
-                value={form.existingCheckBatchSize}
-                onChange={(event) =>
-                  handleChange('existingCheckBatchSize', event.target.value)
-                }
-                className="w-full rounded-lg border border-border bg-foreground/[0.02] px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-foreground/55">
-                Concorrencia existentes
-              </label>
-              <input
-                value={form.existingCheckConcurrency}
-                onChange={(event) =>
-                  handleChange('existingCheckConcurrency', event.target.value)
-                }
-                className="w-full rounded-lg border border-border bg-foreground/[0.02] px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div className="sm:col-span-3">
-              <label className="inline-flex items-center gap-2 text-xs font-medium text-foreground/65">
-                <input
-                  type="checkbox"
-                  className="accent-primary"
-                  checked={form.disableNormalizeAi}
-                  onChange={(event) => handleChange('disableNormalizeAi', event.target.checked)}
-                />
-                Desabilitar IA normalizacao
-              </label>
-            </div>
-            <div className="sm:col-span-3">
-              <label className="inline-flex items-center gap-2 text-xs font-medium text-foreground/65">
-                <input
-                  type="checkbox"
-                  className="accent-primary"
-                  checked={form.disableAi}
-                  onChange={(event) => handleChange('disableAi', event.target.checked)}
-                />
-                Desabilitar toda IA
-              </label>
-            </div>
-          </div>
-        ) : null}
-
-        <button
-          type="submit"
-          disabled={submitting}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {submitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" /> Iniciando...
-            </>
-          ) : (
-            <>
-              <Play className="h-4 w-4" /> Iniciar subida
-            </>
-          )}
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
+}
+
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return <label className="block min-w-0"><span className="block text-sm font-medium text-foreground/85">{label}</span>{hint ? <span className="mt-1 block text-xs leading-5 text-foreground/55">{hint}</span> : null}<span className="mt-2 block">{children}</span></label>;
+}
+
+function ToggleField({ label, description, checked, onChange, tone = 'default' }: { label: string; description: string; checked: boolean; onChange: (checked: boolean) => void; tone?: 'default' | 'danger' }) {
+  if (tone === 'danger') {
+    return <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-rose-200 bg-rose-50/70 p-3 transition-colors hover:border-rose-300"><input type="checkbox" className="mt-0.5 size-4 accent-rose-600" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span><span className="block text-sm font-semibold text-rose-900">{label}</span><span className="mt-0.5 block text-xs leading-5 text-rose-800">{description}</span></span></label>;
+  }
+
+  return <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-background p-3 transition-colors hover:border-primary/35"><input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span><span className="block text-sm font-semibold text-foreground">{label}</span><span className="mt-0.5 block text-xs leading-5 text-foreground/60">{description}</span></span></label>;
 }

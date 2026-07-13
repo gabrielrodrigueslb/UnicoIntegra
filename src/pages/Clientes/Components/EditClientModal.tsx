@@ -42,6 +42,7 @@ export default function EditClientModal({
   const [provider, setProvider] = useState<ClientProvider>(client.provider);
   const [instance, setInstance] = useState(client.providerConfig || '');
   const [credential, setCredential] = useState('');
+  const [changingCredential, setChangingCredential] = useState(!client.credentialHint);
   const [alpha7Port, setAlpha7Port] = useState(String(client.alpha7Port || 5432));
   const [alpha7Database, setAlpha7Database] = useState(client.alpha7Database || '');
   const [alpha7User, setAlpha7User] = useState(client.alpha7User || '');
@@ -220,13 +221,43 @@ export default function EditClientModal({
           {provider !== 'file' ? (
             <div>
               <label className={labelClass}>{CREDENTIAL_LABEL[provider]}</label>
-              <input
-                type="password"
-                value={credential}
-                onChange={(event) => setCredential(event.target.value)}
-                className={inputClass}
-                placeholder={client.hasCredential ? 'Deixe em branco para manter' : ''}
-              />
+              {!changingCredential && client.credentialHint ? (
+                <div className="flex items-center gap-2">
+                  <span className="flex min-h-[42px] flex-1 items-center rounded-lg border border-border bg-foreground/[0.03] px-3 font-mono text-sm text-foreground">
+                    {client.credentialHint}••••••••
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setChangingCredential(true)}
+                    className="shrink-0 rounded-lg border border-border px-3 py-2.5 text-xs font-semibold text-foreground/70 transition-colors hover:bg-foreground/[0.03]"
+                  >
+                    Alterar
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="password"
+                    value={credential}
+                    onChange={(event) => setCredential(event.target.value)}
+                    className={inputClass}
+                    placeholder={client.credentialHint ? 'Nova credencial' : ''}
+                    autoFocus={Boolean(client.credentialHint)}
+                  />
+                  {client.credentialHint ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCredential('');
+                        setChangingCredential(false);
+                      }}
+                      className="shrink-0 rounded-lg border border-border px-3 py-2.5 text-xs font-semibold text-foreground/70 transition-colors hover:bg-foreground/[0.03]"
+                    >
+                      Cancelar
+                    </button>
+                  ) : null}
+                </div>
+              )}
             </div>
           ) : null}
 

@@ -163,6 +163,11 @@ export async function listBancoUnicoImportItems(
     limit?: number;
     search?: string;
     status?: string;
+    ean?: string;
+    name?: string;
+    manufacturer?: string;
+    activeIngredient?: string;
+    hasError?: 'yes' | 'no';
   },
 ) {
   const response = await api.get<PaginatedResponse<BancoUnicoImportItem>>(
