@@ -47,13 +47,14 @@ const FUNNEL_STEPS: Array<{
   >;
   label: string;
   tone: string;
+  bar: string;
 }> = [
-  { key: 'totalSelected', label: 'Selecionados', tone: 'text-foreground' },
-  { key: 'totalExisting', label: 'Ja existiam', tone: 'text-foreground/70' },
-  { key: 'totalPrepared', label: 'Preparados', tone: 'text-primary' },
-  { key: 'totalSkipped', label: 'Pulados', tone: 'text-amber-600' },
-  { key: 'totalPublished', label: 'Subidos', tone: 'text-emerald-600' },
-  { key: 'totalErrors', label: 'Erros', tone: 'text-rose-600' },
+  { key: 'totalSelected', label: 'Selecionados', tone: 'text-foreground', bar: 'bg-foreground/40' },
+  { key: 'totalExisting', label: 'Já existiam', tone: 'text-foreground/70', bar: 'bg-foreground/25' },
+  { key: 'totalPrepared', label: 'Preparados', tone: 'text-primary', bar: 'bg-primary' },
+  { key: 'totalSkipped', label: 'Pulados', tone: 'text-amber-600', bar: 'bg-amber-500' },
+  { key: 'totalPublished', label: 'Subidos', tone: 'text-emerald-600', bar: 'bg-emerald-500' },
+  { key: 'totalErrors', label: 'Erros', tone: 'text-rose-600', bar: 'bg-rose-500' },
 ];
 
 const ITEM_STATUS_FILTERS = [
@@ -284,91 +285,95 @@ export default function ImportJobView({ jobId, onBack }: ImportJobViewProps) {
         ) : null}
       </div>
 
-      {/* Progress + Funnel + Details — one bordered block, internal dividers only */}
-      <div className="border border-border">
-        <div className="p-4">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-medium text-foreground/55">Progresso</span>
-            <span className="tabular-nums text-foreground/70">
-              {job.progressCurrent.toLocaleString('pt-BR')} / {job.progressTotal.toLocaleString('pt-BR')} ({job.progressPercent}%)
-            </span>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-foreground/[0.06]">
-            <div
-              className="h-full rounded-full bg-primary transition-[width]"
-              style={{ width: `${job.progressPercent}%` }}
-            />
-          </div>
+      {/* Funnel */}
+      <div className="rounded-lg border border-border bg-background p-4 sm:p-5">
+        <h4 className="text-xs font-semibold text-foreground/55">Funil de processamento</h4>
+        <div className="mt-4 flex items-start overflow-x-auto pb-1">
+          {FUNNEL_STEPS.map((step, index) => {
+            const value = job[step.key];
+            const base = job.totalSelected || 1;
+            const pct = Math.max(0, Math.min(100, Math.round((value / base) * 100)));
+            return (
+              <div key={step.key} className="flex items-start">
+                <div className="min-w-[92px] flex-1">
+                  <span className="text-[11px] text-foreground/50">{step.label}</span>
+                  <p className={`mt-0.5 text-xl font-semibold tabular-nums leading-none ${step.tone}`}>
+                    {value.toLocaleString('pt-BR')}
+                  </p>
+                  <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-foreground/[0.07]">
+                    <div className={`h-full rounded-full ${step.bar} transition-[width] duration-300 motion-reduce:transition-none`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+                {index < FUNNEL_STEPS.length - 1 ? <div className="mx-4 mt-3 h-px w-4 shrink-0 bg-foreground/15 sm:mx-6" /> : null}
+              </div>
+            );
+          })}
         </div>
 
-        <div className="grid divide-y divide-border border-t border-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-          <div className="p-4">
-            <h4 className="text-xs font-semibold text-foreground/55">Funil</h4>
-            <div className="mt-3 flex items-stretch gap-1 overflow-x-auto">
-              {FUNNEL_STEPS.map((step, index) => (
-                <div key={step.key} className="flex items-stretch">
-                  <div className="flex min-w-[80px] flex-col justify-center px-2 py-1">
-                    <span className="text-[10px] text-foreground/40">{step.label}</span>
-                    <span className={`mt-0.5 text-lg font-semibold tabular-nums ${step.tone}`}>
-                      {job[step.key]}
-                    </span>
-                  </div>
-                  {index < FUNNEL_STEPS.length - 1 ? (
-                    <div className="flex items-center px-0.5 text-foreground/15">&rarr;</div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center justify-between text-xs pt-4">
+          <span className="font-medium text-foreground/55">Progresso</span>
+          <span className="tabular-nums text-foreground/70">
+            {job.progressCurrent.toLocaleString('pt-BR')} / {job.progressTotal.toLocaleString('pt-BR')} ({job.progressPercent}%)
+          </span>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-foreground/[0.06]">
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-300 motion-reduce:transition-none"
+            style={{ width: `${job.progressPercent}%` }}
+          />
+        </div>
+      </div>
 
-          <div className="p-4">
-            <h4 className="text-xs font-semibold text-foreground/55">Detalhes</h4>
-            <dl className="mt-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <dt className="flex items-center gap-1.5 text-foreground/45">
-                  <Database className="h-3 w-3" /> Origem
-                </dt>
-                <dd className="font-medium text-foreground/75">
-                  {SOURCE_TYPE_LABEL[job.sourceType] || job.sourceType}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="flex items-center gap-1.5 text-foreground/45">
-                  <Boxes className="h-3 w-3" /> Modo
-                </dt>
-                <dd className="font-medium text-foreground/75">
-                  {MODE_LABEL[job.mode] || job.mode}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="flex items-center gap-1.5 text-foreground/45">
-                  <Clock3 className="h-3 w-3" /> Criada
-                </dt>
-                <dd className="text-foreground/60">{formatDateTime(job.createdAt)}</dd>
-              </div>
-              {job.startedAt ? (
-                <div className="flex items-center justify-between">
-                  <dt className="flex items-center gap-1.5 text-foreground/45">
-                    <Clock3 className="h-3 w-3" /> Iniciada
-                  </dt>
-                  <dd className="text-foreground/60">{formatDateTime(job.startedAt)}</dd>
-                </div>
-              ) : null}
-              {job.finishedAt ? (
-                <div className="flex items-center justify-between">
-                  <dt className="flex items-center gap-1.5 text-foreground/45">
-                    <CheckCircle2 className="h-3 w-3" /> Finalizada
-                  </dt>
-                  <dd className="text-foreground/60">{formatDateTime(job.finishedAt)}</dd>
-                </div>
-              ) : null}
-              <div className="border-t border-border pt-2" />
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-foreground/45">
-                <span>Amostra: <strong className="font-semibold text-foreground/65">{job.totalSampled}</strong></span>
-                <span>Valido: <strong className="font-semibold text-foreground/65">{job.totalCatalogValid}</strong></span>
-                <span>EANs invalidos: <strong className="font-semibold text-foreground/65">{job.totalInvalidEans}</strong></span>
-              </div>
-            </dl>
+      {/* Details */}
+      <div className="rounded-lg border border-border bg-background p-4 sm:p-5">
+        <h4 className="text-xs font-semibold text-foreground/55">Detalhes da execução</h4>
+        <dl className="mt-3 grid gap-x-6 gap-y-2 text-xs sm:grid-cols-2">
+          <div className="flex items-center justify-between gap-3 sm:justify-start">
+            <dt className="flex items-center gap-1.5 text-foreground/45">
+              <Database className="h-3 w-3" /> Origem
+            </dt>
+            <dd className="font-medium text-foreground/75 sm:ml-auto">
+              {SOURCE_TYPE_LABEL[job.sourceType] || job.sourceType}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between gap-3 sm:justify-start">
+            <dt className="flex items-center gap-1.5 text-foreground/45">
+              <Boxes className="h-3 w-3" /> Modo
+            </dt>
+            <dd className="font-medium text-foreground/75 sm:ml-auto">
+              {MODE_LABEL[job.mode] || job.mode}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between gap-3 sm:justify-start">
+            <dt className="flex items-center gap-1.5 text-foreground/45">
+              <Clock3 className="h-3 w-3" /> Criada
+            </dt>
+            <dd className="text-foreground/60 sm:ml-auto">{formatDateTime(job.createdAt)}</dd>
+          </div>
+          {job.startedAt ? (
+            <div className="flex items-center justify-between gap-3 sm:justify-start">
+              <dt className="flex items-center gap-1.5 text-foreground/45">
+                <Clock3 className="h-3 w-3" /> Iniciada
+              </dt>
+              <dd className="text-foreground/60 sm:ml-auto">{formatDateTime(job.startedAt)}</dd>
+            </div>
+          ) : null}
+          {job.finishedAt ? (
+            <div className="flex items-center justify-between gap-3 sm:justify-start">
+              <dt className="flex items-center gap-1.5 text-foreground/45">
+                <CheckCircle2 className="h-3 w-3" /> Finalizada
+              </dt>
+              <dd className="text-foreground/60 sm:ml-auto">{formatDateTime(job.finishedAt)}</dd>
+            </div>
+          ) : null}
+        </dl>
+
+        <div className="mt-4 border-t border-border pt-3">
+          <h5 className="text-[11px] font-semibold text-foreground/40">Amostragem da origem</h5>
+          <div className="mt-2 grid grid-cols-3 gap-3">
+            <SampleStat label="Amostra" value={job.totalSampled} />
+            <SampleStat label="Válido" value={job.totalCatalogValid} />
+            <SampleStat label="EANs inválidos" value={job.totalInvalidEans} />
           </div>
         </div>
       </div>
@@ -378,6 +383,7 @@ export default function ImportJobView({ jobId, onBack }: ImportJobViewProps) {
         jobId={jobId}
         events={events}
         streamConnected={streamConnected}
+        defaultOpen={job.totalErrors > 0}
       />
 
       {/* Items Table */}
@@ -508,6 +514,15 @@ export default function ImportJobView({ jobId, onBack }: ImportJobViewProps) {
           </div>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function SampleStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="min-w-0 rounded-md bg-foreground/[0.03] px-2.5 py-2">
+      <dt className="truncate text-[10px] text-foreground/45">{label}</dt>
+      <dd className="mt-0.5 text-sm font-semibold tabular-nums text-foreground/80">{value.toLocaleString('pt-BR')}</dd>
     </div>
   );
 }

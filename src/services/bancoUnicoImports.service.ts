@@ -162,12 +162,12 @@ export async function listBancoUnicoImportItems(
     page?: number;
     limit?: number;
     search?: string;
-    status?: string;
-    ean?: string;
-    name?: string;
-    manufacturer?: string;
-    activeIngredient?: string;
-    hasError?: 'yes' | 'no';
+    status?: string | string[];
+    ean?: string | string[];
+    name?: string | string[];
+    manufacturer?: string | string[];
+    activeIngredient?: string | string[];
+    hasError?: ('yes' | 'no')[];
   },
 ) {
   const response = await api.get<PaginatedResponse<BancoUnicoImportItem>>(
@@ -175,6 +175,20 @@ export async function listBancoUnicoImportItems(
     { params },
   );
   return response.data;
+}
+
+export type ItemFacetField = 'ean' | 'name' | 'manufacturer' | 'activeIngredient';
+
+export async function listBancoUnicoImportItemFacets(
+  id: number,
+  field: ItemFacetField,
+  params: { search?: string; limit?: number } = {},
+) {
+  const response = await api.get<{ values: string[] }>(
+    `api/banco-unico-imports/${id}/items/facets`,
+    { params: { ...params, field } },
+  );
+  return response.data.values;
 }
 
 export async function listBancoUnicoImportEvents(

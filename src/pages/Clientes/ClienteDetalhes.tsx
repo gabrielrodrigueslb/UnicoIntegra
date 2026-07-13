@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
+  ChevronDown,
   CircleCheckBig,
   Clock3,
   Database,
@@ -15,10 +17,12 @@ import {
 } from 'lucide-react';
 import { getClient, type Client } from '../../services/clients.service';
 import {
+  listBancoUnicoImportItemFacets,
   listBancoUnicoImports,
   listBancoUnicoImportItems,
   type BancoUnicoImportJob,
   type BancoUnicoImportItem,
+  type ItemFacetField,
 } from '../../services/bancoUnicoImports.service';
 import { itemStatusLabel, itemStatusTone, SOURCE_TYPE_LABEL } from '../Aplications/bancoUnicoImports.ui';
 import StatusBadge from '../Aplications/StatusBadge';
@@ -60,13 +64,14 @@ export default function ClienteDetalhes() {
   const [products, setProducts] = useState<BancoUnicoImportItem[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productFilters, setProductFilters] = useState({
-    status: 'all',
-    ean: '',
-    name: '',
-    manufacturer: '',
-    activeIngredient: '',
-    hasError: 'all' as 'all' | 'yes' | 'no',
+    status: [] as string[],
+    ean: [] as string[],
+    name: [] as string[],
+    manufacturer: [] as string[],
+    activeIngredient: [] as string[],
+    hasError: [] as string[],
   });
+  const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
   const [productPage, setProductPage] = useState(1);
   const [productTotalPages, setProductTotalPages] = useState(1);
   const [productTotalItems, setProductTotalItems] = useState(0);
@@ -106,12 +111,12 @@ export default function ClienteDetalhes() {
       const res = await listBancoUnicoImportItems(latestJob.id, {
         page: productPage,
         limit: PRODUCT_PAGE_SIZE,
-        status: productFilters.status === 'all' ? undefined : productFilters.status,
-        ean: productFilters.ean || undefined,
-        name: productFilters.name || undefined,
-        manufacturer: productFilters.manufacturer || undefined,
-        activeIngredient: productFilters.activeIngredient || undefined,
-        hasError: productFilters.hasError === 'all' ? undefined : productFilters.hasError,
+        status: productFilters.status.length ? productFilters.status : undefined,
+        ean: productFilters.ean.length ? productFilters.ean : undefined,
+        name: productFilters.name.length ? productFilters.name : undefined,
+        manufacturer: productFilters.manufacturer.length ? productFilters.manufacturer : undefined,
+        activeIngredient: productFilters.activeIngredient.length ? productFilters.activeIngredient : undefined,
+        hasError: productFilters.hasError.length ? (productFilters.hasError as ('yes' | 'no')[]) : undefined,
       });
       setProducts(res.data);
       setProductTotalPages(res.meta.totalPages);
@@ -129,19 +134,29 @@ export default function ClienteDetalhes() {
     }
   }, [activeTab, latestJob, productPage, productFilters]);
 
-  function updateProductFilter<K extends keyof typeof productFilters>(key: K, value: (typeof productFilters)[K]) {
-    setProductFilters((current) => ({ ...current, [key]: value }));
+  function toggleProductFilterValue<K extends keyof typeof productFilters>(key: K, value: string) {
+    setProductFilters((current) => {
+      const list = current[key];
+      const next = list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+      return { ...current, [key]: next };
+    });
     setProductPage(1);
+  }
+
+  function clearProductFilters() {
+    setProductFilters({ status: [], ean: [], name: [], manufacturer: [], activeIngredient: [], hasError: [] });
+    setProductPage(1);
+  }
+
+  function toggleFilterColumn(key: string) {
+    setOpenFilterColumn((current) => (current === key ? null : key));
   }
 
   const estoqueTotal = latestJob?.totalCatalogValid ?? 0;
   const noBanco = latestJob ? latestJob.totalExisting + latestJob.totalPublished : 0;
   const porcentagem = estoqueTotal > 0 ? Math.round((noBanco / estoqueTotal) * 100) : 0;
   const providerAvatar = client ? PROVIDER_AVATAR[client.provider] : null;
-  const hasActiveProductFilters =
-    productFilters.status !== 'all' ||
-    productFilters.hasError !== 'all' ||
-    Boolean(productFilters.ean || productFilters.name || productFilters.manufacturer || productFilters.activeIngredient);
+  const hasActiveProductFilters = Object.values(productFilters).some((list) => list.length > 0);
 
   if (clientLoading) {
     return (
@@ -361,13 +376,7 @@ export default function ClienteDetalhes() {
                   {productTotalItems} item{productTotalItems !== 1 ? 's' : ''}
                 </span>
                 {hasActiveProductFilters ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setProductFilters({ status: 'all', ean: '', name: '', manufacturer: '', activeIngredient: '', hasError: 'all' })
-                    }
-                    className="text-xs font-medium text-primary hover:underline"
-                  >
+                  <button type="button" onClick={clearProductFilters} className="text-xs font-medium text-primary hover:underline">
                     Limpar filtros
                   </button>
                 ) : null}
@@ -377,54 +386,98 @@ export default function ClienteDetalhes() {
                 <table className="w-full">
                   <thead className="bg-foreground/[0.025]">
                     <tr className="border-b border-border text-xs font-semibold text-foreground/55">
-                      <th className="px-4 py-2.5 text-left w-[12%]">Status</th>
-                      <th className="px-4 py-2.5 text-left w-[13%]">EAN</th>
-                      <th className="px-4 py-2.5 text-left w-[30%]">Produto</th>
-                      <th className="px-4 py-2.5 text-left w-[18%]">Fabricante</th>
-                      <th className="px-4 py-2.5 text-left w-[14%]">Principio Ativo</th>
-                      <th className="px-4 py-2.5 text-left w-[13%]">Erro</th>
-                    </tr>
-                    <tr className="border-b border-border bg-background">
-                      <th className="px-3 py-2">
-                        <select
-                          value={productFilters.status}
-                          onChange={(e) => updateProductFilter('status', e.target.value)}
-                          className="w-full rounded-md border border-border bg-foreground/[0.02] px-2 py-1.5 text-xs font-normal text-foreground outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-                        >
-                          <option value="all">Todos</option>
-                          <option value="loaded">Carregados</option>
-                          <option value="classified">Clarificados</option>
-                          <option value="prepared">Preparados</option>
-                          <option value="published">Publicados</option>
-                          <option value="already_exists">Existiam</option>
-                          <option value="invalid_ean">EAN invalido</option>
-                          <option value="classification_error">Erro classificacao</option>
-                          <option value="publish_error">Erro publicacao</option>
-                        </select>
-                      </th>
-                      <th className="px-3 py-2">
-                        <ColumnFilterInput value={productFilters.ean} onChange={(v) => updateProductFilter('ean', v)} placeholder="Filtrar EAN" />
-                      </th>
-                      <th className="px-3 py-2">
-                        <ColumnFilterInput value={productFilters.name} onChange={(v) => updateProductFilter('name', v)} placeholder="Filtrar produto" />
-                      </th>
-                      <th className="px-3 py-2">
-                        <ColumnFilterInput value={productFilters.manufacturer} onChange={(v) => updateProductFilter('manufacturer', v)} placeholder="Filtrar fabricante" />
-                      </th>
-                      <th className="px-3 py-2">
-                        <ColumnFilterInput value={productFilters.activeIngredient} onChange={(v) => updateProductFilter('activeIngredient', v)} placeholder="Filtrar princípio" />
-                      </th>
-                      <th className="px-3 py-2">
-                        <select
-                          value={productFilters.hasError}
-                          onChange={(e) => updateProductFilter('hasError', e.target.value as 'all' | 'yes' | 'no')}
-                          className="w-full rounded-md border border-border bg-foreground/[0.02] px-2 py-1.5 text-xs font-normal text-foreground outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-                        >
-                          <option value="all">Todos</option>
-                          <option value="yes">Com erro</option>
-                          <option value="no">Sem erro</option>
-                        </select>
-                      </th>
+                      <ColumnFilterHeader
+                        label="Status"
+                        widthClass="w-[12%]"
+                        count={productFilters.status.length}
+                        isOpen={openFilterColumn === 'status'}
+                        onToggle={() => toggleFilterColumn('status')}
+                        onClose={() => setOpenFilterColumn(null)}
+                      >
+                        <FacetCheckboxList
+                          options={STATUS_FILTER_OPTIONS}
+                          selected={productFilters.status}
+                          onToggle={(value) => toggleProductFilterValue('status', value)}
+                        />
+                      </ColumnFilterHeader>
+                      <ColumnFilterHeader
+                        label="EAN"
+                        widthClass="w-[13%]"
+                        count={productFilters.ean.length}
+                        isOpen={openFilterColumn === 'ean'}
+                        onToggle={() => toggleFilterColumn('ean')}
+                        onClose={() => setOpenFilterColumn(null)}
+                      >
+                        <RemoteFacetFilter
+                          jobId={latestJob.id}
+                          field="ean"
+                          active={openFilterColumn === 'ean'}
+                          selected={productFilters.ean}
+                          onToggle={(value) => toggleProductFilterValue('ean', value)}
+                        />
+                      </ColumnFilterHeader>
+                      <ColumnFilterHeader
+                        label="Produto"
+                        widthClass="w-[30%]"
+                        count={productFilters.name.length}
+                        isOpen={openFilterColumn === 'name'}
+                        onToggle={() => toggleFilterColumn('name')}
+                        onClose={() => setOpenFilterColumn(null)}
+                      >
+                        <RemoteFacetFilter
+                          jobId={latestJob.id}
+                          field="name"
+                          active={openFilterColumn === 'name'}
+                          selected={productFilters.name}
+                          onToggle={(value) => toggleProductFilterValue('name', value)}
+                        />
+                      </ColumnFilterHeader>
+                      <ColumnFilterHeader
+                        label="Fabricante"
+                        widthClass="w-[18%]"
+                        count={productFilters.manufacturer.length}
+                        isOpen={openFilterColumn === 'manufacturer'}
+                        onToggle={() => toggleFilterColumn('manufacturer')}
+                        onClose={() => setOpenFilterColumn(null)}
+                      >
+                        <RemoteFacetFilter
+                          jobId={latestJob.id}
+                          field="manufacturer"
+                          active={openFilterColumn === 'manufacturer'}
+                          selected={productFilters.manufacturer}
+                          onToggle={(value) => toggleProductFilterValue('manufacturer', value)}
+                        />
+                      </ColumnFilterHeader>
+                      <ColumnFilterHeader
+                        label="Principio Ativo"
+                        widthClass="w-[14%]"
+                        count={productFilters.activeIngredient.length}
+                        isOpen={openFilterColumn === 'activeIngredient'}
+                        onToggle={() => toggleFilterColumn('activeIngredient')}
+                        onClose={() => setOpenFilterColumn(null)}
+                      >
+                        <RemoteFacetFilter
+                          jobId={latestJob.id}
+                          field="activeIngredient"
+                          active={openFilterColumn === 'activeIngredient'}
+                          selected={productFilters.activeIngredient}
+                          onToggle={(value) => toggleProductFilterValue('activeIngredient', value)}
+                        />
+                      </ColumnFilterHeader>
+                      <ColumnFilterHeader
+                        label="Erro"
+                        widthClass="w-[13%]"
+                        count={productFilters.hasError.length}
+                        isOpen={openFilterColumn === 'hasError'}
+                        onToggle={() => toggleFilterColumn('hasError')}
+                        onClose={() => setOpenFilterColumn(null)}
+                      >
+                        <FacetCheckboxList
+                          options={ERROR_FILTER_OPTIONS}
+                          selected={productFilters.hasError}
+                          onToggle={(value) => toggleProductFilterValue('hasError', value)}
+                        />
+                      </ColumnFilterHeader>
                     </tr>
                   </thead>
                   <tbody>
@@ -522,15 +575,207 @@ export default function ClienteDetalhes() {
   );
 }
 
-function ColumnFilterInput({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
+const STATUS_FILTER_OPTIONS = [
+  { value: 'loaded', label: 'Carregados' },
+  { value: 'classified', label: 'Clarificados' },
+  { value: 'prepared', label: 'Preparados' },
+  { value: 'published', label: 'Publicados' },
+  { value: 'already_exists', label: 'Existiam' },
+  { value: 'invalid_ean', label: 'EAN invalido' },
+  { value: 'classification_error', label: 'Erro classificacao' },
+  { value: 'publish_error', label: 'Erro publicacao' },
+];
+
+const ERROR_FILTER_OPTIONS = [
+  { value: 'yes', label: 'Com erro' },
+  { value: 'no', label: 'Sem erro' },
+];
+
+function ColumnFilterHeader({
+  label,
+  widthClass,
+  count,
+  isOpen,
+  onToggle,
+  onClose,
+  children,
+}: {
+  label: string;
+  widthClass: string;
+  count: number;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const active = count > 0;
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPosition(null);
+      return;
+    }
+
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (rect) setPosition({ top: rect.bottom + 6, left: rect.left });
+
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (buttonRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
+      onClose();
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+
+    window.addEventListener('mousedown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('scroll', onClose, true);
+    window.addEventListener('resize', onClose);
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', onClose, true);
+      window.removeEventListener('resize', onClose);
+    };
+  }, [isOpen, onClose]);
+
   return (
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full rounded-md border border-border bg-foreground/[0.02] px-2 py-1.5 text-xs font-normal text-foreground outline-none transition-colors placeholder:text-foreground/40 focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
-    />
+    <th className={`px-4 py-2.5 text-left align-middle ${widthClass}`}>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={onToggle}
+        className={`flex items-center gap-1.5 transition-colors ${active ? 'text-primary' : 'hover:text-foreground'}`}
+      >
+        {label}
+        {active ? <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-primary">{count}</span> : <ChevronDown className="size-3 shrink-0 text-foreground/35" />}
+      </button>
+
+      {isOpen && position
+        ? createPortal(
+            <div
+              ref={popoverRef}
+              style={{ position: 'fixed', top: position.top, left: position.left }}
+              className="z-50 w-64 rounded-lg border border-border bg-background p-2 shadow-[0_8px_24px_rgba(0,0,0,0.14)]"
+            >
+              {children}
+            </div>,
+            document.body,
+          )
+        : null}
+    </th>
+  );
+}
+
+function FacetCheckboxList({
+  options,
+  selected,
+  onToggle,
+}: {
+  options: Array<{ value: string; label: string }>;
+  selected: string[];
+  onToggle: (value: string) => void;
+}) {
+  return (
+    <div className="max-h-64 space-y-0.5 overflow-y-auto scrollbar-minimal">
+      {options.map((option) => (
+        <label key={option.value} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs font-normal text-foreground transition-colors hover:bg-foreground/[0.04]">
+          <input
+            type="checkbox"
+            className="size-3.5 shrink-0 accent-primary"
+            checked={selected.includes(option.value)}
+            onChange={() => onToggle(option.value)}
+          />
+          <span className="truncate">{option.label}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+const FACET_DEFAULT_LIMIT = 5;
+const FACET_SEARCH_LIMIT = 20;
+const FACET_SEARCH_DEBOUNCE_MS = 250;
+
+function RemoteFacetFilter({
+  jobId,
+  field,
+  active,
+  selected,
+  onToggle,
+}: {
+  jobId: number;
+  field: ItemFacetField;
+  active: boolean;
+  selected: string[];
+  onToggle: (value: string) => void;
+}) {
+  const [search, setSearch] = useState('');
+  const [options, setOptions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!active) return;
+    let cancelled = false;
+    setLoading(true);
+    const timeout = window.setTimeout(() => {
+      listBancoUnicoImportItemFacets(jobId, field, {
+        search: search || undefined,
+        limit: search ? FACET_SEARCH_LIMIT : FACET_DEFAULT_LIMIT,
+      })
+        .then((values) => {
+          if (!cancelled) setOptions(values);
+        })
+        .catch(() => {
+          if (!cancelled) setOptions([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }, FACET_SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [active, jobId, field, search]);
+
+  useEffect(() => {
+    if (!active) setSearch('');
+  }, [active]);
+
+  // keep already-selected values visible/checked even if a later search narrows them out
+  const displayOptions = Array.from(new Set([...selected, ...options]));
+
+  return (
+    <div>
+      <input
+        type="text"
+        autoFocus
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Pesquisar..."
+        className="w-full rounded-md border border-border bg-foreground/[0.02] px-2 py-1.5 text-xs font-normal text-foreground outline-none transition-colors placeholder:text-foreground/40 focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
+      />
+      <div className="mt-2 max-h-64 space-y-0.5 overflow-y-auto scrollbar-minimal">
+        {loading ? (
+          <p className="px-2 py-2 text-xs text-foreground/40">Carregando…</p>
+        ) : displayOptions.length === 0 ? (
+          <p className="px-2 py-2 text-xs text-foreground/40">Nenhum valor encontrado.</p>
+        ) : (
+          displayOptions.map((value) => (
+            <label key={value} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs font-normal text-foreground transition-colors hover:bg-foreground/[0.04]">
+              <input type="checkbox" className="size-3.5 shrink-0 accent-primary" checked={selected.includes(value)} onChange={() => onToggle(value)} />
+              <span className="truncate">{value}</span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
   );
 }
 
