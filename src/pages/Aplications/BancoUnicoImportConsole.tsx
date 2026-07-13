@@ -111,7 +111,7 @@ export default function BancoUnicoImportConsole({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-950 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
+    <div className="overflow-hidden rounded-lg border border-gray-800 bg-gray-950">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-800 bg-gray-900 px-5 py-3.5">
         <div className="flex items-center gap-2.5">
           <SquareTerminal className="h-4 w-4 text-gray-400" />

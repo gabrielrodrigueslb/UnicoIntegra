@@ -2,25 +2,11 @@ import { useEffect, useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
-  createClient,
+  updateClient,
   type Client,
   type ClientProvider,
-} from '../../services/clients.service';
-import { extractErrorMessage } from '../../utils/error';
-
-const INITIAL_FORM = {
-  name: '',
-  businessUnit: '',
-  cnpj: '',
-  clientInstance: '',
-  provider: 'api' as ClientProvider,
-  instance: '',
-  credential: '',
-  alpha7Port: '5432',
-  alpha7Database: '',
-  alpha7User: '',
-  alpha7Schema: 'public',
-};
+} from '../../../services/clients.service';
+import { extractErrorMessage } from '../../../utils/error';
 
 const INSTANCE_PLACEHOLDER: Record<ClientProvider, string> = {
   api: 'Ex: Drogaria Dom Bosco',
@@ -40,31 +26,37 @@ const CREDENTIAL_LABEL: Record<ClientProvider, string> = {
   alpha7: 'Senha do banco',
 };
 
-export default function ClientFormModal({
+export default function EditClientModal({
+  client,
   onClose,
-  onCreated,
+  onUpdated,
 }: {
+  client: Client;
   onClose: () => void;
-  onCreated: (client: Client) => void;
+  onUpdated: (client: Client) => void;
 }) {
-  const [form, setForm] = useState(INITIAL_FORM);
+  const [name, setName] = useState(client.name);
+  const [businessUnit, setBusinessUnit] = useState(client.businessUnit || '');
+  const [cnpj, setCnpj] = useState(client.cnpj || '');
+  const [clientInstance, setClientInstance] = useState(client.clientInstance || '');
+  const [provider, setProvider] = useState<ClientProvider>(client.provider);
+  const [instance, setInstance] = useState(client.providerConfig || '');
+  const [credential, setCredential] = useState('');
+  const [alpha7Port, setAlpha7Port] = useState(String(client.alpha7Port || 5432));
+  const [alpha7Database, setAlpha7Database] = useState(client.alpha7Database || '');
+  const [alpha7User, setAlpha7User] = useState(client.alpha7User || '');
+  const [alpha7Schema, setAlpha7Schema] = useState(client.alpha7Schema || 'public');
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onClose();
-      }
+      if (event.key === 'Escape' && !submitting) onClose();
     }
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
-  function handleChange<K extends keyof typeof INITIAL_FORM>(key: K, value: (typeof INITIAL_FORM)[K]) {
-    setForm((current) => ({ ...current, [key]: value }));
-  }
+  }, [onClose, submitting]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -72,22 +64,33 @@ export default function ClientFormModal({
     setError(null);
 
     try {
-      const created = await createClient({
-        name: form.name,
-        businessUnit: form.businessUnit || undefined,
-        cnpj: form.cnpj || undefined,
-        clientInstance: form.clientInstance,
-        provider: form.provider,
-        instance: form.instance,
-        credential: form.credential || undefined,
-        alpha7Port: form.provider === 'alpha7' ? Number(form.alpha7Port) : undefined,
-        alpha7Database: form.provider === 'alpha7' ? form.alpha7Database : undefined,
-        alpha7User: form.provider === 'alpha7' ? form.alpha7User : undefined,
-        alpha7Schema: form.provider === 'alpha7' ? form.alpha7Schema : undefined,
-      });
-      onCreated(created);
+      const payload: Record<string, unknown> = {};
+
+      if (name !== client.name) payload.name = name;
+      if (businessUnit !== (client.businessUnit || '')) payload.businessUnit = businessUnit || undefined;
+      if (cnpj !== (client.cnpj || '')) payload.cnpj = cnpj || undefined;
+      if (clientInstance !== (client.clientInstance || '')) payload.clientInstance = clientInstance;
+      if (provider !== client.provider) payload.provider = provider;
+      if (provider !== 'api' && instance !== client.providerConfig) {
+        payload.instance = instance;
+      }
+      if (credential) payload.credential = credential;
+      if (provider === 'alpha7') {
+        if (Number(alpha7Port) !== (client.alpha7Port || 5432)) payload.alpha7Port = Number(alpha7Port);
+        if (alpha7Database !== (client.alpha7Database || '')) payload.alpha7Database = alpha7Database;
+        if (alpha7User !== (client.alpha7User || '')) payload.alpha7User = alpha7User;
+        if (alpha7Schema !== (client.alpha7Schema || 'public')) payload.alpha7Schema = alpha7Schema;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        onClose();
+        return;
+      }
+
+      const updated = await updateClient(client.id, payload);
+      onUpdated(updated);
     } catch (caught) {
-      setError(extractErrorMessage(caught, 'Erro ao criar cliente.'));
+      setError(extractErrorMessage(caught, 'Erro ao atualizar cliente.'));
     } finally {
       setSubmitting(false);
     }
@@ -104,7 +107,7 @@ export default function ClientFormModal({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-foreground">Novo cliente</h2>
+          <h2 className="text-sm font-semibold text-foreground">Editar cliente</h2>
           <button
             onClick={onClose}
             className="flex h-7 w-7 items-center justify-center rounded-md text-foreground/45 transition-colors hover:bg-foreground/5 hover:text-foreground"
@@ -130,12 +133,9 @@ export default function ClientFormModal({
             <label className={labelClass}>Nome do cliente</label>
             <input
               type="text"
-              name="client_name"
-              autoComplete="organization"
-              value={form.name}
-              onChange={(event) => handleChange('name', event.target.value)}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
               className={inputClass}
-              placeholder="Ex: Farmacia Centro"
               required
               autoFocus
             />
@@ -145,10 +145,8 @@ export default function ClientFormModal({
             <label className={labelClass}>CNPJ</label>
             <input
               type="text"
-              name="client_cnpj"
-              autoComplete="off"
-              value={form.cnpj}
-              onChange={(event) => handleChange('cnpj', event.target.value)}
+              value={cnpj}
+              onChange={(event) => setCnpj(event.target.value)}
               className={inputClass}
               placeholder="Opcional"
             />
@@ -158,10 +156,8 @@ export default function ClientFormModal({
             <label className={labelClass}>Unidade ou filial</label>
             <input
               type="text"
-              name="client_business_unit"
-              autoComplete="organization"
-              value={form.businessUnit}
-              onChange={(event) => handleChange('businessUnit', event.target.value)}
+              value={businessUnit}
+              onChange={(event) => setBusinessUnit(event.target.value)}
               className={inputClass}
               placeholder="Ex: Loja Centro"
             />
@@ -171,10 +167,8 @@ export default function ClientFormModal({
             <label className={labelClass}>Instância do cliente</label>
             <input
               type="text"
-              name="client_instance"
-              autoComplete="off"
-              value={form.clientInstance}
-              onChange={(event) => handleChange('clientInstance', event.target.value)}
+              value={clientInstance}
+              onChange={(event) => setClientInstance(event.target.value)}
               className={inputClass}
               placeholder="Ex: Drogaria Dom Bosco"
               required
@@ -193,9 +187,12 @@ export default function ClientFormModal({
                 <button
                   key={value}
                   type="button"
-                  onClick={() => handleChange('provider', value)}
+                  onClick={() => {
+                    setProvider(value);
+                    if (value !== client.provider) setInstance('');
+                  }}
                   className={`rounded-md px-2 py-2 text-xs font-semibold transition-colors ${
-                    form.provider === value
+                    provider === value
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-foreground/55 hover:text-foreground'
                   }`}
@@ -206,46 +203,41 @@ export default function ClientFormModal({
             </div>
           </div>
 
-          {form.provider !== 'api' ? (
+          {provider !== 'api' ? (
             <div>
-              <label className={labelClass}>{SOURCE_INSTANCE_LABEL[form.provider]}</label>
+              <label className={labelClass}>{SOURCE_INSTANCE_LABEL[provider]}</label>
               <input
                 type="text"
-                name={form.provider === 'alpha7' ? 'alpha7_host' : 'source_instance'}
-                autoComplete="off"
-                value={form.instance}
-                onChange={(event) => handleChange('instance', event.target.value)}
+                value={instance}
+                onChange={(event) => setInstance(event.target.value)}
                 className={inputClass}
-                placeholder={INSTANCE_PLACEHOLDER[form.provider]}
+                placeholder={INSTANCE_PLACEHOLDER[provider]}
                 required
               />
             </div>
           ) : null}
 
-          {form.provider !== 'file' ? (
+          {provider !== 'file' ? (
             <div>
-              <label className={labelClass}>{CREDENTIAL_LABEL[form.provider]}</label>
+              <label className={labelClass}>{CREDENTIAL_LABEL[provider]}</label>
               <input
                 type="password"
-                name={form.provider === 'api' ? 'api_token' : 'alpha7_password'}
-                autoComplete="new-password"
-                value={form.credential}
-                onChange={(event) => handleChange('credential', event.target.value)}
+                value={credential}
+                onChange={(event) => setCredential(event.target.value)}
                 className={inputClass}
+                placeholder={client.hasCredential ? 'Deixe em branco para manter' : ''}
               />
             </div>
           ) : null}
 
-          {form.provider === 'alpha7' ? (
+          {provider === 'alpha7' ? (
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className={labelClass}>Porta</label>
                 <input
                   type="text"
-                  name="alpha7_port"
-                  autoComplete="off"
-                  value={form.alpha7Port}
-                  onChange={(event) => handleChange('alpha7Port', event.target.value)}
+                  value={alpha7Port}
+                  onChange={(event) => setAlpha7Port(event.target.value)}
                   className={inputClass}
                 />
               </div>
@@ -253,10 +245,8 @@ export default function ClientFormModal({
                 <label className={labelClass}>Database</label>
                 <input
                   type="text"
-                  name="alpha7_database"
-                  autoComplete="off"
-                  value={form.alpha7Database}
-                  onChange={(event) => handleChange('alpha7Database', event.target.value)}
+                  value={alpha7Database}
+                  onChange={(event) => setAlpha7Database(event.target.value)}
                   className={inputClass}
                   required
                 />
@@ -265,10 +255,8 @@ export default function ClientFormModal({
                 <label className={labelClass}>Usuario</label>
                 <input
                   type="text"
-                  name="alpha7_user"
-                  autoComplete="username"
-                  value={form.alpha7User}
-                  onChange={(event) => handleChange('alpha7User', event.target.value)}
+                  value={alpha7User}
+                  onChange={(event) => setAlpha7User(event.target.value)}
                   className={inputClass}
                   required
                 />
@@ -277,10 +265,8 @@ export default function ClientFormModal({
                 <label className={labelClass}>Schema</label>
                 <input
                   type="text"
-                  name="alpha7_schema"
-                  autoComplete="off"
-                  value={form.alpha7Schema}
-                  onChange={(event) => handleChange('alpha7Schema', event.target.value)}
+                  value={alpha7Schema}
+                  onChange={(event) => setAlpha7Schema(event.target.value)}
                   className={inputClass}
                 />
               </div>
@@ -291,7 +277,8 @@ export default function ClientFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-border px-3.5 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-foreground/[0.03]"
+              disabled={submitting}
+              className="rounded-lg border border-border px-3.5 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-foreground/[0.03] disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -301,7 +288,7 @@ export default function ClientFormModal({
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Criar cliente
+              Salvar
             </button>
           </div>
         </form>

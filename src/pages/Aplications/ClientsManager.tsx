@@ -54,7 +54,7 @@ export default function ClientsManager() {
       <header className="sticky top-0 z-10 flex w-full shrink-0 flex-wrap items-center justify-between gap-4 border-b border-border bg-background px-6 py-3.5">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
-            onClick={() => navigate('/main/aplications/banco-unico-imports')}
+            onClick={() => navigate('/main/clientes')}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground/50 transition-colors hover:bg-foreground/5 hover:text-foreground"
           >
             <ArrowLeft className="h-4.5 w-4.5" />

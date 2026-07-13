@@ -4,6 +4,7 @@ import { requireAuthSession } from '../utils/authSession';
 export type BancoUnicoImportStatus =
   | 'pending'
   | 'running'
+  | 'paused'
   | 'cancelling'
   | 'completed'
   | 'cancelled'
@@ -119,6 +120,7 @@ export interface CreateBancoUnicoImportPayload {
   ignoreExistingCheck?: boolean;
   useAiNormalization?: boolean;
   limit?: number;
+  limitNew?: number;
   offset?: number;
 }
 
@@ -138,6 +140,7 @@ export async function listBancoUnicoImports(params: {
   limit?: number;
   search?: string;
   status?: string;
+  clientId?: number;
 }) {
   const response = await api.get<PaginatedResponse<BancoUnicoImportJob>>(
     'api/banco-unico-imports',
@@ -186,6 +189,16 @@ export async function listBancoUnicoImportEvents(
 export async function cancelBancoUnicoImport(id: number) {
   const username = requireAuthSession().authUsername;
   await api.post(`api/banco-unico-imports/${id}/cancel`, { username });
+}
+
+export async function pauseBancoUnicoImport(id: number) {
+  const username = requireAuthSession().authUsername;
+  await api.post(`api/banco-unico-imports/${id}/pause`, { username });
+}
+
+export async function resumeBancoUnicoImport(id: number) {
+  const username = requireAuthSession().authUsername;
+  await api.post(`api/banco-unico-imports/${id}/resume`, { username });
 }
 
 export async function deleteBancoUnicoImport(id: number) {

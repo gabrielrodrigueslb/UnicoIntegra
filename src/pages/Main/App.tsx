@@ -5,9 +5,6 @@ import { GlobalStatusPopup } from '../../components/GlobalStatusPopup';
 import { GenerationProvider } from '../../context/GenerationContext';
 import ApplicationsHub from '../Aplications/ApplicationsHub';
 import AiServicesManager from '../Aplications/AiServicesManager';
-import BancoUnicoImportsManager from '../Aplications/BancoUnicoImportsManager';
-import BancoUnicoImportJobView from '../Aplications/BancoUnicoImportJobView';
-import ClientsManager from '../Aplications/ClientsManager';
 import InovaFarmaExtensionGenerator from '../Aplications/InovaFarmaExtensionGenerator';
 import { PkgGenerator } from '../Aplications/PkgGenerator';
 import TrierExtensionGenerator from '../Aplications/TrierExtensionGenerator';
@@ -56,18 +53,6 @@ export default function App() {
             <Route
               path="aplications/ia-services"
               element={<AiServicesManager />}
-            />
-            <Route
-              path="aplications/banco-unico-imports"
-              element={<BancoUnicoImportsManager />}
-            />
-            <Route
-              path="aplications/banco-unico-imports/:jobId"
-              element={<BancoUnicoImportJobView />}
-            />
-            <Route
-              path="aplications/banco-unico-imports/clientes"
-              element={<ClientsManager />}
             />
             <Route path="integrations" element={<Integrations />} />
             <Route path="automations" element={<Automations />} />

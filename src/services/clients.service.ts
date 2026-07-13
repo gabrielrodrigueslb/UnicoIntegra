@@ -8,13 +8,17 @@ export interface Client {
   name: string;
   businessUnit: string | null;
   cnpj: string | null;
+  clientInstance: string | null;
   provider: ClientProvider;
   instance: string;
+  providerConfig: string;
   hasCredential: boolean;
   alpha7Port: number | null;
   alpha7Database: string | null;
   alpha7User: string | null;
   alpha7Schema: string | null;
+  totalProdutosEstoque?: number;
+  totalNoBanco?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,6 +37,7 @@ export interface CreateClientPayload {
   name: string;
   businessUnit?: string;
   cnpj?: string;
+  clientInstance: string;
   provider: ClientProvider;
   instance: string;
   credential?: string;
@@ -60,4 +65,35 @@ export async function createClient(payload: CreateClientPayload) {
     username,
   });
   return response.data;
+}
+
+export interface UpdateClientPayload {
+  name?: string;
+  businessUnit?: string;
+  cnpj?: string;
+  clientInstance?: string;
+  provider?: ClientProvider;
+  instance?: string;
+  credential?: string;
+  alpha7Port?: number;
+  alpha7Database?: string;
+  alpha7User?: string;
+  alpha7Schema?: string;
+  username?: string;
+}
+
+export async function updateClient(id: number, payload: UpdateClientPayload) {
+  const username = requireAuthSession().authUsername;
+  const response = await api.put<Client>(`api/clients/${id}`, {
+    ...payload,
+    username,
+  });
+  return response.data;
+}
+
+export async function deleteClient(id: number) {
+  const username = requireAuthSession().authUsername;
+  await api.delete(`api/clients/${id}`, {
+    data: { username },
+  });
 }

@@ -3,7 +3,6 @@ import {
   HardDriveDownload,
   Puzzle,
   ServerCog,
-  UploadCloud,
 } from 'lucide-react';
 import ApplicationModuleCard from '../../components/ApplicationModuleCard';
 import { useRequireAuth } from '../../hooks/useAuthRedirect';
@@ -51,19 +50,6 @@ export default function ApplicationsHub() {
                 'Criacao de instancias',
                 'Listagem e status online',
                 'Logs em tempo real',
-              ]}
-            />
-
-            <ApplicationModuleCard
-              title="Subidas Banco Unico"
-              description="Execute o normalizador/publicador do Banco Unico com historico, progresso em tempo real, indicadores e listagem de itens por importacao."
-              badge="Novo modulo"
-              icon={UploadCloud}
-              path="/main/aplications/banco-unico-imports"
-              points={[
-                'Executa a subida direto do painel',
-                'Acompanha eventos em tempo real',
-                'Consulta itens por cliente/importacao',
               ]}
             />
 

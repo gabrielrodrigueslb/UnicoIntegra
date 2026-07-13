@@ -31,6 +31,7 @@ export function statusInfo(status: string): { label: string; tone: StatusTone } 
   const table: Record<string, { label: string; tone: StatusTone }> = {
     completed: { label: 'Concluida', tone: 'success' },
     running: { label: 'Rodando', tone: 'active' },
+    paused: { label: 'Pausada', tone: 'warning' },
     pending: { label: 'Na fila', tone: 'neutral' },
     cancelling: { label: 'Cancelando', tone: 'warning' },
     cancelled: { label: 'Cancelada', tone: 'warning' },

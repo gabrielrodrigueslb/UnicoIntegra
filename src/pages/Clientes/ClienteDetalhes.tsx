@@ -1,389 +1,551 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
+  CircleCheckBig,
+  Clock3,
   Database,
-  Filter,
+  FileText,
+  FileSpreadsheet,
+  Loader2,
   Package,
+  Pencil,
   Search,
-  X,
+  Upload,
 } from 'lucide-react';
+import { getClient, type Client } from '../../services/clients.service';
+import {
+  listBancoUnicoImports,
+  listBancoUnicoImportItems,
+  type BancoUnicoImportJob,
+  type BancoUnicoImportItem,
+} from '../../services/bancoUnicoImports.service';
+import { itemStatusLabel, itemStatusTone, SOURCE_TYPE_LABEL } from '../Aplications/bancoUnicoImports.ui';
+import StatusBadge from '../Aplications/StatusBadge';
+import EditClientModal from './Components/EditClientModal';
+import ImportForm from './Components/ImportForm';
+import ImportJobList from './Components/ImportJobList';
+import ImportJobView from './Components/ImportJobView';
 
-type ProductStatus = 'published' | 'classified' | 'prepared' | 'error' | 'skipped';
+type Tab = 'overview' | 'imports' | 'products';
 
-type Product = {
-  id: number;
-  ean: string;
-  nome: string;
-  fabricante: string;
-  principioAtivo: string;
-  status: ProductStatus;
-  temNoBanco: boolean;
-};
-
-type ClienteData = {
-  id: number;
-  nome: string;
-  instancia: string;
-  cnpj: string;
-  provider: string;
-  status: string;
-  totalProdutosEstoque: number;
-  totalNoBanco: number;
-};
-
-const MOCK_CLIENTE: ClienteData = {
-  id: 1,
-  nome: 'Farmácia Vida Nova',
-  instancia: 'instancia-01',
-  cnpj: '12.345.678/0001-90',
-  provider: 'Alpha7',
-  status: 'Ativo',
-  totalProdutosEstoque: 4820,
-  totalNoBanco: 3615,
-};
-
-const MOCK_PRODUTOS: Product[] = [
-  { id: 1, ean: '7891234560001', nome: 'Dipirona 500mg 10cp', fabricante: 'Medley', principioAtivo: 'Dipirona Sódica', status: 'published', temNoBanco: true },
-  { id: 2, ean: '7891234560002', nome: 'Amoxicilina 500mg 21cp', fabricante: 'Eurofarma', principioAtivo: 'Amoxicilina', status: 'published', temNoBanco: true },
-  { id: 3, ean: '7891234560003', nome: 'Ibuprofeno 600mg 20cp', fabricante: 'Germed', principioAtivo: 'Ibuprofeno', status: 'classified', temNoBanco: true },
-  { id: 4, ean: '7891234560004', nome: 'Omeprazol 20mg 28cp', fabricante: 'Pague Menos', principioAtivo: 'Omeprazol', status: 'published', temNoBanco: true },
-  { id: 5, ean: '7891234560005', nome: 'Losartana 50mg 30cp', fabricante: 'Medley', principioAtivo: 'Losartana Potássica', status: 'prepared', temNoBanco: true },
-  { id: 6, ean: '7891234560006', nome: 'Metformina 850mg 30cp', fabricante: 'Eurofarma', principioAtivo: 'Metformina Cloridrato', status: 'published', temNoBanco: true },
-  { id: 7, ean: '7891234560007', nome: 'Sinvastatina 20mg 30cp', fabricante: 'Germed', principioAtivo: 'Sinvastatina', status: 'error', temNoBanco: false },
-  { id: 8, ean: '7891234560008', nome: 'Azitromicina 500mg 3cp', fabricante: 'Medley', principioAtivo: 'Azitromicina', status: 'published', temNoBanco: true },
-  { id: 9, ean: '7891234560009', nome: 'Captopril 25mg 30cp', fabricante: 'Eurofarma', principioAtivo: 'Captopril', status: 'skipped', temNoBanco: false },
-  { id: 10, ean: '7891234560010', nome: 'Rivotril 2mg 30cp', fabricante: 'Roche', principioAtivo: 'Clonazepam', status: 'classified', temNoBanco: true },
-  { id: 11, ean: '7891234560011', nome: 'Dorflex 36cp', fabricante: 'Sanofi', principioAtivo: 'Dipirona + Orfenadrina', status: 'published', temNoBanco: true },
-  { id: 12, ean: '7891234560012', nome: 'Nimesulida 100mg 20cp', fabricante: 'Germed', principioAtivo: 'Nimesulida', status: 'published', temNoBanco: true },
-  { id: 13, ean: '7891234560013', nome: 'Prednisona 20mg 20cp', fabricante: 'Medley', principioAtivo: 'Prednisona', status: 'prepared', temNoBanco: true },
-  { id: 14, ean: '7891234560014', nome: 'Fluoxetina 20mg 30cp', fabricante: 'Eurofarma', principioAtivo: 'Fluoxetina Cloridrato', status: 'error', temNoBanco: false },
-  { id: 15, ean: '7891234560015', nome: 'Pantoprazol 40mg 28cp', fabricante: 'Pague Menos', principioAtivo: 'Pantoprazol Sódico', status: 'published', temNoBanco: true },
-  { id: 16, ean: '7891234560016', nome: 'Enalapril 20mg 30cp', fabricante: 'Medley', principioAtivo: 'Enalapril Maleato', status: 'classified', temNoBanco: true },
-  { id: 17, ean: '7891234560017', nome: 'Hidroclorotiazida 25mg 30cp', fabricante: 'Germed', principioAtivo: 'Hidroclorotiazida', status: 'published', temNoBanco: true },
-  { id: 18, ean: '7891234560018', nome: 'Atenolol 50mg 30cp', fabricante: 'Eurofarma', principioAtivo: 'Atenolol', status: 'skipped', temNoBanco: false },
-  { id: 19, ean: '7891234560019', nome: 'Clonazepam 2mg 30cp', fabricante: 'Eurofarma', principioAtivo: 'Clonazepam', status: 'published', temNoBanco: true },
-  { id: 20, ean: '7891234560020', nome: 'Dexametasona 4mg 20cp', fabricante: 'Medley', principioAtivo: 'Dexametasona', status: 'classified', temNoBanco: true },
-  { id: 21, ean: '7891234560021', nome: 'Cefalexina 500mg 21cp', fabricante: 'Germed', principioAtivo: 'Cefalexina', status: 'published', temNoBanco: true },
-  { id: 22, ean: '7891234560022', nome: 'Paracetamol 750mg 20cp', fabricante: 'Medley', principioAtivo: 'Paracetamol', status: 'published', temNoBanco: true },
-  { id: 23, ean: '7891234560023', nome: 'Rivotril 0,5mg 30cp', fabricante: 'Roche', principioAtivo: 'Clonazepam', status: 'error', temNoBanco: false },
-  { id: 24, ean: '7891234560024', nome: 'Zolpidem 10mg 30cp', fabricante: 'Eurofarma', principioAtivo: 'Zolpidem Tartrato', status: 'published', temNoBanco: true },
-  { id: 25, ean: '7891234560025', nome: 'Escitalopram 10mg 30cp', fabricante: 'Medley', principioAtivo: 'Escitalopram Oxalato', status: 'prepared', temNoBanco: true },
+const TABS: Array<{ key: Tab; label: string; icon: typeof Package }> = [
+  { key: 'overview', label: 'Visao geral', icon: Package },
+  { key: 'imports', label: 'Importacoes', icon: Upload },
+  { key: 'products', label: 'Produtos', icon: Database },
 ];
 
-const STATUS_LABELS: Record<ProductStatus, string> = {
-  published: 'Publicado',
-  classified: 'Clarificado',
-  prepared: 'Preparado',
-  error: 'Erro',
-  skipped: 'Pulado',
+const PRODUCT_PAGE_SIZE = 10;
+
+const PROVIDER_AVATAR: Partial<Record<Client['provider'], { src: string; alt: string }>> = {
+  api: { src: '/trier.jpg', alt: 'Trier' },
+  alpha7: { src: '/Alpha.png', alt: 'Alpha 7' },
 };
-
-const STATUS_TONES: Record<ProductStatus, string> = {
-  published: 'text-emerald-600',
-  classified: 'text-primary',
-  prepared: 'text-amber-600',
-  error: 'text-rose-600',
-  skipped: 'text-foreground/45',
-};
-
-const STATUS_DOTS: Record<ProductStatus, string> = {
-  published: 'bg-emerald-500',
-  classified: 'bg-primary',
-  prepared: 'bg-amber-500',
-  error: 'bg-rose-500',
-  skipped: 'bg-foreground/30',
-};
-
-const PRODUCT_STATUS_FILTERS = [
-  { value: 'all', label: 'Todos' },
-  { value: 'published', label: 'Publicados' },
-  { value: 'classified', label: 'Clarificados' },
-  { value: 'prepared', label: 'Preparados' },
-  { value: 'error', label: 'Erros' },
-  { value: 'skipped', label: 'Pulados' },
-] as const;
-
-const PAGE_SIZE = 10;
 
 export default function ClienteDetalhes() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const cliente = MOCK_CLIENTE;
+  const [client, setClient] = useState<Client | null>(null);
+  const [clientLoading, setClientLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
 
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [page, setPage] = useState(1);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [activeJobId, setActiveJobId] = useState<number | null>(null);
+  const [importRefreshKey, setImportRefreshKey] = useState(0);
+  const [importError, setImportError] = useState<string | null>(null);
 
-  const porcentagem = cliente.totalProdutosEstoque > 0
-    ? Math.round((cliente.totalNoBanco / cliente.totalProdutosEstoque) * 100)
-    : 0;
+  const [latestJob, setLatestJob] = useState<BancoUnicoImportJob | null>(null);
+  const [products, setProducts] = useState<BancoUnicoImportItem[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
+  const [productStatus, setProductStatus] = useState('all');
+  const [productPage, setProductPage] = useState(1);
+  const [productTotalPages, setProductTotalPages] = useState(1);
+  const [productTotalItems, setProductTotalItems] = useState(0);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+  const clientId = id ? Number(id) : null;
 
-    return MOCK_PRODUTOS.filter((p) => {
-      if (statusFilter !== 'all' && p.status !== statusFilter) return false;
-      if (q && !p.ean.includes(q) && !p.nome.toLowerCase().includes(q) && !p.fabricante.toLowerCase().includes(q) && !p.principioAtivo.toLowerCase().includes(q)) {
-        return false;
-      }
-      return true;
-    });
-  }, [search, statusFilter]);
+  // Load client
+  useEffect(() => {
+    if (!clientId) return;
+    setClientLoading(true);
+    getClient(clientId)
+      .then(setClient)
+      .catch(() => setClient(null))
+      .finally(() => setClientLoading(false));
+  }, [clientId]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  // Clear import error
+  useEffect(() => {
+    if (!importError) return;
+    const t = window.setTimeout(() => setImportError(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [importError]);
 
-  function changeSearch(value: string) {
-    setSearch(value);
-    setPage(1);
-  }
+  // Load latest job for overview metrics
+  useEffect(() => {
+    if (!clientId) return;
+    listBancoUnicoImports({ clientId, limit: 1 })
+      .then((res) => setLatestJob(res.data[0] || null))
+      .catch(() => {});
+  }, [clientId, importRefreshKey]);
 
-  function changeStatusFilter(value: string) {
-    setStatusFilter(value);
-    setPage(1);
-  }
-
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: MOCK_PRODUTOS.length };
-    for (const p of MOCK_PRODUTOS) {
-      counts[p.status] = (counts[p.status] || 0) + 1;
+  // Load products from latest job
+  async function loadProducts(options?: { silent?: boolean }) {
+    if (!latestJob) return;
+    if (!options?.silent) setProductsLoading(true);
+    try {
+      const res = await listBancoUnicoImportItems(latestJob.id, {
+        page: productPage,
+        limit: PRODUCT_PAGE_SIZE,
+        search: productSearch || undefined,
+        status: productStatus === 'all' ? undefined : productStatus,
+      });
+      setProducts(res.data);
+      setProductTotalPages(res.meta.totalPages);
+      setProductTotalItems(res.meta.totalItems);
+    } catch {
+      /* silent */
+    } finally {
+      setProductsLoading(false);
     }
-    return counts;
-  }, []);
+  }
 
-  return (
-    <main className="w-full p-6">
-      {/* Header */}
-      <header className="flex items-center gap-3 pb-6">
+  useEffect(() => {
+    if (activeTab === 'products' && latestJob) {
+      void loadProducts();
+    }
+  }, [activeTab, latestJob, productPage, productSearch, productStatus]);
+
+  const estoqueTotal = client?.totalProdutosEstoque ?? 0;
+  const noBanco = client?.totalNoBanco ?? 0;
+  const porcentagem = estoqueTotal > 0 ? Math.round((noBanco / estoqueTotal) * 100) : 0;
+  const providerAvatar = client ? PROVIDER_AVATAR[client.provider] : null;
+
+  if (clientLoading) {
+    return (
+      <main className="flex h-full items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-foreground/40" />
+      </main>
+    );
+  }
+
+  if (!client) {
+    return (
+      <main className="flex h-full flex-col items-center justify-center gap-3">
+        <p className="text-sm text-foreground/45">Cliente nao encontrado.</p>
         <button
           onClick={() => navigate('/main/clientes')}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground/50 transition-colors hover:bg-foreground/5 hover:text-foreground"
-          aria-label="Voltar"
+          className="text-sm text-primary hover:underline"
         >
-          <ArrowLeft className="h-4.5 w-4.5" />
+          Voltar para lista
         </button>
-        <div className="h-6 w-px shrink-0 bg-border" />
-        <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold">{cliente.nome}</h1>
-          <p className="text-sm text-foreground/50">
-            {cliente.instancia} &middot; {cliente.provider}
-          </p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="flex h-full w-full flex-col overflow-hidden bg-[#f8fafc] px-5 py-7 text-slate-950 sm:px-8 lg:px-10 lg:py-9">
+      <button
+        type="button"
+        onClick={() => navigate('/main/clientes')}
+        className="mb-6 inline-flex shrink-0 items-center gap-1.5 self-start text-sm font-semibold text-slate-500 transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      >
+        <ArrowLeft className="h-4 w-4" /> Voltar para Clientes
+      </button>
+
+      <header className="mb-6 shrink-0">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 text-lg font-semibold text-primary">
+              {providerAvatar ? (
+                <img src={providerAvatar.src} alt={providerAvatar.alt} className="h-full w-full object-cover" />
+              ) : (
+                getInitials(client.name)
+              )}
+            </div>
+            <div className="min-w-0">
+              <h1 className="mt-1 truncate text-2xl font-semibold tracking-[-0.03em] text-slate-950 sm:text-3xl">{client.name}</h1>
+              {client.businessUnit ? <p className="mt-1 text-sm text-slate-500">{client.businessUnit}</p> : null}
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-slate-500">
+                <span className="rounded-md bg-primary/10 px-2.5 py-1 font-semibold text-primary">{SOURCE_TYPE_LABEL[client.provider] || client.provider}</span>
+                <span className="flex items-center gap-1.5">
+                  <Database size={12} className="text-slate-400" /> {client.clientInstance || 'Não informada'}
+                </span>
+                {client.cnpj ? (
+                  <span className="flex items-center gap-1.5"><FileText size={12} className="text-slate-400" /> {client.cnpj}</span>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              onClick={() => setActiveTab('imports')}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#0f50df] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <Upload size={15} /> Nova importação
+            </button>
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[#cbd7e6] bg-background px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <Pencil size={15} /> Editar
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Client info */}
-      <section className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <InfoBlock label="Instância" value={cliente.instancia} />
-        <InfoBlock label="CNPJ" value={cliente.cnpj} />
-        <InfoBlock label="Origem" value={cliente.provider} />
-        <InfoBlock label="Status" value={cliente.status} />
-      </section>
+      <nav className="mb-6 flex shrink-0  border-b border-[#dbe3ef]" aria-label="Seções do cliente">
+        {TABS.map((tab) => {
+          const isActive = tab.key === activeTab;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => {
+                setActiveTab(tab.key);
+                if (tab.key === 'imports') setActiveJobId(null);
+              }}
+              className={`-mb-px flex shrink-0 items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary ${
+                isActive
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Icon size={15} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </nav>
 
-      {/* Metrics */}
-      <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <MetricCard
-          icon={<Package className="h-5 w-5 text-foreground/35" />}
-          label="Produtos no estoque"
-          value={cliente.totalProdutosEstoque}
-        />
-        <MetricCard
-          icon={<Database className="h-5 w-5 text-foreground/35" />}
-          label="No banco Unico"
-          value={cliente.totalNoBanco}
-        />
-        <MetricCard
-          icon={
-            <div className="relative h-5 w-5">
-              <svg viewBox="0 0 20 20" className="h-5 w-5 -rotate-90">
-                <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-foreground/[0.06]" />
-                <circle
-                  cx="10"
-                  cy="10"
-                  r="8"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeDasharray={`${(porcentagem / 100) * 50.27} 50.27`}
-                  className="text-primary"
-                />
-              </svg>
-            </div>
-          }
-          label="Cobertura"
-          value={porcentagem}
-          suffix="%"
-        />
-      </section>
+      {/* Tab body — scrolls internally, the route shell above clips overflow */}
+      <div className="min-h-0 flex-1 overflow-y-auto scrollbar-minimal pr-1">
+      {activeTab === 'overview' ? (
+        <div className="space-y-6 pb-4">
+          <section className="grid overflow-hidden rounded-xl border border-[#dbe3ef] bg-background sm:grid-cols-3 sm:divide-x sm:divide-[#dbe3ef]">
+            <Stat label="Produtos no estoque" value={estoqueTotal} detail="Itens encontrados no ambiente" />
+            <Stat label="No Banco Único" value={noBanco} detail="Registros já disponíveis" />
+            <Stat label="Cobertura" value={porcentagem} suffix="%" detail={`${noBanco.toLocaleString('pt-BR')} de ${estoqueTotal.toLocaleString('pt-BR')} itens`} progress={porcentagem} />
+          </section>
 
-      {/* Products section */}
-      <section>
-        {/* Toolbar */}
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <span className="border border-border flex items-center gap-2 px-3 rounded-lg max-w-[320px] w-full">
-            <Search size={15} className="text-foreground/35" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => changeSearch(e.target.value)}
-              className="outline-none flex flex-1 py-2 text-sm bg-transparent"
-              placeholder="EAN, nome, fabricante..."
-            />
-          </span>
-
-          <div className="flex items-center gap-1.5">
-            <Filter size={14} className="text-foreground/40" />
-            {PRODUCT_STATUS_FILTERS.map((f) => {
-              const isActive = statusFilter === f.value;
-              return (
-                <button
-                  key={f.value}
-                  type="button"
-                  onClick={() => changeStatusFilter(f.value)}
-                  className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-foreground/50 hover:bg-foreground/5 hover:text-foreground/70'
-                  }`}
-                >
-                  {f.label}
-                  <span className="ml-1 tabular-nums text-foreground/35">
-                    {statusCounts[f.value] || 0}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="border border-border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-foreground/[0.025]">
-              <tr className="border-b border-border text-xs font-semibold text-foreground/55">
-                <th className="px-4 py-2.5 text-left w-[14%]">EAN</th>
-                <th className="px-4 py-2.5 text-left w-[28%]">Produto</th>
-                <th className="px-4 py-2.5 text-left w-[18%]">Fabricante</th>
-                <th className="px-4 py-2.5 text-left w-[22%]">Princípio Ativo</th>
-                <th className="px-4 py-2.5 text-left w-[10%]">Status</th>
-                <th className="px-4 py-2.5 text-center w-[8%]">Banco</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginated.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-sm text-foreground/40">
-                    Nenhum produto encontrado para os filtros atuais.
-                  </td>
-                </tr>
+          <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(410px,0.95fr)]">
+            <div className="overflow-hidden rounded-xl border border-[#dbe3ef] bg-background">
+              <div className="flex items-center justify-between gap-4 border-b border-[#dbe3ef] px-5 py-4 sm:px-6">
+                <div><h2 className="text-base font-semibold tracking-[-0.015em] text-slate-950">Última importação</h2><p className="mt-0.5 text-xs text-slate-500">Acompanhe a atividade mais recente deste cliente.</p></div>
+                {latestJob ? <StatusBadge label={latestJob.status === 'completed' ? 'Concluída' : latestJob.status} tone={latestJob.status === 'completed' ? 'success' : latestJob.status === 'failed' ? 'danger' : 'warning'} /> : null}
+              </div>
+              {latestJob ? (
+                <div className="p-5 sm:p-6">
+                  <div className="grid gap-5 sm:grid-cols-3">
+                    <OverviewDatum label="Importação" value={`#${latestJob.id}`} icon={FileSpreadsheet} />
+                    <OverviewDatum label="Criada em" value={new Date(latestJob.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })} icon={Clock3} />
+                    <OverviewDatum label="Solicitada por" value={latestJob.requestedBy || 'Sistema'} icon={CircleCheckBig} />
+                  </div>
+                  <div className="mt-6 border-t border-[#dbe3ef] pt-5">
+                    <p className="text-sm font-semibold text-slate-900">{latestJob.currentMessage || 'Importação pronta para acompanhamento.'}</p>
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${Math.max(0, Math.min(100, latestJob.progressPercent))}%` }} /></div>
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+                      <span><strong className="font-semibold text-slate-900">{latestJob.totalExisting.toLocaleString('pt-BR')}</strong> já existiam</span>
+                      <span><strong className="font-semibold text-slate-900">{latestJob.totalSkipped.toLocaleString('pt-BR')}</strong> pulados</span>
+                      <span><strong className="font-semibold text-slate-900">{latestJob.totalPublished.toLocaleString('pt-BR')}</strong> publicados</span>
+                      <span><strong className="font-semibold text-slate-900">{latestJob.totalErrors.toLocaleString('pt-BR')}</strong> erros</span>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => { setActiveTab('imports'); setActiveJobId(latestJob.id); }} className="mt-6 inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#cbd7e6] px-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Ver detalhes da importação <ArrowRight className="size-4" /></button>
+                </div>
               ) : (
-                paginated.map((p) => (
-                  <tr
-                    key={p.id}
-                    className="border-b border-border last:border-0 hover:bg-foreground/[0.02] transition-colors"
-                  >
-                    <td className="px-4 py-3 text-sm tabular-nums text-foreground/70 font-mono">
-                      {p.ean}
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium text-foreground">
-                      {p.nome}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground/65">
-                      {p.fabricante}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground/65">
-                      {p.principioAtivo}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${STATUS_TONES[p.status]}`}>
-                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOTS[p.status]}`} />
-                        {STATUS_LABELS[p.status]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {p.temNoBanco ? (
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10">
-                          <svg className="h-3 w-3 text-emerald-600" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M2 6l3 3 5-5" />
-                          </svg>
-                        </span>
-                      ) : (
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-foreground/[0.05]">
-                          <X size={11} className="text-foreground/30" />
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                <div className="flex min-h-64 flex-col items-center justify-center px-6 text-center"><Upload className="size-7 text-primary" /><h3 className="mt-3 text-sm font-semibold text-slate-900">Nenhuma importação ainda</h3><p className="mt-1 max-w-[34ch] text-sm leading-6 text-slate-500">Faça a primeira importação para acompanhar produtos e cobertura deste cliente.</p><button type="button" onClick={() => setActiveTab('imports')} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#0f50df]">Nova importação <ArrowRight className="size-4" /></button></div>
               )}
-            </tbody>
-          </table>
+            </div>
 
-          {/* Pagination */}
-          <footer className="flex items-center justify-between border-t border-border px-4 py-2.5">
-            <span className="text-xs text-foreground/50">
-              {filtered.length} produto{filtered.length !== 1 ? 's' : ''}
-            </span>
-            <div className="flex items-center gap-2">
+            <aside className="overflow-hidden rounded-xl border border-[#dbe3ef] bg-background"><div className="border-b border-[#dbe3ef] px-5 py-4 sm:px-6"><h2 className="text-base font-semibold tracking-[-0.015em] text-slate-950">Informações do ambiente</h2><p className="mt-0.5 text-xs text-slate-500">Dados de conexão e identificação.</p></div><dl className="divide-y divide-[#dbe3ef] px-5 sm:px-6"><InfoRow label="Provedor" value={SOURCE_TYPE_LABEL[client.provider] || client.provider} /><InfoRow label="Instância" value={client.instance} /><InfoRow label="CNPJ" value={client.cnpj || 'Não informado'} /><InfoRow label="Credencial" value={client.hasCredential ? 'Configurada' : 'Pendente'} tone={client.hasCredential ? 'success' : 'warning'} />{client.provider === 'alpha7' ? <><InfoRow label="Base Alpha 7" value={client.alpha7Database || 'Não informada'} /><InfoRow label="Schema" value={client.alpha7Schema || 'Não informado'} /></> : null}</dl></aside>
+          </section>
+
+        </div>
+      ) : null}
+
+      {activeTab === 'imports' ? (
+        <div className="space-y-5">
+          {importError ? (
+            <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50/80 px-4 py-2.5 text-sm font-medium text-rose-800">
+              {importError}
+            </div>
+          ) : null}
+
+          {activeJobId ? (
+            <ImportJobView
+              jobId={activeJobId}
+              onBack={() => setActiveJobId(null)}
+            />
+          ) : (
+            <div className="grid gap-5 lg:grid-cols-[420px_1fr]">
+              <ImportForm
+                client={client}
+                onCreated={() => {
+                  setImportRefreshKey((k) => k + 1);
+                  setImportError(null);
+                }}
+                onError={setImportError}
+              />
+              <ImportJobList
+                clientId={client.id}
+                onSelectJob={(job) => setActiveJobId(job.id)}
+                refreshKey={importRefreshKey}
+              />
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {activeTab === 'products' ? (
+        <section>
+          {!latestJob ? (
+            <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-background py-16 text-center">
+              <Database className="h-8 w-8 text-foreground/20" />
+              <p className="mt-3 text-sm text-foreground/45">
+                Nenhuma importacao encontrada para este cliente.
+              </p>
+              <p className="mt-1 text-xs text-foreground/35">
+                Execute uma importacao na aba Importacoes para ver os produtos aqui.
+              </p>
               <button
-                type="button"
-                disabled={currentPage <= 1}
-                onClick={() => setPage((c) => Math.max(1, c - 1))}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-foreground/60 border border-border rounded-lg disabled:cursor-not-allowed disabled:opacity-40 hover:bg-foreground/5 transition-colors"
+                onClick={() => setActiveTab('imports')}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
               >
-                <ArrowLeft size={14} /> Anterior
-              </button>
-              <span className="px-3 py-1.5 text-xs font-medium text-foreground/60 tabular-nums">
-                {currentPage} / {totalPages}
-              </span>
-              <button
-                type="button"
-                disabled={currentPage >= totalPages}
-                onClick={() => setPage((c) => Math.min(totalPages, c + 1))}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-foreground/60 border border-border rounded-lg disabled:cursor-not-allowed disabled:opacity-40 hover:bg-foreground/5 transition-colors"
-              >
-                Próximo <ArrowRight size={14} />
+                <Upload size={15} /> Nova importacao
               </button>
             </div>
-          </footer>
-        </div>
-      </section>
+          ) : (
+            <>
+              <div className="mb-3 flex items-center gap-2 text-xs text-foreground/45">
+                <span>Importacao:</span>
+                <span className="font-medium text-foreground/65">#{latestJob.id}</span>
+                <span>&middot;</span>
+                <span>{latestJob.currentMessage || 'Sem detalhes'}</span>
+              </div>
+
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <span className="border border-border flex items-center gap-2 px-3 rounded-lg max-w-[320px] w-full">
+                  <Search size={15} className="text-foreground/35" />
+                  <input
+                    type="text"
+                    value={productSearch}
+                    onChange={(e) => {
+                      setProductSearch(e.target.value);
+                      setProductPage(1);
+                    }}
+                    className="outline-none flex flex-1 py-2 text-sm bg-transparent"
+                    placeholder="EAN, nome, fabricante..."
+                  />
+                </span>
+
+                <select
+                  value={productStatus}
+                  onChange={(e) => {
+                    setProductStatus(e.target.value);
+                    setProductPage(1);
+                  }}
+                  className="rounded-lg border border-border bg-foreground/[0.02] px-3 py-2 text-xs outline-none transition-colors focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary"
+                >
+                  <option value="all">Todos os status</option>
+                  <option value="loaded">Carregados</option>
+                  <option value="classified">Clarificados</option>
+                  <option value="prepared">Preparados</option>
+                  <option value="published">Publicados</option>
+                  <option value="already_exists">Existiam</option>
+                  <option value="invalid_ean">EAN invalido</option>
+                  <option value="classification_error">Erro classificacao</option>
+                  <option value="publish_error">Erro publicacao</option>
+                </select>
+
+                <span className="text-xs text-foreground/45 tabular-nums">
+                  {productTotalItems} item{productTotalItems !== 1 ? 's' : ''}
+                </span>
+              </div>
+
+              <div className="border border-border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-foreground/[0.025]">
+                    <tr className="border-b border-border text-xs font-semibold text-foreground/55">
+                      <th className="px-4 py-2.5 text-left w-[12%]">Status</th>
+                      <th className="px-4 py-2.5 text-left w-[13%]">EAN</th>
+                      <th className="px-4 py-2.5 text-left w-[30%]">Produto</th>
+                      <th className="px-4 py-2.5 text-left w-[18%]">Fabricante</th>
+                      <th className="px-4 py-2.5 text-left w-[14%]">Principio Ativo</th>
+                      <th className="px-4 py-2.5 text-left w-[13%]">Erro</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productsLoading ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-12 text-center">
+                          <Loader2 className="mx-auto h-4 w-4 animate-spin text-foreground/40" />
+                        </td>
+                      </tr>
+                    ) : products.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-12 text-center text-sm text-foreground/40">
+                          Nenhum item encontrado.
+                        </td>
+                      </tr>
+                    ) : (
+                      products.map((p) => (
+                        <tr
+                          key={p.id}
+                          className="border-b border-border last:border-0 hover:bg-foreground/[0.02] transition-colors"
+                        >
+                          <td className="px-4 py-3">
+                            <StatusBadge
+                              label={itemStatusLabel(p.status)}
+                              tone={itemStatusTone(p.status)}
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-sm tabular-nums text-foreground/70 font-mono">
+                            {p.ean || '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className="font-medium text-foreground">
+                              {p.nameNormalized || p.nameOriginal || '-'}
+                            </span>
+                            {p.nameNormalized && p.nameOriginal && p.nameNormalized !== p.nameOriginal ? (
+                              <span className="ml-1.5 text-xs text-foreground/35">
+                                ({p.nameOriginal})
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-foreground/65">
+                            {p.manufacturer || '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-foreground/55">
+                            {p.activeIngredient || '-'}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-rose-500">
+                            {p.errorMessage || ''}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+
+                {productTotalPages > 1 ? (
+                  <footer className="flex items-center justify-between border-t border-border px-4 py-2.5">
+                    <span className="text-xs text-foreground/50">
+                      Pagina {productPage} de {productTotalPages}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={productPage <= 1}
+                        onClick={() => setProductPage((c) => Math.max(1, c - 1))}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-foreground/60 border border-border rounded-lg disabled:cursor-not-allowed disabled:opacity-40 hover:bg-foreground/5 transition-colors"
+                      >
+                        <ArrowLeft size={14} /> Anterior
+                      </button>
+                      <button
+                        type="button"
+                        disabled={productPage >= productTotalPages}
+                        onClick={() => setProductPage((c) => Math.min(productTotalPages, c + 1))}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-foreground/60 border border-border rounded-lg disabled:cursor-not-allowed disabled:opacity-40 hover:bg-foreground/5 transition-colors"
+                      >
+                        Proximo <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  </footer>
+                ) : null}
+              </div>
+            </>
+          )}
+        </section>
+      ) : null}
+      </div>
+
+      {showEditModal ? (
+        <EditClientModal
+          client={client}
+          onClose={() => setShowEditModal(false)}
+          onUpdated={(updated) => {
+            setClient(updated);
+            setShowEditModal(false);
+          }}
+        />
+      ) : null}
     </main>
   );
 }
 
-function InfoBlock({ label, value }: { label: string; value: string }) {
+function getInitials(value: string) {
   return (
-    <div className="rounded-lg border border-border px-4 py-3">
-      <span className="text-xs font-medium text-foreground/45">{label}</span>
-      <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
+    value
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('') || '?'
+  );
+}
+
+function Stat({
+  label,
+  value,
+  suffix = '',
+  detail,
+  progress,
+}: {
+  label: string;
+  value: number;
+  suffix?: string;
+  detail: string;
+  progress?: number;
+}) {
+  return (
+    <div className="min-w-0 px-5 py-5 sm:px-6">
+      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <p className="mt-1.5 text-3xl font-semibold tracking-[-0.03em] tabular-nums text-slate-950">
+        {value.toLocaleString('pt-BR')}{suffix}
+      </p>
+      {progress !== undefined ? <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} /></div> : null}
+      <p className="mt-3 text-xs text-slate-500">{detail}</p>
     </div>
   );
 }
 
-function MetricCard({
-  icon,
+function OverviewDatum({
   label,
   value,
-  suffix = '',
+  icon: Icon,
 }: {
-  icon: React.ReactNode;
   label: string;
-  value: number;
-  suffix?: string;
+  value: string;
+  icon: typeof FileSpreadsheet;
 }) {
   return (
-    <div className="rounded-lg border border-border px-5 py-4">
-      <div className="flex items-center gap-2">
-        {icon}
-        <span className="text-xs font-medium text-foreground/45">{label}</span>
-      </div>
-      <p className="mt-2 text-3xl font-semibold tabular-nums text-foreground">
-        {value.toLocaleString('pt-BR')}{suffix}
-      </p>
+    <div className="min-w-0">
+      <Icon className="size-4 text-primary" />
+      <dt className="mt-3 text-xs font-medium text-slate-500">{label}</dt>
+      <dd className="mt-1 truncate text-sm font-semibold text-slate-900">{value}</dd>
+    </div>
+  );
+}
+
+function InfoRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: 'success' | 'warning';
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-4">
+      <dt className="text-sm text-slate-500">{label}</dt>
+      <dd className={`max-w-[60%] truncate text-right text-sm font-semibold ${tone === 'success' ? 'text-emerald-700' : tone === 'warning' ? 'text-amber-700' : 'text-slate-900'}`}>{value}</dd>
     </div>
   );
 }
