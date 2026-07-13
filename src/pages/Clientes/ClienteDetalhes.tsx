@@ -13,6 +13,7 @@ import {
   Loader2,
   Package,
   Pencil,
+  Search,
   Upload,
 } from 'lucide-react';
 import { getClient, type Client } from '../../services/clients.service';
@@ -72,6 +73,7 @@ export default function ClienteDetalhes() {
     hasError: [] as string[],
   });
   const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
+  const [productSearch, setProductSearch] = useState('');
   const [productPage, setProductPage] = useState(1);
   const [productTotalPages, setProductTotalPages] = useState(1);
   const [productTotalItems, setProductTotalItems] = useState(0);
@@ -111,6 +113,7 @@ export default function ClienteDetalhes() {
       const res = await listBancoUnicoImportItems(latestJob.id, {
         page: productPage,
         limit: PRODUCT_PAGE_SIZE,
+        search: productSearch || undefined,
         status: productFilters.status.length ? productFilters.status : undefined,
         ean: productFilters.ean.length ? productFilters.ean : undefined,
         name: productFilters.name.length ? productFilters.name : undefined,
@@ -132,7 +135,7 @@ export default function ClienteDetalhes() {
     if (activeTab === 'products' && latestJob) {
       void loadProducts();
     }
-  }, [activeTab, latestJob, productPage, productFilters]);
+  }, [activeTab, latestJob, productPage, productFilters, productSearch]);
 
   function toggleProductFilterValue<K extends keyof typeof productFilters>(key: K, value: string) {
     setProductFilters((current) => {
@@ -145,6 +148,7 @@ export default function ClienteDetalhes() {
 
   function clearProductFilters() {
     setProductFilters({ status: [], ean: [], name: [], manufacturer: [], activeIngredient: [], hasError: [] });
+    setProductSearch('');
     setProductPage(1);
   }
 
@@ -156,7 +160,7 @@ export default function ClienteDetalhes() {
   const noBanco = latestJob ? latestJob.totalExisting + latestJob.totalPublished : 0;
   const porcentagem = estoqueTotal > 0 ? Math.round((noBanco / estoqueTotal) * 100) : 0;
   const providerAvatar = client ? PROVIDER_AVATAR[client.provider] : null;
-  const hasActiveProductFilters = Object.values(productFilters).some((list) => list.length > 0);
+  const hasActiveProductFilters = Boolean(productSearch) || Object.values(productFilters).some((list) => list.length > 0);
 
   if (clientLoading) {
     return (
@@ -371,12 +375,26 @@ export default function ClienteDetalhes() {
                 <span>{latestJob.currentMessage || 'Sem detalhes'}</span>
               </div>
 
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <span className="text-xs text-foreground/45 tabular-nums">
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                <label className="relative block min-w-0 flex-1 max-w-sm">
+                  <span className="sr-only">Buscar produto</span>
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground/35" />
+                  <input
+                    type="text"
+                    value={productSearch}
+                    onChange={(e) => {
+                      setProductSearch(e.target.value);
+                      setProductPage(1);
+                    }}
+                    placeholder="EAN, nome, fabricante..."
+                    className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-foreground/40 focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
+                </label>
+                <span className="shrink-0 text-xs text-foreground/45 tabular-nums">
                   {productTotalItems} item{productTotalItems !== 1 ? 's' : ''}
                 </span>
                 {hasActiveProductFilters ? (
-                  <button type="button" onClick={clearProductFilters} className="text-xs font-medium text-primary hover:underline">
+                  <button type="button" onClick={clearProductFilters} className="shrink-0 text-xs font-medium text-primary hover:underline">
                     Limpar filtros
                   </button>
                 ) : null}
