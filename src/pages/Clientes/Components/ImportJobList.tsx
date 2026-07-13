@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle2, ChevronRight, Loader2, RefreshCw, Search, Trash2, Upload } from 'lucide-react';
 import { deleteBancoUnicoImport, listBancoUnicoImports, type BancoUnicoImportJob } from '../../../services/bancoUnicoImports.service';
 import { extractErrorMessage } from '../../../utils/error';
@@ -37,7 +37,6 @@ export default function ImportJobList({ clientId, onSelectJob, onNewImport, refr
   useEffect(() => { const id = window.setInterval(() => void loadJobs({ silent: true }), 5000); return () => window.clearInterval(id); }, [loadJobs]);
   useEffect(() => { if (!flashMessage) return; const id = window.setTimeout(() => setFlashMessage(null), 5000); return () => window.clearTimeout(id); }, [flashMessage]);
 
-  const activeCount = useMemo(() => jobs.filter((job) => ACTIVE_JOB_STATUSES.has(job.status)).length, [jobs]);
   const hasSearch = search.trim().length > 0;
 
   return (
