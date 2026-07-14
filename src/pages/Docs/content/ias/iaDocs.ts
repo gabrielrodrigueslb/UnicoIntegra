@@ -1,33 +1,33 @@
-import { templates } from '../../../../data/templates_ia'
+import { templates } from '../../../../data/templates_ia';
 
 interface ParamDoc {
-  field: string
-  type: string
-  required: boolean
-  description: string
+  field: string;
+  type: string;
+  required: boolean;
+  description: string;
 }
 
 interface IaDocLink {
-  label: string
-  path: string
+  label: string;
+  path: string;
 }
 
 export interface IaDocDefinition {
-  slug: string
-  docsPath: string
-  title: string
-  badge: string
-  version: string
-  description: string
-  summary: string
-  endpoint: string
-  highlights: string[]
-  steps: string[]
-  requestFields: ParamDoc[]
-  installedTemplates: string[]
-  payloadExample: string
-  checklist: string[]
-  links: IaDocLink[]
+  slug: string;
+  docsPath: string;
+  title: string;
+  badge: string;
+  version: string;
+  description: string;
+  summary: string;
+  endpoint: string;
+  highlights: string[];
+  steps: string[];
+  requestFields: ParamDoc[];
+  installedTemplates: string[];
+  payloadExample: string;
+  checklist: string[];
+  links: IaDocLink[];
 }
 
 export const iaDocOrder = [
@@ -37,36 +37,40 @@ export const iaDocOrder = [
   'vannon',
   'vetor',
   'atendimento',
-] as const
+] as const;
 
-export type IaDocKey = (typeof iaDocOrder)[number]
+export type IaDocKey = (typeof iaDocOrder)[number];
 
-const endpointBase = '/api/ia/create-ai'
+const endpointBase = '/api/ia/create-ai';
 
 export const commonIaRequestFields: ParamDoc[] = [
   {
     field: 'instance',
     type: 'string',
     required: true,
-    description: 'URL da instÃ¢ncia alvo. A instalaÃ§Ã£o deve usar a URL completa, com https e sem barra final.',
+    description:
+      'URL da instÃ¢ncia alvo. A instalaÃ§Ã£o deve usar a URL completa, com https e sem barra final.',
   },
   {
     field: 'username',
     type: 'string',
     required: true,
-    description: 'Credencial da instÃ¢ncia enviada automaticamente pela sessÃ£o autenticada.',
+    description:
+      'Credencial da instÃ¢ncia enviada automaticamente pela sessÃ£o autenticada.',
   },
   {
     field: 'password',
     type: 'string',
     required: true,
-    description: 'Senha da instÃ¢ncia enviada automaticamente pela sessÃ£o autenticada.',
+    description:
+      'Senha da instÃ¢ncia enviada automaticamente pela sessÃ£o autenticada.',
   },
   {
     field: 'code',
     type: 'string',
     required: true,
-    description: 'CÃ³digo 2FA informado na etapa de seguranÃ§a da instalaÃ§Ã£o.',
+    description:
+      'CÃ³digo 2FA informado na etapa de seguranÃ§a da instalaÃ§Ã£o.',
   },
   {
     field: 'name',
@@ -74,7 +78,7 @@ export const commonIaRequestFields: ParamDoc[] = [
     required: true,
     description: 'Nome que serÃ¡ exibido para a IA criada.',
   },
-]
+];
 
 export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
   alpha7: {
@@ -83,7 +87,8 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     title: 'IA Alpha 7',
     badge: 'IAs - Alpha 7',
     version: templates.alpha7.version || '1.0',
-    description: 'Fluxo com coleta inicial, liberaÃ§Ã£o de acesso ao banco, criaÃ§Ã£o do serviÃ§o Alpha 7 API e instalaÃ§Ã£o da IA.',
+    description:
+      'Fluxo com coleta inicial, liberaÃ§Ã£o de acesso ao banco, criaÃ§Ã£o do serviÃ§o Alpha 7 API e instalaÃ§Ã£o da IA.',
     summary:
       'Coleta dados do cliente, libera acesso ao banco, valida a unidade de negÃ³cio, cria o serviÃ§o e conclui a instalaÃ§Ã£o da IA.',
     endpoint: `${endpointBase}${templates.alpha7.endpoint || ''}`,
@@ -114,12 +119,13 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     title: 'IA Trier',
     badge: 'IAs - Trier',
     version: templates.trier.version || '1.0',
-    description: 'Fluxo com solicitaÃ§Ã£o de integraÃ§Ã£o Ã  Trier, recebimento do token, criaÃ§Ã£o do serviÃ§o e instalaÃ§Ã£o da IA.',
+    description:
+      'Fluxo com solicitaÃ§Ã£o de Integração Ã  Trier, recebimento do token, criaÃ§Ã£o do serviÃ§o e instalaÃ§Ã£o da IA.',
     summary:
-      'Solicita a integraÃ§Ã£o junto Ã  Trier, recebe o token, cria o serviÃ§o IA Trier API e valida a fila antes da homologaÃ§Ã£o.',
+      'Solicita a Integração junto Ã  Trier, recebe o token, cria o serviÃ§o IA Trier API e valida a fila antes da homologaÃ§Ã£o.',
     endpoint: `${endpointBase}${templates.trier.endpoint || ''}`,
     highlights: [
-      'ComeÃ§a pela solicitaÃ§Ã£o da integraÃ§Ã£o diretamente Ã  Trier.',
+      'ComeÃ§a pela solicitaÃ§Ã£o da Integração diretamente Ã  Trier.',
       'Depende do token enviado pela Trier.',
       'Exige conferÃªncia da API key da fila antes da liberaÃ§Ã£o.',
     ],
@@ -145,7 +151,8 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     title: 'IA VTEX',
     badge: 'IAs - VTEX',
     version: templates.vtex.version || '1.0',
-    description: 'Fluxo inicial de implantacao da IA VTEX com criacao de servico/API, instalacao da IA e homologacao.',
+    description:
+      'Fluxo inicial de implantacao da IA VTEX com criacao de servico/API, instalacao da IA e homologacao.',
     summary:
       'Usa a mesma base operacional do fluxo e-commerce: cria o servico, instala a IA VTEX e valida a fila antes da homologacao.',
     endpoint: `${endpointBase}${templates.vtex.endpoint || ''}`,
@@ -177,7 +184,8 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     title: 'IA Vannon',
     badge: 'IAs - Vannon',
     version: templates.vannon.version || '1.0',
-    description: 'Fluxo com solicitaÃ§Ã£o de credenciais no grupo, validaÃ§Ã£o interna, instalaÃ§Ã£o da IA e homologaÃ§Ã£o.',
+    description:
+      'Fluxo com solicitaÃ§Ã£o de credenciais no grupo, validaÃ§Ã£o interna, instalaÃ§Ã£o da IA e homologaÃ§Ã£o.',
     summary:
       'Solicita credenciais no grupo, valida internamente, instala a IA Vannon com endpoint pÃºblico e CEP da loja, e confere a fila.',
     endpoint: `${endpointBase}${templates.vannon.endpoint || ''}`,
@@ -208,7 +216,8 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     title: 'IA Vetor',
     badge: 'IAs - Vetor',
     version: templates.vetor.version || '1.0',
-    description: 'Fluxo com solicitaÃ§Ã£o de credenciais no grupo, validaÃ§Ã£o interna, instalaÃ§Ã£o da IA e homologaÃ§Ã£o.',
+    description:
+      'Fluxo com solicitaÃ§Ã£o de credenciais no grupo, validaÃ§Ã£o interna, instalaÃ§Ã£o da IA e homologaÃ§Ã£o.',
     summary:
       'Solicita credenciais no grupo, valida internamente, instala a IA Vetor com token dedicado e confere a API key da fila.',
     endpoint: `${endpointBase}${templates.vetor.endpoint || ''}`,
@@ -239,7 +248,8 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
     title: 'IA Atendimento',
     badge: 'IAs - Atendimento',
     version: templates.atendimento.version || '1.0',
-    description: 'Fluxo de instalaÃ§Ã£o direta da IA de atendimento com contexto customizado e homologaÃ§Ã£o.',
+    description:
+      'Fluxo de instalaÃ§Ã£o direta da IA de atendimento com contexto customizado e homologaÃ§Ã£o.',
     summary:
       'Instala uma IA de atendimento com contexto customizado, valida a fila e exige homologaÃ§Ã£o antes da produÃ§Ã£o.',
     endpoint: `${endpointBase}${templates.atendimento.endpoint || ''}`,
@@ -264,4 +274,4 @@ export const iaDocs: Record<IaDocKey, IaDocDefinition> = {
       { label: 'IA Vannon', path: '/main/docs/ias/vannon' },
     ],
   },
-}
+};

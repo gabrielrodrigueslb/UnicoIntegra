@@ -14,6 +14,8 @@ export interface Client {
   providerConfig: string;
   hasCredential: boolean;
   credentialHint: string | null;
+  multiProviderTenantId: number | null;
+  hasMultiProviderCredential: boolean;
   alpha7Port: number | null;
   alpha7Database: string | null;
   alpha7User: string | null;
@@ -54,6 +56,20 @@ export async function listClients(params: { page?: number; limit?: number; searc
 
 export async function getClient(id: number) {
   const response = await api.get<Client>(`api/clients/${id}`);
+  return response.data;
+}
+
+export async function getClientMultiProviderApiKey(id: number) {
+  const username = requireAuthSession().authUsername;
+  const response = await api.get<{ apiKey: string }>(`api/clients/${id}/multiprovider-api-key`, {
+    params: { username },
+  });
+  return response.data.apiKey;
+}
+
+export async function setupClientMultiProvider(id: number) {
+  const username = requireAuthSession().authUsername;
+  const response = await api.post<Client>(`api/clients/${id}/multiprovider-setup`, { username });
   return response.data;
 }
 
