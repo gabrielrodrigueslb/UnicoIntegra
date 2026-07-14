@@ -35,7 +35,7 @@ const SOURCE_INSTANCE_LABEL: Record<ClientProvider, string> = {
 };
 
 const CREDENTIAL_LABEL: Record<ClientProvider, string> = {
-  api: 'Token da API',
+  api: 'Token de integracao Trier',
   file: 'Nao se aplica',
   alpha7: 'Senha do banco',
 };
