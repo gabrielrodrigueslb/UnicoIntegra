@@ -26,18 +26,21 @@ const INSTANCE_PLACEHOLDER: Record<ClientProvider, string> = {
   api: 'Ex: Drogaria Dom Bosco',
   file: 'C:\\dados\\catalogo.json',
   alpha7: '145.223.x.x',
+  vetor: 'Ex: 2',
 };
 
 const SOURCE_INSTANCE_LABEL: Record<ClientProvider, string> = {
   api: 'Instância do cliente',
   file: 'Caminho do arquivo no servidor',
   alpha7: 'Host Alpha 7',
+  vetor: 'Unidade Vetor',
 };
 
 const CREDENTIAL_LABEL: Record<ClientProvider, string> = {
   api: 'Token de integracao Trier',
   file: 'Nao se aplica',
   alpha7: 'Senha do banco',
+  vetor: 'Token de integracao Vetor',
 };
 
 export default function ClientFormModal({
@@ -184,11 +187,12 @@ export default function ClientFormModal({
 
           <div>
             <label className={labelClass}>Provedor</label>
-            <div className="grid grid-cols-3 gap-1 rounded-lg bg-foreground/[0.04] p-1">
+            <div className="grid grid-cols-4 gap-1 rounded-lg bg-foreground/[0.04] p-1">
               {([
                 ['api', 'API Trier'],
                 ['file', 'Arquivo'],
                 ['alpha7', 'Alpha 7'],
+                ['vetor', 'Vetor'],
               ] as const).map(([value, label]) => (
                 <button
                   key={value}
@@ -211,7 +215,7 @@ export default function ClientFormModal({
               <label className={labelClass}>{SOURCE_INSTANCE_LABEL[form.provider]}</label>
               <input
                 type="text"
-                name={form.provider === 'alpha7' ? 'alpha7_host' : 'source_instance'}
+                name={form.provider === 'alpha7' ? 'alpha7_host' : form.provider === 'vetor' ? 'vetor_unit' : 'source_instance'}
                 autoComplete="off"
                 value={form.instance}
                 onChange={(event) => handleChange('instance', event.target.value)}
@@ -227,7 +231,7 @@ export default function ClientFormModal({
               <label className={labelClass}>{CREDENTIAL_LABEL[form.provider]}</label>
               <input
                 type="password"
-                name={form.provider === 'api' ? 'api_token' : 'alpha7_password'}
+                name={form.provider === 'api' ? 'api_token' : form.provider === 'vetor' ? 'vetor_token' : 'alpha7_password'}
                 autoComplete="new-password"
                 value={form.credential}
                 onChange={(event) => handleChange('credential', event.target.value)}
@@ -261,7 +265,7 @@ export default function ClientFormModal({
                   required
                 />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <label className={labelClass}>Usuario</label>
                 <input
                   type="text"
@@ -271,17 +275,6 @@ export default function ClientFormModal({
                   onChange={(event) => handleChange('alpha7User', event.target.value)}
                   className={inputClass}
                   required
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Schema</label>
-                <input
-                  type="text"
-                  name="alpha7_schema"
-                  autoComplete="off"
-                  value={form.alpha7Schema}
-                  onChange={(event) => handleChange('alpha7Schema', event.target.value)}
-                  className={inputClass}
                 />
               </div>
             </div>

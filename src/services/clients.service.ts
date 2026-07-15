@@ -1,7 +1,7 @@
 import { api } from './api';
 import { requireAuthSession } from '../utils/authSession';
 
-export type ClientProvider = 'api' | 'file' | 'alpha7';
+export type ClientProvider = 'api' | 'file' | 'alpha7' | 'vetor';
 
 export interface Client {
   id: number;
@@ -106,9 +106,31 @@ export async function updateClient(id: number, payload: UpdateClientPayload) {
   return response.data;
 }
 
-export async function deleteClient(id: number) {
+export class ClientHasImportsError extends Error {
+  jobCount: number;
+
+  constructor(message: string, jobCount: number) {
+    super(message);
+    this.name = 'ClientHasImportsError';
+    this.jobCount = jobCount;
+  }
+}
+
+export async function deleteClient(id: number, options: { force?: boolean } = {}) {
   const username = requireAuthSession().authUsername;
-  await api.delete(`api/clients/${id}`, {
-    data: { username },
-  });
+  try {
+    await api.delete(`api/clients/${id}`, {
+      params: options.force ? { force: 'true' } : undefined,
+      data: { username },
+    });
+  } catch (error) {
+    const response = (error as { response?: { status?: number; data?: { error?: string; jobCount?: number } } }).response;
+    if (response?.status === 409 && typeof response.data?.jobCount === 'number') {
+      throw new ClientHasImportsError(
+        response.data.error || 'Cliente possui importacoes associadas.',
+        response.data.jobCount,
+      );
+    }
+    throw error;
+  }
 }
