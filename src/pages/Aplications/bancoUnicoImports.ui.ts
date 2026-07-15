@@ -83,6 +83,7 @@ export const SOURCE_TYPE_LABEL: Record<string, string> = {
   api: 'API Trier',
   file: 'Arquivo JSON',
   alpha7: 'Banco Alpha 7',
+  vetor: 'API Vetor',
 };
 
 export const MODE_LABEL: Record<string, string> = {
