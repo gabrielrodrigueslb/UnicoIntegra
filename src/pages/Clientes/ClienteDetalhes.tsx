@@ -58,6 +58,7 @@ const PROVIDER_AVATAR: Partial<
 > = {
   api: { src: '/trier.jpg', alt: 'Trier' },
   alpha7: { src: '/Alpha.png', alt: 'Alpha 7' },
+  vetor: { src: '/vetor.png', alt: 'Vetor' },
 };
 
 export default function ClienteDetalhes() {
