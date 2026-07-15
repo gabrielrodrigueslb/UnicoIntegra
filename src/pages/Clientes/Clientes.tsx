@@ -12,7 +12,7 @@ import {
   Trash2,
   UsersRound,
 } from 'lucide-react';
-import { deleteClient, listClients, type Client } from '../../services/clients.service';
+import { ClientHasImportsError, deleteClient, listClients, type Client } from '../../services/clients.service';
 import { SOURCE_TYPE_LABEL } from '../Aplications/bancoUnicoImports.ui';
 import ClientFormModal from '../Aplications/ClientFormModal';
 import ConfirmModal from '../Aplications/ConfirmModal';
@@ -31,6 +31,7 @@ export default function Clientes() {
   const [showCreate, setShowCreate] = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
+  const [forceDeleteTarget, setForceDeleteTarget] = useState<{ client: Client; jobCount: number } | null>(null);
   const [flashMessage, setFlashMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
 
   async function loadClients(options?: { silent?: boolean }) {
@@ -60,6 +61,23 @@ export default function Clientes() {
   function handleSearch(value: string) {
     setSearch(value);
     setPage(1);
+  }
+
+  async function handleDeleteConfirm(client: Client, force = false) {
+    try {
+      await deleteClient(client.id, { force });
+      setDeleteTarget(null);
+      setForceDeleteTarget(null);
+      setFlashMessage({ tone: 'success', text: `Cliente ${client.name} excluído.` });
+      void loadClients({ silent: true });
+    } catch (error) {
+      if (error instanceof ClientHasImportsError) {
+        setDeleteTarget(null);
+        setForceDeleteTarget({ client, jobCount: error.jobCount });
+        return;
+      }
+      throw error;
+    }
   }
 
   return (
@@ -171,7 +189,28 @@ export default function Clientes() {
 
       {showCreate ? <ClientFormModal onClose={() => setShowCreate(false)} onCreated={(created) => { setShowCreate(false); setFlashMessage({ tone: 'success', text: `Cliente ${created.name} criado com sucesso.` }); void loadClients({ silent: true }); }} /> : null}
       {editClient ? <EditClientModal client={editClient} onClose={() => setEditClient(null)} onUpdated={(updated) => { setEditClient(null); setFlashMessage({ tone: 'success', text: `Cliente ${updated.name} atualizado.` }); setClients((current) => current.map((client) => client.id === updated.id ? updated : client)); }} /> : null}
-      {deleteTarget ? <ConfirmModal title="Excluir cliente" description={`Isso remove permanentemente o cliente "${deleteTarget.name}". Esta ação não pode ser desfeita.`} confirmLabel="Excluir" confirmingLabel="Excluindo..." tone="danger" onClose={() => setDeleteTarget(null)} onConfirm={async () => { await deleteClient(deleteTarget.id); setDeleteTarget(null); setFlashMessage({ tone: 'success', text: `Cliente ${deleteTarget.name} excluído.` }); void loadClients({ silent: true }); }} /> : null}
+      {deleteTarget ? (
+        <ConfirmModal
+          title="Excluir cliente"
+          description={`Isso remove permanentemente o cliente "${deleteTarget.name}". Esta ação não pode ser desfeita.`}
+          confirmLabel="Excluir"
+          confirmingLabel="Excluindo..."
+          tone="danger"
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={() => handleDeleteConfirm(deleteTarget)}
+        />
+      ) : null}
+      {forceDeleteTarget ? (
+        <ConfirmModal
+          title="Cliente possui importações"
+          description={`O cliente "${forceDeleteTarget.client.name}" tem ${forceDeleteTarget.jobCount} importação${forceDeleteTarget.jobCount !== 1 ? 'ões' : ''} registrada${forceDeleteTarget.jobCount !== 1 ? 's' : ''}. Excluir o cliente apaga tudo em cadeia (importações, itens e logs). Deseja realmente excluir?`}
+          confirmLabel="Excluir tudo"
+          confirmingLabel="Excluindo..."
+          tone="danger"
+          onClose={() => setForceDeleteTarget(null)}
+          onConfirm={() => handleDeleteConfirm(forceDeleteTarget.client, true)}
+        />
+      ) : null}
     </main>
   );
 }
