@@ -14,12 +14,14 @@ import {
   Loader2,
   Package,
   Pencil,
+  RefreshCw,
   Search,
   Upload,
 } from 'lucide-react';
 import {
   getClient,
   getClientMultiProviderApiKey,
+  regenerateClientMultiProviderApiKey,
   setupClientMultiProvider,
   type Client,
 } from '../../services/clients.service';
@@ -37,6 +39,7 @@ import {
   SOURCE_TYPE_LABEL,
 } from '../Aplications/bancoUnicoImports.ui';
 import StatusBadge from '../Aplications/StatusBadge';
+import ConfirmModal from '../Aplications/ConfirmModal';
 import EditClientModal from './Components/EditClientModal';
 import ImportForm from './Components/ImportForm';
 import ImportJobList from './Components/ImportJobList';
@@ -71,6 +74,8 @@ export default function ClienteDetalhes() {
   const [copyingApiKey, setCopyingApiKey] = useState(false);
   const [setupLabel, setSetupLabel] = useState('Realizar setup');
   const [multiProviderError, setMultiProviderError] = useState<string | null>(null);
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+  const [regenerateSuccess, setRegenerateSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('overview');
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -208,6 +213,23 @@ export default function ClienteDetalhes() {
     }
 
     window.setTimeout(() => setApiKeyCopyLabel('Copiar API key'), 3000);
+  }
+
+  async function regenerateApiKey() {
+    if (!client) return;
+
+    const updated = await regenerateClientMultiProviderApiKey(client.id);
+    setClient(updated);
+    setShowRegenerateConfirm(false);
+    setRegenerateSuccess(true);
+    window.setTimeout(() => setRegenerateSuccess(false), 4000);
+
+    try {
+      await navigator.clipboard.writeText(await getClientMultiProviderApiKey(updated.id));
+    } catch {
+      // Clipboard copy is a convenience on top of the (already successful)
+      // regeneration - a failure here shouldn't read as the action failing.
+    }
   }
 
   async function setupMultiProvider() {
@@ -413,15 +435,29 @@ export default function ClienteDetalhes() {
                 </div>
                 <div className="mt-3">
                   {client.hasMultiProviderCredential && client.multiProviderTenantId != null ? (
-                    <button
-                      type="button"
-                      disabled={copyingApiKey}
-                      onClick={() => void copyMultiProviderApiKey()}
-                      className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#cbd7e6] px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-wait disabled:opacity-70"
-                    >
-                      {copyingApiKey ? <Loader2 className="animate-spin" size={13} /> : <Copy size={13} />}
-                      {apiKeyCopyLabel}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={copyingApiKey}
+                        onClick={() => void copyMultiProviderApiKey()}
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#cbd7e6] px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-wait disabled:opacity-70"
+                      >
+                        {copyingApiKey ? <Loader2 className="animate-spin" size={13} /> : <Copy size={13} />}
+                        {apiKeyCopyLabel}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowRegenerateConfirm(true)}
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#cbd7e6] px-3 text-xs font-semibold text-slate-700 transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                        title="Invalida a key atual e gera uma nova"
+                      >
+                        <RefreshCw size={13} />
+                        Gerar nova key
+                      </button>
+                      {regenerateSuccess ? (
+                        <span className="text-xs font-medium text-emerald-600">Nova key gerada e copiada.</span>
+                      ) : null}
+                    </div>
                   ) : (
                     <button
                       type="button"
@@ -928,6 +964,18 @@ export default function ClienteDetalhes() {
             setClient(updated);
             setShowEditModal(false);
           }}
+        />
+      ) : null}
+
+      {showRegenerateConfirm ? (
+        <ConfirmModal
+          title="Gerar nova API key"
+          description={`Isso invalida imediatamente a API key atual do cliente "${client.name}" e gera outra no lugar. Qualquer integração usando a key antiga para de funcionar.`}
+          confirmLabel="Gerar nova key"
+          confirmingLabel="Gerando..."
+          tone="danger"
+          onClose={() => setShowRegenerateConfirm(false)}
+          onConfirm={regenerateApiKey}
         />
       ) : null}
     </main>
