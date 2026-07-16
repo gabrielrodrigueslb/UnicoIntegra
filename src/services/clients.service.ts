@@ -73,6 +73,12 @@ export async function setupClientMultiProvider(id: number) {
   return response.data;
 }
 
+export async function regenerateClientMultiProviderApiKey(id: number) {
+  const username = requireAuthSession().authUsername;
+  const response = await api.post<Client>(`api/clients/${id}/multiprovider-regenerate-key`, { username });
+  return response.data;
+}
+
 export async function createClient(payload: CreateClientPayload) {
   const username = requireAuthSession().authUsername;
   const response = await api.post<Client>('api/clients', {
