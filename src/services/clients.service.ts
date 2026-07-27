@@ -1,7 +1,7 @@
 import { api } from './api';
 import { requireAuthSession } from '../utils/authSession';
 
-export type ClientProvider = 'api' | 'file' | 'alpha7' | 'vetor';
+export type ClientProvider = 'api' | 'file' | 'alpha7' | 'vetor' | 'automatiza' | 'deliverypharmacy';
 
 export interface Client {
   id: number;
@@ -20,6 +20,9 @@ export interface Client {
   alpha7Database: string | null;
   alpha7User: string | null;
   alpha7Schema: string | null;
+  automatizaShopId: number | null;
+  deliveryCompanyId: string | null;
+  deliveryErpId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,6 +49,9 @@ export interface CreateClientPayload {
   alpha7Database?: string;
   alpha7User?: string;
   alpha7Schema?: string;
+  automatizaShopId?: number;
+  deliveryCompanyId?: string;
+  deliveryErpId?: string;
   username?: string;
 }
 
@@ -100,6 +106,9 @@ export interface UpdateClientPayload {
   alpha7Database?: string;
   alpha7User?: string;
   alpha7Schema?: string;
+  automatizaShopId?: number;
+  deliveryCompanyId?: string;
+  deliveryErpId?: string;
   username?: string;
 }
 

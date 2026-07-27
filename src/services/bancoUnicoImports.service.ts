@@ -3,6 +3,8 @@ import { requireAuthSession } from '../utils/authSession';
 
 export type BancoUnicoImportStatus =
   | 'pending'
+  | 'claimed'
+  | 'processing'
   | 'running'
   | 'paused'
   | 'cancelling'
@@ -14,7 +16,7 @@ export interface BancoUnicoImportJob {
   id: number;
   clientId: number | null;
   clientName: string;
-  sourceType: 'api' | 'file' | 'alpha7';
+  sourceType: 'trier' | 'api' | 'file' | 'alpha7' | 'vetor' | 'automatiza';
   sourceLabel: string | null;
   status: BancoUnicoImportStatus;
   mode: 'publish' | 'classify-only';
@@ -218,6 +220,15 @@ export async function pauseBancoUnicoImport(id: number) {
 export async function resumeBancoUnicoImport(id: number) {
   const username = requireAuthSession().authUsername;
   await api.post(`api/banco-unico-imports/${id}/resume`, { username });
+}
+
+export async function retryBancoUnicoImport(id: number) {
+  const username = requireAuthSession().authUsername;
+  const response = await api.post<BancoUnicoImportJobDetail>(
+    `api/banco-unico-imports/${id}/retry`,
+    { username },
+  );
+  return response.data;
 }
 
 export async function deleteBancoUnicoImport(id: number) {

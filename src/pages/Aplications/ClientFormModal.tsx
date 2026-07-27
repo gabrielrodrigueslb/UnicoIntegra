@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, X } from 'lucide-react';
+import { ChevronDown, Loader2, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
   createClient,
@@ -20,13 +20,18 @@ const INITIAL_FORM = {
   alpha7Database: '',
   alpha7User: '',
   alpha7Schema: 'public',
+  automatizaShopId: '',
+  deliveryCompanyId: '',
+  deliveryErpId: '',
 };
 
 const INSTANCE_PLACEHOLDER: Record<ClientProvider, string> = {
   api: 'Ex: Drogaria Dom Bosco',
   file: 'C:\\dados\\catalogo.json',
-  alpha7: '145.223.x.x',
+  alpha7: '145.274.x.x',
   vetor: 'Ex: 2',
+  automatiza: '00.000.000',
+  deliverypharmacy: '',
 };
 
 const SOURCE_INSTANCE_LABEL: Record<ClientProvider, string> = {
@@ -34,6 +39,8 @@ const SOURCE_INSTANCE_LABEL: Record<ClientProvider, string> = {
   file: 'Caminho do arquivo no servidor',
   alpha7: 'Host Alpha 7',
   vetor: 'Unidade Vetor',
+  automatiza: 'Host MySQL Automatiza',
+  deliverypharmacy: 'Endpoint Delivery Pharmacy',
 };
 
 const CREDENTIAL_LABEL: Record<ClientProvider, string> = {
@@ -41,7 +48,14 @@ const CREDENTIAL_LABEL: Record<ClientProvider, string> = {
   file: 'Nao se aplica',
   alpha7: 'Senha do banco',
   vetor: 'Token de integracao Vetor',
+  automatiza: 'Senha do banco MySQL',
+  deliverypharmacy: 'Token da API Delivery Pharmacy',
 };
+
+const PROVIDER_OPTIONS: Array<[ClientProvider, string]> = [
+  ['api', 'API Trier'], ['file', 'Arquivo'], ['alpha7', 'Alpha 7'], ['vetor', 'Vetor'], ['automatiza', 'Automatiza'],
+  ['deliverypharmacy', 'Delivery Pharmacy'],
+];
 
 export default function ClientFormModal({
   onClose,
@@ -53,6 +67,7 @@ export default function ClientFormModal({
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [providerOpen, setProviderOpen] = useState(false);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -69,6 +84,16 @@ export default function ClientFormModal({
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  function selectProvider(provider: ClientProvider) {
+    setForm((current) => ({
+      ...current,
+      provider,
+      alpha7Port: provider === 'automatiza' && current.alpha7Port === '5432' ? '59001' : current.alpha7Port,
+      alpha7Database: provider === 'automatiza' && !current.alpha7Database ? 'automatiza' : current.alpha7Database,
+    }));
+    setProviderOpen(false);
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setSubmitting(true);
@@ -81,12 +106,15 @@ export default function ClientFormModal({
         cnpj: form.cnpj || undefined,
         clientInstance: form.clientInstance,
         provider: form.provider,
-        instance: form.instance,
+        instance: form.provider === 'deliverypharmacy' ? 'https://api.deliverypharmacy.com.br/v2/produto' : form.instance,
         credential: form.credential || undefined,
-        alpha7Port: form.provider === 'alpha7' ? Number(form.alpha7Port) : undefined,
-        alpha7Database: form.provider === 'alpha7' ? form.alpha7Database : undefined,
-        alpha7User: form.provider === 'alpha7' ? form.alpha7User : undefined,
+        alpha7Port: form.provider === 'alpha7' || form.provider === 'automatiza' ? Number(form.alpha7Port) : undefined,
+        alpha7Database: form.provider === 'alpha7' || form.provider === 'automatiza' ? form.alpha7Database : undefined,
+        alpha7User: form.provider === 'alpha7' || form.provider === 'automatiza' ? form.alpha7User : undefined,
         alpha7Schema: form.provider === 'alpha7' ? form.alpha7Schema : undefined,
+        automatizaShopId: form.provider === 'automatiza' ? Number(form.automatizaShopId) : undefined,
+        deliveryCompanyId: form.provider === 'deliverypharmacy' ? form.deliveryCompanyId : undefined,
+        deliveryErpId: form.provider === 'deliverypharmacy' ? form.deliveryErpId : undefined,
       });
       onCreated(created);
     } catch (caught) {
@@ -187,35 +215,23 @@ export default function ClientFormModal({
 
           <div>
             <label className={labelClass}>Provedor</label>
-            <div className="grid grid-cols-4 gap-1 rounded-lg bg-foreground/[0.04] p-1">
-              {([
-                ['api', 'API Trier'],
-                ['file', 'Arquivo'],
-                ['alpha7', 'Alpha 7'],
-                ['vetor', 'Vetor'],
-              ] as const).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => handleChange('provider', value)}
-                  className={`rounded-md px-2 py-2 text-xs font-semibold transition-colors ${
-                    form.provider === value
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-foreground/55 hover:text-foreground'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="relative">
+              <button type="button" onClick={() => setProviderOpen((open) => !open)} className={`${inputClass} flex items-center justify-between font-semibold`} aria-expanded={providerOpen}>
+                {PROVIDER_OPTIONS.find(([value]) => value === form.provider)?.[1]}
+                <ChevronDown className={`h-4 w-4 transition-transform ${providerOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {providerOpen ? <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-border bg-background p-1 shadow-lg">
+                {PROVIDER_OPTIONS.map(([value, label]) => <button key={value} type="button" onClick={() => selectProvider(value)} className={`block w-full rounded-md px-3 py-2 text-left text-sm ${form.provider === value ? 'bg-primary text-primary-foreground' : 'hover:bg-foreground/5'}`}>{label}</button>)}
+              </div> : null}
             </div>
           </div>
 
-          {form.provider !== 'api' ? (
+          {form.provider !== 'api' && form.provider !== 'deliverypharmacy' ? (
             <div>
               <label className={labelClass}>{SOURCE_INSTANCE_LABEL[form.provider]}</label>
               <input
                 type="text"
-                name={form.provider === 'alpha7' ? 'alpha7_host' : form.provider === 'vetor' ? 'vetor_unit' : 'source_instance'}
+                name={form.provider === 'alpha7' ? 'alpha7_host' : form.provider === 'vetor' ? 'vetor_unit' : form.provider === 'automatiza' ? 'automatiza_host' : 'source_instance'}
                 autoComplete="off"
                 value={form.instance}
                 onChange={(event) => handleChange('instance', event.target.value)}
@@ -236,14 +252,15 @@ export default function ClientFormModal({
                 value={form.credential}
                 onChange={(event) => handleChange('credential', event.target.value)}
                 className={inputClass}
+                required={form.provider === 'deliverypharmacy'}
               />
             </div>
           ) : null}
 
-          {form.provider === 'alpha7' ? (
+          {form.provider === 'alpha7' || form.provider === 'automatiza' ? (
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className={labelClass}>Porta</label>
+                <label className={labelClass}>{form.provider === 'automatiza' ? 'Porta MySQL' : 'Porta'}</label>
                 <input
                   type="text"
                   name="alpha7_port"
@@ -276,6 +293,25 @@ export default function ClientFormModal({
                   className={inputClass}
                   required
                 />
+              </div>
+              {form.provider === 'automatiza' ? (
+                <div className="sm:col-span-2">
+                  <label className={labelClass}>Shop ID</label>
+                  <input type="number" min="1" name="automatiza_shop_id" autoComplete="off" value={form.automatizaShopId} onChange={(event) => handleChange('automatizaShopId', event.target.value)} className={inputClass} required />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {form.provider === 'deliverypharmacy' ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className={labelClass}>Empresa ID</label>
+                <input type="text" name="delivery_company_id" autoComplete="off" value={form.deliveryCompanyId} onChange={(event) => handleChange('deliveryCompanyId', event.target.value)} className={inputClass} required />
+              </div>
+              <div>
+                <label className={labelClass}>ERP ID</label>
+                <input type="text" name="delivery_erp_id" autoComplete="off" value={form.deliveryErpId} onChange={(event) => handleChange('deliveryErpId', event.target.value)} className={inputClass} required />
               </div>
             </div>
           ) : null}

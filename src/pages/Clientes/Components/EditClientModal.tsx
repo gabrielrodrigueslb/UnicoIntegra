@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, X } from 'lucide-react';
+import { ChevronDown, Loader2, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
   updateClient,
@@ -13,6 +13,8 @@ const INSTANCE_PLACEHOLDER: Record<ClientProvider, string> = {
   file: 'C:\\dados\\catalogo.json',
   alpha7: '145.223.x.x',
   vetor: 'Ex: 2',
+  automatiza: '189.89.222.5',
+  deliverypharmacy: 'https://api.deliverypharmacy.com.br/v2/produto',
 };
 
 const SOURCE_INSTANCE_LABEL: Record<ClientProvider, string> = {
@@ -20,6 +22,8 @@ const SOURCE_INSTANCE_LABEL: Record<ClientProvider, string> = {
   file: 'Caminho do arquivo no servidor',
   alpha7: 'Host Alpha 7',
   vetor: 'Unidade Vetor',
+  automatiza: 'Host MySQL Automatiza',
+  deliverypharmacy: 'Endpoint Delivery Pharmacy',
 };
 
 const CREDENTIAL_LABEL: Record<ClientProvider, string> = {
@@ -27,7 +31,14 @@ const CREDENTIAL_LABEL: Record<ClientProvider, string> = {
   file: 'Nao se aplica',
   alpha7: 'Senha do banco',
   vetor: 'Token de integracao Vetor',
+  automatiza: 'Senha do banco MySQL',
+  deliverypharmacy: 'Token da API Delivery Pharmacy',
 };
+
+const PROVIDER_OPTIONS: Array<[ClientProvider, string]> = [
+  ['api', 'API Trier'], ['file', 'Arquivo'], ['alpha7', 'Alpha 7'], ['vetor', 'Vetor'], ['automatiza', 'Automatiza'],
+  ['deliverypharmacy', 'Delivery Pharmacy'],
+];
 
 export default function EditClientModal({
   client,
@@ -46,13 +57,16 @@ export default function EditClientModal({
   const [instance, setInstance] = useState(client.providerConfig || '');
   const [credential, setCredential] = useState('');
   const [changingCredential, setChangingCredential] = useState(!client.credentialHint);
-  const [alpha7Port, setAlpha7Port] = useState(String(client.alpha7Port || 5432));
-  const [alpha7Database, setAlpha7Database] = useState(client.alpha7Database || '');
+  const [alpha7Port, setAlpha7Port] = useState(String(client.alpha7Port || (client.provider === 'automatiza' ? 59001 : 5432)));
+  const [alpha7Database, setAlpha7Database] = useState(client.alpha7Database || (client.provider === 'automatiza' ? 'automatiza' : ''));
   const [alpha7User, setAlpha7User] = useState(client.alpha7User || '');
   const [alpha7Schema] = useState(client.alpha7Schema || 'public');
+  const [deliveryCompanyId, setDeliveryCompanyId] = useState(client.deliveryCompanyId || '');
+  const [deliveryErpId, setDeliveryErpId] = useState(client.deliveryErpId || '');
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [providerOpen, setProviderOpen] = useState(false);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -84,6 +98,10 @@ export default function EditClientModal({
         if (alpha7Database !== (client.alpha7Database || '')) payload.alpha7Database = alpha7Database;
         if (alpha7User !== (client.alpha7User || '')) payload.alpha7User = alpha7User;
         if (alpha7Schema !== (client.alpha7Schema || 'public')) payload.alpha7Schema = alpha7Schema;
+      }
+      if (provider === 'deliverypharmacy') {
+        if (deliveryCompanyId !== (client.deliveryCompanyId || '')) payload.deliveryCompanyId = deliveryCompanyId;
+        if (deliveryErpId !== (client.deliveryErpId || '')) payload.deliveryErpId = deliveryErpId;
       }
 
       if (Object.keys(payload).length === 0) {
@@ -196,34 +214,19 @@ export default function EditClientModal({
 
             <div>
               <label className={labelClass}>Provedor</label>
-              <div className="grid grid-cols-4 gap-1 rounded-lg bg-foreground/[0.04] p-1">
-                {([
-                  ['api', 'API Trier'],
-                  ['file', 'Arquivo'],
-                  ['alpha7', 'Alpha 7'],
-                  ['vetor', 'Vetor'],
-                ] as const).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => {
-                      setProvider(value);
-                      if (value !== client.provider) setInstance('');
-                    }}
-                    className={`rounded-md px-2 py-2 text-xs font-semibold transition-colors ${
-                      provider === value
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-foreground/55 hover:text-foreground'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+              <div className="relative">
+                <button type="button" onClick={() => setProviderOpen((open) => !open)} className={`${inputClass} flex items-center justify-between font-semibold`} aria-expanded={providerOpen}>
+                  {PROVIDER_OPTIONS.find(([value]) => value === provider)?.[1]}
+                  <ChevronDown className={`h-4 w-4 transition-transform ${providerOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {providerOpen ? <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-border bg-background p-1 shadow-lg">
+                  {PROVIDER_OPTIONS.map(([value, label]) => <button key={value} type="button" onClick={() => { setProvider(value); if (value === 'automatiza' && !alpha7Database) setAlpha7Database('automatiza'); if (value === 'automatiza' && alpha7Port === '5432') setAlpha7Port('59001'); if (value !== client.provider) setInstance(''); setProviderOpen(false); }} className={`block w-full rounded-md px-3 py-2 text-left text-sm ${provider === value ? 'bg-primary text-primary-foreground' : 'hover:bg-foreground/5'}`}>{label}</button>)}
+                </div> : null}
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              {provider !== 'api' ? (
+              {provider !== 'api' && provider !== 'deliverypharmacy' ? (
                 <div>
                   <label className={labelClass}>{SOURCE_INSTANCE_LABEL[provider]}</label>
                   <input
@@ -311,6 +314,19 @@ export default function EditClientModal({
                     className={inputClass}
                     required
                   />
+                </div>
+              </div>
+            ) : null}
+
+            {provider === 'deliverypharmacy' ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className={labelClass}>Empresa ID</label>
+                  <input type="text" value={deliveryCompanyId} onChange={(event) => setDeliveryCompanyId(event.target.value)} className={inputClass} required />
+                </div>
+                <div>
+                  <label className={labelClass}>ERP ID</label>
+                  <input type="text" value={deliveryErpId} onChange={(event) => setDeliveryErpId(event.target.value)} className={inputClass} required />
                 </div>
               </div>
             ) : null}

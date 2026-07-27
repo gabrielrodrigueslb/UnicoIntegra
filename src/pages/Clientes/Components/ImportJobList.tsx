@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle2, ChevronRight, Loader2, RefreshCw, Search, Trash2, Upload } from 'lucide-react';
-import { deleteBancoUnicoImport, listBancoUnicoImports, type BancoUnicoImportJob } from '../../../services/bancoUnicoImports.service';
+import { deleteBancoUnicoImport, listBancoUnicoImports, retryBancoUnicoImport, type BancoUnicoImportJob } from '../../../services/bancoUnicoImports.service';
 import { extractErrorMessage } from '../../../utils/error';
 import { statusInfo } from '../../Aplications/bancoUnicoImports.ui';
 import StatusBadge from '../../Aplications/StatusBadge';
 import ConfirmModal from '../../Aplications/ConfirmModal';
 
 type ImportJobListProps = { clientId: number; onSelectJob: (job: BancoUnicoImportJob) => void; onNewImport: () => void; refreshKey?: number };
-const ACTIVE_JOB_STATUSES = new Set(['pending', 'running', 'paused', 'cancelling']);
+const ACTIVE_JOB_STATUSES = new Set(['pending', 'claimed', 'processing', 'running', 'paused', 'cancelling']);
 
 export default function ImportJobList({ clientId, onSelectJob, onNewImport, refreshKey }: ImportJobListProps) {
   const [jobs, setJobs] = useState<BancoUnicoImportJob[]>([]);
@@ -17,6 +17,7 @@ export default function ImportJobList({ clientId, onSelectJob, onNewImport, refr
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<BancoUnicoImportJob | null>(null);
+  const [retryingId, setRetryingId] = useState<number | null>(null);
   const [flashMessage, setFlashMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
 
   const loadJobs = useCallback(async (options?: { silent?: boolean }) => {
@@ -38,6 +39,19 @@ export default function ImportJobList({ clientId, onSelectJob, onNewImport, refr
   useEffect(() => { if (!flashMessage) return; const id = window.setTimeout(() => setFlashMessage(null), 5000); return () => window.clearTimeout(id); }, [flashMessage]);
 
   const hasSearch = search.trim().length > 0;
+
+  async function retryJob(job: BancoUnicoImportJob) {
+    setRetryingId(job.id);
+    try {
+      await retryBancoUnicoImport(job.id);
+      setFlashMessage({ tone: 'success', text: `Importação #${job.id} reiniciada.` });
+      await loadJobs({ silent: true });
+    } catch (error) {
+      setFlashMessage({ tone: 'error', text: extractErrorMessage(error, 'Não foi possível repetir a importação.') });
+    } finally {
+      setRetryingId(null);
+    }
+  }
 
   return (
 
@@ -72,7 +86,7 @@ export default function ImportJobList({ clientId, onSelectJob, onNewImport, refr
             ) : jobs.length === 0 ? (
               <tr><td colSpan={8}><EmptyState search={hasSearch} onNewImport={onNewImport} /></td></tr>
             ) : (
-              jobs.map((job) => <JobRow key={job.id} job={job} onSelectJob={onSelectJob} onDelete={() => setDeleteTarget(job)} />)
+              jobs.map((job) => <JobRow key={job.id} job={job} onSelectJob={onSelectJob} onDelete={() => setDeleteTarget(job)} onRetry={() => void retryJob(job)} retrying={retryingId === job.id} />)
             )}
           </tbody>
         </table>
@@ -86,7 +100,7 @@ export default function ImportJobList({ clientId, onSelectJob, onNewImport, refr
   );
 }
 
-function JobRow({ job, onSelectJob, onDelete }: { job: BancoUnicoImportJob; onSelectJob: (job: BancoUnicoImportJob) => void; onDelete: () => void }) {
+function JobRow({ job, onSelectJob, onDelete, onRetry, retrying }: { job: BancoUnicoImportJob; onSelectJob: (job: BancoUnicoImportJob) => void; onDelete: () => void; onRetry: () => void; retrying: boolean }) {
   const info = statusInfo(job.status);
   const deletable = !ACTIVE_JOB_STATUSES.has(job.status);
   const progress = Math.max(0, Math.min(100, job.progressPercent));
@@ -109,6 +123,18 @@ function JobRow({ job, onSelectJob, onDelete }: { job: BancoUnicoImportJob; onSe
       <Metric value={job.totalErrors} tone={job.totalErrors > 0 ? 'danger' : 'default'} />
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
+          {job.status === 'failed' ? (
+            <button
+              type="button"
+              title={`Tentar novamente a importação #${job.id}`}
+              aria-label={`Tentar novamente a importação #${job.id}`}
+              disabled={retrying}
+              onClick={(event) => { event.stopPropagation(); onRetry(); }}
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:opacity-40"
+            >
+              {retrying ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+            </button>
+          ) : null}
           {deletable ? (
             <button
               type="button"

@@ -33,6 +33,8 @@ export function statusInfo(status: string): { label: string; tone: StatusTone } 
     running: { label: 'Rodando', tone: 'active' },
     paused: { label: 'Pausada', tone: 'warning' },
     pending: { label: 'Na fila', tone: 'neutral' },
+    claimed: { label: 'Iniciando', tone: 'active' },
+    processing: { label: 'Processando', tone: 'active' },
     cancelling: { label: 'Cancelando', tone: 'warning' },
     cancelled: { label: 'Cancelada', tone: 'warning' },
     failed: { label: 'Falhou', tone: 'danger' },
@@ -81,9 +83,12 @@ export function eventTone(event: BancoUnicoImportEvent) {
 
 export const SOURCE_TYPE_LABEL: Record<string, string> = {
   api: 'API Trier',
+  trier: 'API Trier',
   file: 'Arquivo JSON',
   alpha7: 'Banco Alpha 7',
   vetor: 'API Vetor',
+  automatiza: 'Automatiza',
+  deliverypharmacy: 'Delivery Pharmacy',
 };
 
 export const MODE_LABEL: Record<string, string> = {

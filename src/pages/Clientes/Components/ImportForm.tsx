@@ -26,7 +26,7 @@ const INITIAL_FORM = {
   mode: 'publish' as 'publish' | 'classify-only',
   disableNormalizeAi: false,
   disableAi: false,
-  forceTaxonomyAi: true,
+  forceTaxonomyAi: false,
   ignoreExistingCheck: false,
   useAiNormalization: true,
   limit: '',

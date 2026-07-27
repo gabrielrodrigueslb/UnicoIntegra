@@ -8,6 +8,7 @@ import {
   Loader2,
   Pause,
   Play,
+  RefreshCw,
   Search,
   StopCircle,
 } from 'lucide-react';
@@ -17,6 +18,7 @@ import {
   listBancoUnicoImportItems,
   pauseBancoUnicoImport,
   resumeBancoUnicoImport,
+  retryBancoUnicoImport,
   type BancoUnicoImportEvent,
   type BancoUnicoImportItem,
   type BancoUnicoImportJobDetail,
@@ -38,7 +40,7 @@ type ImportJobViewProps = {
   onBack: () => void;
 };
 
-const ACTIVE_JOB_STATUSES = new Set(['pending', 'running', 'paused', 'cancelling']);
+const ACTIVE_JOB_STATUSES = new Set(['pending', 'claimed', 'processing', 'running', 'paused', 'cancelling']);
 
 const FUNNEL_STEPS: Array<{
   key: keyof Pick<
@@ -74,7 +76,7 @@ export default function ImportJobView({ jobId, onBack }: ImportJobViewProps) {
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<BancoUnicoImportEvent[]>([]);
   const [streamConnected, setStreamConnected] = useState(false);
-  const [queueAction, setQueueAction] = useState<'pause' | 'resume' | 'cancel' | null>(null);
+  const [queueAction, setQueueAction] = useState<'pause' | 'resume' | 'cancel' | 'retry' | null>(null);
 
   const [items, setItems] = useState<BancoUnicoImportItem[]>([]);
   const [itemsLoading, setItemsLoading] = useState(true);
@@ -213,6 +215,17 @@ export default function ImportJobView({ jobId, onBack }: ImportJobViewProps) {
     }
   }
 
+  async function handleRetry() {
+    setQueueAction('retry');
+    try {
+      await retryBancoUnicoImport(jobId);
+      void loadJob({ replaceEvents: true });
+      void loadItems();
+    } finally {
+      setQueueAction(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex h-40 items-center justify-center text-foreground/40">
@@ -282,6 +295,15 @@ export default function ImportJobView({ jobId, onBack }: ImportJobViewProps) {
               Cancelar
             </button>
           </div>
+        ) : job.status === 'failed' ? (
+          <button
+            onClick={() => void handleRetry()}
+            disabled={queueAction !== null}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-[#0f50df] disabled:opacity-40"
+          >
+            {queueAction === 'retry' ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+            Tentar novamente
+          </button>
         ) : null}
       </div>
 
