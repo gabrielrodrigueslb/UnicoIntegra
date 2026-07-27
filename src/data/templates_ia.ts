@@ -2,6 +2,22 @@
 /* eslint-disable no-useless-escape */
 
 export const templates = {
+  vannon2: {
+    key: 'vannon2',
+    name: 'IA - Vannon 2.0',
+    type: 'assistente',
+    version: '1.0',
+    contextMode: 'hidden' as const,
+    description: 'IA Vannon 2.0 com busca de produtos, transferência humana e URA AB integrada.',
+    banner: '/vannon1.png',
+    endpoint: '/vannon2',
+    fields: [
+      { key: 'clientName', label: 'Nome da loja', type: 'text', placeholder: 'Farmácia X', width: 'half' as const },
+      { key: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Sua chave de API', width: 'half' as const },
+      { key: 'clientEndpoint', label: 'Endpoint do e-commerce', type: 'text', placeholder: 'Ex: farmaciax', width: 'half' as const },
+      { key: 'cepLoja', label: 'CEP da loja', type: 'number', placeholder: 'Ex: 12345678', width: 'half' as const },
+    ],
+  },
   trier2: {
     key: 'trier2',
     name: 'IA - Trier 2.0',
